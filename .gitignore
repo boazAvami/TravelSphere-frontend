@@ -1,82 +1,37 @@
-# Kotlin-specific
-*.kt~
-*.kts
-
-# Android-specific
-*.iml
-.gradle/
-.local/
-.idea/
-build/
-app/build/
-captures/
-.externalNativeBuild/
-cxx/
-
-# Generated files
-*.apk
-*.ap_
-*.dex
-*.class
-*.so
-*.jar
-*.war
-*.ear
-
-# Local configuration files
-/local.properties
-/.vscode/
-*.log
-*.orig
-
-# Signing keys
-*.keystore
-*.jks
-
-# OS-specific
-.DS_Store
-Thumbs.db
-
-# JetBrains IDEs
-.idea/**
-*.idea/*
-.idea/modules.xml
-.idea/.name
-.idea/workspace.xml
-.idea/libraries
-.idea/caches
-.idea/httpRequests
-.idea/gradle.xml
-.idea/assetWizardSettings.xml
-.idea/androidProfiles.xml
-.idea/codeStyles/
-.idea/inspectionProfiles/
-
-# Gradle-specific
+# Gradle
 .gradle/
 build/
 */build/
-!gradle-wrapper.jar
-gradle-app.setting
-gradle.properties
-gradlew
-gradlew.bat
 
-# Miscellaneous
+# Local configuration files
+local.properties
+.idea/
+*.iml
+.gradle/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Android Studio
+/.idea/
+/*.iml
+
+# Kotlin
+*.kotlin_modules
+
+# Android specific
+.cxx/
+.externalNativeBuild/
+
+# Firebase
+google-services.json
+
+# JetBrains
+.idea/
+
+# Gradle Wrapper
+gradle-wrapper.jar
+
+# Logs
 *.log
-*.log.*
-*.bak
-*.swp
-*.tmp
-
-# Test outputs
-test-results/
-coverage/
-.idea/testResults/
-
-# Android Studio captures
-captures/
-
-# Crashlytics
-crashlytics.properties
-fabric.properties
