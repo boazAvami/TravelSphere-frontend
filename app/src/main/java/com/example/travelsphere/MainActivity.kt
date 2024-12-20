@@ -14,7 +14,7 @@ class MainActivity : AppCompatActivity() {
         try {
             val button: Button = findViewById(R.id.my_button)
             button.setOnClickListener {
-                // Handle button click
+
             }
         } catch (e: Exception) {
             e.printStackTrace() // This will log any error to Logcat
