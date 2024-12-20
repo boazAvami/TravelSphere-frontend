@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.syb.travelsphere"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.syb.travelsphere"
