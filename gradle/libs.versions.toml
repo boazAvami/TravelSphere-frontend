@@ -11,6 +11,7 @@ activity = "1.9.3"
 constraintlayout = "2.2.0"
 
 [libraries]
+osmdroid = { module = "org.osmdroid:osmdroid-android", version = "6.1.14" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
