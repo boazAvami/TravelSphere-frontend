@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import org.osmdroid.config.Configuration
 import org.osmdroid.views.MapView
 import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.overlay.Marker
 
 class MapActivity : AppCompatActivity() {
 
@@ -14,16 +15,29 @@ class MapActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_map)
 
-        // Load osmdroid configuration
         Configuration.getInstance().load(applicationContext, getSharedPreferences("osmdroid", MODE_PRIVATE))
-
-        // Initialize the MapView
         mapView = findViewById(R.id.map)
 
-        // Set zoom and center to a default location (e.g., San Francisco)
         mapView.controller.setZoom(15.0)
-        mapView.controller.setCenter(GeoPoint(37.7749, -122.4194))
+        mapView.controller.setCenter(GeoPoint(37.7749, -122.4194))  // Default center
+
+        // Add markers
+        addMarker(37.7749, -122.4194, "San Francisco")
+        addMarker(34.0522, -118.2437, "Los Angeles")
+        addMarker(40.7128, -74.0060, "New York")
     }
+
+    private fun addMarker(lat: Double, lon: Double, title: String) {
+        val marker = Marker(mapView)
+        marker.icon = resources.getDrawable(R.drawable.location, null)
+
+        marker.position = GeoPoint(lat, lon)
+        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+        marker.title = title
+        mapView.overlays.add(marker)
+        mapView.invalidate()  // Refresh the map to show markers
+    }
+
 
     override fun onResume() {
         super.onResume()
