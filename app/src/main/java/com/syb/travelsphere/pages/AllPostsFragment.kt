@@ -2,8 +2,11 @@ package com.syb.travelsphere.pages
 
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -15,7 +18,8 @@ import com.syb.travelsphere.ui.PostListAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-class AllPostsActivity : AppCompatActivity() {
+
+class AllPostsFragment : Fragment() {
 
     private lateinit var travelService: TravelService
     private lateinit var postListRecyclerView: RecyclerView
@@ -23,51 +27,47 @@ class AllPostsActivity : AppCompatActivity() {
 
     private var posts = listOf<Post>()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_all_posts)
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_all_posts, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         travelService = TravelService()
 
-        // Initialize the RecyclerView
-        postListRecyclerView = findViewById(R.id.postListRecyclerView)
-        postListRecyclerView.layoutManager = LinearLayoutManager(this)
+        postListRecyclerView = view.findViewById(R.id.postListRecyclerView)
+        postListRecyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        // Fetch posts and set up RecyclerView
+        mapComponent = view.findViewById(R.id.mapComponent)
+
         fetchPostsAndSetUpScreen()
-
-        // Set up map view
-        mapComponent = findViewById(R.id.mapComponent)
     }
 
     private fun fetchPostsAndSetUpScreen() {
         lifecycleScope.launch {
             try {
-                // Fetch the posts
                 val fetchedPosts = withContext(Dispatchers.IO) {
-                    travelService.getAllPosts()  // Get posts for the logged-in user
+                    travelService.getAllPosts()
                 }
 
                 if (fetchedPosts != null) {
                     posts = fetchedPosts
-
-                    // Update RecyclerView with the new data
                     postListRecyclerView.adapter = PostListAdapter(posts) { post ->
-                        // When a post is clicked, center the map on its location
                         centerMapOnPost(post)
                     }
-
                     mapComponent.displayPosts(posts)
                 }
 
             } catch (e: Exception) {
-                Toast.makeText(this@AllPostsActivity, "Error fetching posts: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Error fetching posts: ${e.message}", Toast.LENGTH_SHORT).show()
                 Log.d("Error", "Error fetching posts: ${e.message}")
             }
         }
     }
 
-    // Method to center the map on the selected post's location
     private fun centerMapOnPost(post: Post) {
         val geotag = post.geotag
         val lat = geotag.coordinates[1]
