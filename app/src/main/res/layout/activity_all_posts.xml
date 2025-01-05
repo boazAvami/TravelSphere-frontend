@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- MapComponent (top part) -->
+    <com.syb.travelsphere.components.MapComponent
+        android:id="@+id/mapComponent"
+        android:layout_width="match_parent"
+        android:layout_height="300dp" />  <!-- Adjust as necessary -->
+
+    <!-- Post List (scrollable) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/postListRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+    android:layout_below="@id/mapComponent"
+    android:layout_alignParentBottom="true"
+    android:layout_marginTop="8dp"
+    android:padding="8dp"
+    android:scrollbars="vertical" />
+
+</RelativeLayout>

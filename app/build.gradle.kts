@@ -42,7 +42,28 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+
+// Retrofit for API calls
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+
+    // OkHttp for logging (optional)
+    implementation(libs.okhttp)
+
+    // Gson for JSON parsing
+    implementation(libs.gson)
+
+    // Coroutines for asynchronous operations
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.core)
+
+    // Lifecycle (ViewModel and LiveData)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.livedata.ktx)
+
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
 }

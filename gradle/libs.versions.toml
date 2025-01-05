@@ -9,8 +9,25 @@ appcompat = "1.7.0"
 material = "1.12.0"
 activity = "1.9.3"
 constraintlayout = "2.2.0"
+retrofit = "2.9.0"
+okhttp = "4.9.3"
+gson = "2.10.1"
+coroutines = "1.7.3"
+lifecycle = "2.6.2"
 
 [libraries]
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version = "4.9.1" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-livedata-ktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycle" }
+
+retrofit-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
+
+
 osmdroid = { module = "org.osmdroid:osmdroid-android", version = "6.1.14" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
