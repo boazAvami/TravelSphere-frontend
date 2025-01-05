@@ -1,2 +1,0 @@
-# TravelSphere-frontend
-TravelSphere-frontend
