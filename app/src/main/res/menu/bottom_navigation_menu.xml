@@ -1,0 +1,18 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/homeFragment"
+        android:icon="@drawable/nav_bar_home_page"
+        android:title="@string/home" />
+    <item
+        android:id="@+id/nearbyTravellersFragment"
+        android:icon="@drawable/nav_bar_nearby_travellers"
+        android:title="@string/nearby" />
+    <item
+        android:id="@+id/newPostFragment"
+        android:icon="@drawable/nav_bar_add_post_icon"
+        android:title="@string/new_post" />
+    <item
+        android:id="@+id/profileFragment"
+        android:icon="@drawable/nav_bar_profile_icon"
+        android:title="@string/profile" />
+</menu>

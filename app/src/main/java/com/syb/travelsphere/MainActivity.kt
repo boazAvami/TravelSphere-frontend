@@ -8,6 +8,10 @@ import androidx.fragment.app.Fragment
 import com.syb.travelsphere.pages.AllPostsFragment
 import com.syb.travelsphere.R
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.navigation.findNavController
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.navigation.ui.setupWithNavController
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,6 +22,15 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             loadFragment(AllPostsFragment())
         }
+
+        // Set up BottomNavigationView with NavController
+        // val navController = findNavController(R.id.nav_host_fragment)
+        // val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottom_navigation)
+        // bottomNavigationView.setupWithNavController(navController)
+
+        val navController = findNavController(R.id.nav_host_fragment) // Use the correct fragment ID
+        val appBarConfiguration = AppBarConfiguration(navController.graph)
+        setupActionBarWithNavController(navController, appBarConfiguration)
 
     }
 
