@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity() {
 
         val appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.homeFragment,
+                R.id.allPostsFragment,
                 R.id.nearbyTravellersFragment,
                 R.id.newPostFragment,
                 R.id.profileFragment
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
 
         // If savedInstanceState is null, set the default fragment using navigation
         if (savedInstanceState == null) {
-            navController.navigate(R.id.homeFragment)
+            navController.navigate(R.id.allPostsFragment)
         }
     }
 

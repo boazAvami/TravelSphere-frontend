@@ -3,13 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/navigation_graph"
-    app:startDestination="@id/homeFragment">
+    app:startDestination="@id/allPostsFragment">
 
     <fragment
-        android:id="@+id/homeFragment"
-        android:name="com.syb.travelsphere.homeFragment"
+        android:id="@+id/allPostsFragment"
+        android:name="com.syb.travelsphere.pages.AllPostsFragment"
         android:label="Home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_all_posts" />
 
     <fragment
         android:id="@+id/nearbyTravellersFragment"

@@ -1,6 +1,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/homeFragment"
+        android:id="@+id/AllPostsFragment"
         android:icon="@drawable/nav_bar_home_page"
         android:title="@string/home" />
     <item
