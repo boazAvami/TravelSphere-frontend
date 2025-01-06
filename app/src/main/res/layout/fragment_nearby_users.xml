@@ -1,0 +1,82 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/titleText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nearby Travellers"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Subtitle -->
+    <TextView
+        android:id="@+id/subtitleText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Find travellers traveling near you!"
+        android:textSize="16sp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Radius Bar -->
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:gravity="center">
+
+        <!-- 30k Button -->
+        <Button
+            android:id="@+id/radius30k"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="30k"
+            android:background="@android:color/black"
+            android:textColor="@android:color/white"
+            android:layout_marginEnd="8dp" />
+
+        <!-- 10k Button -->
+        <Button
+            android:id="@+id/radius10k"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="10k"
+            android:background="@android:color/black"
+            android:textColor="@android:color/white"
+            android:layout_marginEnd="8dp" />
+
+        <!-- 5k Button -->
+        <Button
+            android:id="@+id/radius5k"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="5k"
+            android:background="@android:color/black"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
+
+    <!-- Map -->
+    <com.syb.travelsphere.components.MapComponent
+        android:id="@+id/mapComponent"
+        android:layout_width="match_parent"
+        android:layout_height="450dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- User List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/userListRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="16dp" />
+
+</LinearLayout>
