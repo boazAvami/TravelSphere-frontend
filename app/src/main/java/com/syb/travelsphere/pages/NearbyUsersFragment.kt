@@ -1,31 +1,31 @@
 package com.syb.travelsphere.pages
 
-
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.Button
-import androidx.appcompat.app.AlertDialog
-import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.syb.travelsphere.services.TravelService
-import com.syb.travelsphere.services.User
-import com.syb.travelsphere.R
-import com.syb.travelsphere.components.MapComponent
-import com.syb.travelsphere.components.UserListAdapter
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.syb.travelsphere.R
+import com.syb.travelsphere.components.MapComponent
+import com.syb.travelsphere.components.UserListAdapter
+import com.syb.travelsphere.services.TravelService
+import com.syb.travelsphere.services.User
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.osmdroid.util.GeoPoint
 
 class NearbyUsersFragment : Fragment() {
@@ -53,6 +53,10 @@ class NearbyUsersFragment : Fragment() {
         userListRecyclerView = view.findViewById(R.id.userListRecyclerView)
         userListRecyclerView.layoutManager = LinearLayoutManager(requireContext())
 
+        // Adding divider between rows
+        val dividerItemDecoration = DividerItemDecoration(requireContext(), LinearLayoutManager.VERTICAL)
+        userListRecyclerView.addItemDecoration(dividerItemDecoration)
+
         mapComponent = view.findViewById(R.id.mapComponent)
 
         // Set up radius buttons
@@ -72,15 +76,16 @@ class NearbyUsersFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 val fetchedUsers = withContext(Dispatchers.IO) {
-                    val userLocation = getCurrentUserLocation()
+                    val userLocation = getCurrentUserLocation();
+                    mapComponent.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
                     travelService.getNearbyUsers(userLocation.longitude, userLocation.latitude, currentRadius)
                 }
 
                 if (fetchedUsers != null) {
                     users = fetchedUsers
-                    userListRecyclerView.adapter = UserListAdapter(users)  { user ->
-                        showUserEmailPopup(user.email);
-                        mapComponent.centerMapOnLocation(user.location.coordinates[1],user.location.coordinates[0])
+                    userListRecyclerView.adapter = UserListAdapter(users) { user ->
+                        showUserEmailPopup(user.email)
+                        mapComponent.centerMapOnLocation(user.location.coordinates[1], user.location.coordinates[0])
                     }
 
                     mapComponent.displayUsers(users) // Assuming we can convert users to posts for display
@@ -107,8 +112,7 @@ class NearbyUsersFragment : Fragment() {
     }
 
     private fun getCurrentUserLocation(): GeoPoint {
-        var userLocation = GeoPoint(31.771959, 34.651401)
-
+        var userLocation = GeoPoint(31.771959, 34.651401) // Default location (Jerusalem, Israel)
 
         if (ActivityCompat.checkSelfPermission(
                 requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
@@ -124,13 +128,13 @@ class NearbyUsersFragment : Fragment() {
                 1
             )
 
-            return userLocation;
+            return userLocation // Returning default location
         }
 
         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
             if (location != null) {
                 // Success: Get the current location
-                Log.d("UserLocation", "Latitude: ${userLocation.latitude}, Longitude: ${userLocation.longitude}")
+                Log.d("UserLocation", "Latitude: ${location.latitude}, Longitude: ${location.longitude}")
                 userLocation = GeoPoint(location.latitude, location.longitude)
             } else {
                 // Location is null, handle this case (e.g., use default location)
@@ -138,6 +142,6 @@ class NearbyUsersFragment : Fragment() {
             }
         }
 
-         return userLocation;
+        return userLocation // Return updated location once fetched
     }
 }

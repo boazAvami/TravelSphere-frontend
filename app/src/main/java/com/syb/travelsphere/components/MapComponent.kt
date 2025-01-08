@@ -23,16 +23,18 @@ class MapComponent @JvmOverloads constructor(
 
     // Method to add markers to the map based on the posts
     fun displayPosts(posts: List<Post>?) {
+        clearMap();
+
         posts?.forEach { post ->
             val geotag = post.geotag
             post._id?.let {
-                addMarker(geotag.coordinates[1], geotag.coordinates[0], post.location, it, post.description)
+                addPostMarker(geotag.coordinates[1], geotag.coordinates[0], post.location, it, post.description)
             }
         }
     }
 
     // Method to add a marker on the map
-    private fun addMarker(lat: Double, lon: Double, title: String, postId: String, description: String) {
+    private fun addPostMarker(lat: Double, lon: Double, title: String, postId: String, description: String) {
         val marker = Marker(this)
         marker.icon = resources.getDrawable(R.drawable.location, null)
 
@@ -54,6 +56,8 @@ class MapComponent @JvmOverloads constructor(
 
     // Method to add markers to the map based on the users
     fun displayUsers(users: List<User>?) {
+        clearMap();
+
         users?.forEach { user ->
             val coordinates = user.location?.coordinates
             if (coordinates != null && coordinates.size == 2) {
@@ -97,5 +101,10 @@ class MapComponent @JvmOverloads constructor(
         val geoPoint = GeoPoint(lat, lon)
         controller.setCenter(geoPoint)
     }
-}
 
+    // New method to clear all markers from the map
+    fun clearMap() {
+        overlays.clear() // Clears all overlays (markers)
+        invalidate() // Refresh the map to remove all markers
+    }
+}
