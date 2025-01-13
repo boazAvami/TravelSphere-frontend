@@ -14,6 +14,9 @@ okhttp = "4.9.3"
 gson = "2.10.1"
 coroutines = "1.7.3"
 lifecycle = "2.6.2"
+play_services_places = "17.1.0"
+play_services_location = "21.3.0"
+play_services_maps = "19.0.0"
 
 [libraries]
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
@@ -37,6 +40,9 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+play_services_places = { module = "com.google.android.gms:play-services-places", version.ref = "play_services_places" }
+play_services_location = { module = "com.google.android.gms:play-services-location", version.ref = "play_services_location" }
+play_services_maps = { module = "com.google.android.gms:play-services-maps", version.ref = "play_services_maps" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

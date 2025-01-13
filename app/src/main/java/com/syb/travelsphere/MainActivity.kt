@@ -5,9 +5,10 @@ import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import com.syb.travelsphere.pages.AllPostsFragment
+import com.syb.travelsphere.pages.AddPostFragment
 import com.syb.travelsphere.R
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.syb.travelsphere.pages.AllPostsFragment
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -16,7 +17,7 @@ class MainActivity : AppCompatActivity() {
 
         // Load the AllPostsFragment by default
         if (savedInstanceState == null) {
-            loadFragment(AllPostsFragment())
+            loadFragment(AddPostFragment())
         }
 
     }

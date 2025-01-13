@@ -1,6 +1,8 @@
 package com.syb.travelsphere.services
 
 import retrofit2.Response
+import java.time.LocalDate
+import java.util.Date
 
 class TravelService {
 
@@ -33,8 +35,10 @@ class TravelService {
 
     // Create Post
     suspend fun createPost(location: String, description: String, timeOfVisit: String, photos: List<String>, geotag: Geotag): ApiResponse? {
-        val userId = selfUserID // Use the static selfUserID here
-        val post = Post(null, userId ?: "", location, description, timeOfVisit,photos,geotag, likes = 0 , null)
+        val userId =  "677af762d346ccb5d4fb35fe"//selfUserID // Use the static selfUserID here
+        val todayDate = LocalDate.now()
+
+        val post = Post(null, userId ?: "", location, description, timeOfVisit ,photos,geotag, likes = 0 , null)
         val response: Response<ApiResponse> = apiService.createPost(post)
         return if (response.isSuccessful) response.body() else null
     }

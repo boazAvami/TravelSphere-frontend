@@ -43,7 +43,8 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
 
-// Retrofit for API calls
+
+    // Retrofit for API calls
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
 
@@ -60,6 +61,7 @@ dependencies {
     // Lifecycle (ViewModel and LiveData)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
+    implementation(libs.play.services.location)
 
 
     testImplementation(libs.junit)
