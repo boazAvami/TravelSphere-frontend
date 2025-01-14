@@ -60,6 +60,8 @@ dependencies {
     // Lifecycle (ViewModel and LiveData)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.playServicesLocation)
 
 
     testImplementation(libs.junit)
