@@ -20,11 +20,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         // Initialize View Binding
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        //setContentView(R.layout.activity_main)
 
         // Set up the Toolbar (ActionBar)
         setSupportActionBar(binding.toolbar) // This sets the toolbar as the ActionBar
@@ -33,6 +32,7 @@ class MainActivity : AppCompatActivity() {
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
         val navController = navHostFragment.navController
 
+        // Configure AppBarConfiguration for top-level destinations
         val appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.allPostsFragment,
@@ -42,9 +42,8 @@ class MainActivity : AppCompatActivity() {
             )
         )
 
+        // Link NavController with Toolbar and BottomNavigationView
         setupActionBarWithNavController(navController, appBarConfiguration)
-
-        // Set up BottomNavigationView with NavController
         binding.bottomNavigation.setupWithNavController(navController)
 
         // Handle Back Stack for Bottom Navigation
