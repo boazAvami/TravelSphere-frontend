@@ -19,8 +19,12 @@ navigationUiKtx = "2.8.5"
 navigationRuntimeKtx = "2.8.5"
 recyclerview = "1.3.2"
 playServicesLocation = "18.0.0"
+roomRuntime = "2.6.1"
 
 [libraries]
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
 playServicesLocation = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version = "4.9.1" }

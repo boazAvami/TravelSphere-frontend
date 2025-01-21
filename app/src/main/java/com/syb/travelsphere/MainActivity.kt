@@ -1,6 +1,8 @@
 package com.syb.travelsphere
 
+import android.health.connect.datatypes.ExerciseRoute.Location
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -13,6 +15,9 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.syb.travelsphere.pages.AllPostsFragment
 import androidx.appcompat.widget.Toolbar
 import com.syb.travelsphere.databinding.ActivityMainBinding
+import com.syb.travelsphere.model.Model
+import com.syb.travelsphere.model.Post
+import com.syb.travelsphere.model.User
 
 class MainActivity : AppCompatActivity() {
 
@@ -24,6 +29,12 @@ class MainActivity : AppCompatActivity() {
         // Initialize View Binding
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        //TODO: Test to delete
+
+        testDatabase()
+        //TODO: Until here to delete
+
 
         // Set up the Toolbar (ActionBar)
         setSupportActionBar(binding.toolbar) // This sets the toolbar as the ActionBar
@@ -72,5 +83,40 @@ class MainActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.navHostFragment)
         return navController.navigateUp() || super.onSupportNavigateUp()
+    }
+
+    fun testDatabase() {
+        // Add a user and test
+        Model.shared.addUser(User(
+            email = "john@example.com",
+            profilePictureUrl = "",
+            userName = "John Doe",
+            password = "123",
+            phoneNumber = "0123",
+            isLocationShared = true
+        )) {
+            Log.d("DatabaseTest", "User added successfully!")
+
+            // Fetch users
+            Model.shared.getAllUsers { users ->
+                Log.d("DatabaseTest", "Retrieved users: $users!")
+            }
+        }
+
+// Add a post and test
+        Model.shared.addPost(Post(
+            title = "First Post",
+            description = "First Post Description",
+            imageUrl = "",
+//            location = ,
+            ownerId = 1
+        )) {
+            Log.d("DatabaseTest", "Post added successfully!")
+
+            // Fetch posts
+            Model.shared.getAllPosts { posts ->
+                Log.d("DatabaseTest", "Retrieved posts: $posts")
+            }
+        }
     }
 }
