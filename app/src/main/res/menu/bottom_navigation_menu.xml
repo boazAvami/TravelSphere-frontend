@@ -4,8 +4,8 @@
         android:icon="@drawable/nav_bar_home_page"
         android:title="@string/home" />
     <item
-        android:id="@+id/nearbyTravellersFragment"
-        android:icon="@drawable/nav_bar_nearby_travellers"
+        android:id="@+id/nearbyUsersFragment"
+        android:icon="@drawable/nav_bar_nearby_users"
         android:title="@string/nearby" />
     <item
         android:id="@+id/newPostFragment"

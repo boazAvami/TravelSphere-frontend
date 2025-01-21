@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
         val appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.allPostsFragment,
-                R.id.nearbyTravellersFragment,
+                R.id.nearbyUsersFragment,
                 R.id.newPostFragment,
                 R.id.profileFragment
             )
@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity() {
         binding.bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.allPostsFragment -> navController.navigate(R.id.allPostsFragment)
-                R.id.nearbyTravellersFragment -> navController.navigate(R.id.nearbyTravellersFragment)
+                R.id.nearbyUsersFragment -> navController.navigate(R.id.nearbyUsersFragment)
                 R.id.newPostFragment -> navController.navigate(R.id.newPostFragment)
                 R.id.profileFragment -> navController.navigate(R.id.profileFragment)
                 else -> false
