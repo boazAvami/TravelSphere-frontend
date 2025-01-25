@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">TravelSphere</string>
+    <string name="home">Home</string>
+    <string name="nearby">Nearby</string>
+    <string name="new_post">New Post</string>
+    <string name="profile">Profile</string>
 </resources>

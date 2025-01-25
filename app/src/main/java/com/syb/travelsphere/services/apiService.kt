@@ -11,6 +11,8 @@ data class User(
     val email: String,
     val password: String?,
     val username: String,
+    val location: Geotag,
+    val originCountry: String,
     val profilePicture: String?)
 
 data class Geotag(
@@ -56,6 +58,13 @@ interface ApiService {
 
     @POST("/posts/{postId}/like")
     suspend fun likePost(@Path("postId") postId: String): Response<ApiResponse>
+
+    @GET("/users/nearby")
+    suspend fun getNearbyUsers(
+        @Query("longitude") longitude: Double,
+        @Query("latitude") latitude: Double,
+        @Query("radius") radius: Double
+    ): Response<ApiResponse>
 }
 
 // Retrofit Client
@@ -72,4 +81,4 @@ object RetrofitClient {
 }
 
 // ApiResponse Data Class
-data class ApiResponse(val message: String, val user: User?, val post: Post?)
+data class ApiResponse(val message: String, val users: List<User>? = null, val user: User? = null, val post: Post? = null)

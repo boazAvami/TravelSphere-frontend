@@ -1,5 +1,6 @@
 package com.syb.travelsphere.services
 
+import android.webkit.WebStorage.Origin
 import retrofit2.Response
 import java.time.LocalDate
 import java.util.Date
@@ -14,8 +15,8 @@ class TravelService {
     private val apiService = RetrofitClient.apiService
 
     // Register User
-    suspend fun registerUser(email: String, username: String, password: String, profilePicture: String? = null): ApiResponse? {
-        val user = User(email, username, password, profilePicture)
+    suspend fun registerUser(email: String, username: String, password: String, profilePicture: String? = null, originCountry: String, location: Geotag): ApiResponse? {
+        val user = User(email, username, password, location, originCountry, profilePicture)
         val response: Response<ApiResponse> = apiService.registerUser(user)
         return if (response.isSuccessful) response.body() else null
     }
@@ -71,5 +72,15 @@ class TravelService {
     suspend fun likePost(postId: String): ApiResponse? {
         val response: Response<ApiResponse> = apiService.likePost(postId)
         return if (response.isSuccessful) response.body() else null
+    }
+
+    //  get nearby users
+    suspend fun getNearbyUsers(longitude: Double, latitude: Double, radius: Double): List<User>? {
+        val response = apiService.getNearbyUsers(longitude, latitude, radius)
+        return if (response.isSuccessful) {
+            response.body()?.users
+        } else {
+            null
+        }
     }
 }
