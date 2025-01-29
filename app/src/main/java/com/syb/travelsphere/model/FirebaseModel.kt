@@ -6,6 +6,8 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.memoryCacheSettings
 import com.syb.travelsphere.base.Constants
+import com.syb.travelsphere.base.EmptyCallback
+import com.syb.travelsphere.base.UsersCallback
 
 class FirebaseModel {
     private val database = Firebase.firestore

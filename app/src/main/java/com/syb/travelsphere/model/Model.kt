@@ -4,13 +4,12 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.core.os.HandlerCompat
+import com.syb.travelsphere.base.EmptyCallback
+import com.syb.travelsphere.base.PostsCallback
+import com.syb.travelsphere.base.UsersCallback
 import com.syb.travelsphere.model.dao.AppLocalDb
 import com.syb.travelsphere.model.dao.AppLocalDbRepository
 import java.util.concurrent.Executors
-
-typealias UsersCallback = (List<User>) -> Unit //TODO: Move to the constant
-typealias PostsCallback = (List<Post>) -> Unit
-typealias EmptyCallback = () -> Unit
 
 class Model private constructor() {
     private val database: AppLocalDbRepository = AppLocalDb.database // Mono state pattern
