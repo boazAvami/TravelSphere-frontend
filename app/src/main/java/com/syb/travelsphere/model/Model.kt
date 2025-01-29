@@ -8,7 +8,7 @@ import com.syb.travelsphere.model.dao.AppLocalDb
 import com.syb.travelsphere.model.dao.AppLocalDbRepository
 import java.util.concurrent.Executors
 
-typealias UsersCallback = (List<User>) -> Unit
+typealias UsersCallback = (List<User>) -> Unit //TODO: Move to the constant
 typealias PostsCallback = (List<Post>) -> Unit
 typealias EmptyCallback = () -> Unit
 
@@ -17,6 +17,8 @@ class Model private constructor() {
     private val executor = Executors.newSingleThreadExecutor() // Background thread
     private val mainHandler = HandlerCompat.createAsync(Looper.getMainLooper()) // Main thread
 
+    private val firebaseModel = FirebaseModel()
+
     companion object {
         val shared = Model()
     }
@@ -24,58 +26,62 @@ class Model private constructor() {
     // User Functions.
 
     fun getAllUsers(callback: UsersCallback) {
-        executor.execute {
-            try {
-                val users = database.userDao().getAllUsers().toMutableList()
-                mainHandler.post {
-                    callback(users)
-                }
-            } catch (e: Exception) {
-                Log.e("Model", "Error fetching users: ${e.message}")
-            }
-        }
+        firebaseModel.getAllUsers(callback)
+//        executor.execute {
+//            try {
+//                val users = database.userDao().getAllUsers().toMutableList()
+//                mainHandler.post {
+//                    callback(users)
+//                }
+//            } catch (e: Exception) {
+//                Log.e("Model", "Error fetching users: ${e.message}")
+//            }
+//        }
     }
 
     fun addUser(user: User, callback: EmptyCallback) {
-        executor.execute {
-            try {
-                database.userDao().insertUser(user)
-                Log.d("Model", "Saved user: $user")
-                mainHandler.post {
-                    callback()
-                }
-            } catch (e: Exception) {
-                Log.e("Model", "Error saving user: ${e.message}")
-            }
-        }
+        firebaseModel.addUser(user, callback)
+//        executor.execute {
+//            try {
+//                database.userDao().insertUser(user)
+//                Log.d("Model", "Saved user: $user")
+//                mainHandler.post {
+//                    callback()
+//                }
+//            } catch (e: Exception) {
+//                Log.e("Model", "Error saving user: ${e.message}")
+//            }
+//        }
     }
 
     fun editUser(user: User, callback: EmptyCallback) {
-        executor.execute {
-            try {
-                database.userDao().updateUser(user)
-                Log.d("Model", "Updated user: $user")
-                mainHandler.post {
-                    callback()
-                }
-            } catch (e: Exception) {
-                Log.e("Model", "Error updating user: ${e.message}")
-            }
-        }
+        firebaseModel.editUser(user, callback)
+//        executor.execute {
+//            try {
+//                database.userDao().updateUser(user)
+//                Log.d("Model", "Updated user: $user")
+//                mainHandler.post {
+//                    callback()
+//                }
+//            } catch (e: Exception) {
+//                Log.e("Model", "Error updating user: ${e.message}")
+//            }
+//        }
     }
 
     fun deleteUser(user: User, callback: EmptyCallback) {
-        executor.execute {
-            try {
-                database.userDao().deleteUser(user)
-                Log.d("Model", "Deleted user: $user")
-                mainHandler.post {
-                    callback()
-                }
-            } catch (e: Exception) {
-                Log.e("Model", "Error deleting user: ${e.message}")
-            }
-        }
+        firebaseModel.deleteUser(user.id.toString(), callback)
+//        executor.execute {
+//            try {
+//                database.userDao().deleteUser(user)
+//                Log.d("Model", "Deleted user: $user")
+//                mainHandler.post {
+//                    callback()
+//                }
+//            } catch (e: Exception) {
+//                Log.e("Model", "Error deleting user: ${e.message}")
+//            }
+//        }
     }
 
     // Post Functions.

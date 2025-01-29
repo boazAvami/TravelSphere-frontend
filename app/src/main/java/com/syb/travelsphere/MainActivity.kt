@@ -1,19 +1,17 @@
 package com.syb.travelsphere
 
-import android.health.connect.datatypes.ExerciseRoute.Location
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.syb.travelsphere.pages.AllPostsFragment
-import androidx.appcompat.widget.Toolbar
+import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.syb.travelsphere.databinding.ActivityMainBinding
 import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.Post
@@ -32,7 +30,8 @@ class MainActivity : AppCompatActivity() {
 
         //TODO: Test to delete
 
-        testDatabase()
+//        testDatabase()
+//        testFirestore()
         //TODO: Until here to delete
 
 
@@ -84,39 +83,61 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.navHostFragment)
         return navController.navigateUp() || super.onSupportNavigateUp()
     }
-
-    fun testDatabase() {
-        // Add a user and test
-        Model.shared.addUser(User(
-            email = "john@example.com",
-            profilePictureUrl = "",
-            userName = "John Doe",
-            password = "123",
-            phoneNumber = "0123",
-            isLocationShared = true
-        )) {
-            Log.d("DatabaseTest", "User added successfully!")
-
-            // Fetch users
-            Model.shared.getAllUsers { users ->
-                Log.d("DatabaseTest", "Retrieved users: $users!")
-            }
-        }
-
-// Add a post and test
-        Model.shared.addPost(Post(
-            title = "First Post",
-            description = "First Post Description",
-            imageUrl = "",
-//            location = ,
-            ownerId = 1
-        )) {
-            Log.d("DatabaseTest", "Post added successfully!")
-
-            // Fetch posts
-            Model.shared.getAllPosts { posts ->
-                Log.d("DatabaseTest", "Retrieved posts: $posts")
-            }
-        }
-    }
+//
+//    fun testFirestore() {
+//        val db = Firebase.firestore
+//        val user = hashMapOf(
+//            "first" to "yael",
+//            "last" to "Hamami",
+//            "born" to 2001
+//        )
+//
+//        val user2 = hashMapOf(
+//            "email" to "john@example.com",
+//            "profilePictureUrl" to "",
+//            "userName" to "John Doe",
+//            "password" to "123",
+//            "phoneNumber" to "0123",
+//            "isLocationShared" to true
+//        )
+//
+//        db.collection("users-test")
+//            .add(user2).addOnSuccessListener { documentReference ->
+//                Log.d("TAG", "added with id: ${documentReference.id}")
+//            }
+//    }
+//    fun testDatabase() {
+//        // Add a user and test
+//        Model.shared.addUser(User(
+//            email = "john@example.com",
+//            profilePictureUrl = "",
+//            userName = "John Doe",
+//            password = "123",
+//            phoneNumber = "0123",
+//            isLocationShared = true
+//        )) {
+//            Log.d("DatabaseTest", "User added successfully!")
+//
+//            // Fetch users
+//            Model.shared.getAllUsers { users ->
+//                Log.d("DatabaseTest", "Retrieved users: $users!")
+//            }
+//        }
+//
+//// Add a post and test
+//        Model.shared.addPost(Post(
+//            title = "First Post",
+//            description = "First Post Description",
+//            imageUrl = "",
+////            location = ,
+//            ownerId = 1
+//        )) {
+//            Log.d("DatabaseTest", "Post added successfully!")
+//
+//            // Fetch posts
+//            Model.shared.getAllPosts { posts ->
+//                Log.d("DatabaseTest", "Retrieved posts: $posts")
+//            }
+//        }
+//    }
 }
