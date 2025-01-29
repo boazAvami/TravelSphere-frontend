@@ -3,6 +3,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.*
 import retrofit2.Response
+import java.time.LocalDate
 import javax.security.auth.callback.PasswordCallback
 
 // Data Models
@@ -68,7 +69,7 @@ interface ApiService {
 
 // Retrofit Client
 object RetrofitClient {
-    private const val BASE_URL = "http://10.100.102.66:5900"
+    private const val BASE_URL = "http://172.20.10.3:5900"
 
     val apiService: ApiService by lazy {
         Retrofit.Builder()
