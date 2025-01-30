@@ -56,7 +56,7 @@ dependencies {
     kapt(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
 
-// Retrofit for API calls
+    // Retrofit for API calls
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
 
@@ -73,11 +73,12 @@ dependencies {
     // Lifecycle (ViewModel and LiveData)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
+    implementation(libs.play.services.location)
+
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.recyclerview)
-    implementation(libs.playServicesLocation)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
