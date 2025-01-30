@@ -8,7 +8,7 @@
         android:icon="@drawable/nav_bar_nearby_users"
         android:title="@string/nearby" />
     <item
-        android:id="@+id/newPostFragment"
+        android:id="@+id/addPostFragment"
         android:icon="@drawable/nav_bar_add_post_icon"
         android:title="@string/new_post" />
     <item
