@@ -18,24 +18,55 @@ class FirebaseModel {
         }
         database.firestoreSettings = settings
     }
+//
+//    fun getAllUsers(callback: UsersCallback) {
+////        callback(listOf())
+//        database.collection(Constants.COLLECTIONS.USERS)
+//            .get()
+//            .addOnCompleteListener {
+//                when (it.isSuccessful){
+//                    true -> { // Operation succeeded
+//                        val users: MutableList<User> = mutableListOf()
+//                        for (userJson in it.result) {
+//                            val userToAdd = User.fromJson(userJson.data)
+//
+//                            if (userToAdd != null) { // Ensure valid user objects
+//                                users.add(userToAdd)
+//                            } else {
+//                                Log.e("FirebaseModel", "Invalid user data: ${userJson?.data}")
+//                            }
+//                            callback(users)
+//                        }
+//                    }
+//                    false -> {
+//                        Log.e("FirebaseModel", "Failed to fetch users", it.exception)
+//                        callback(listOf())
+//                    } // Operation failed}
+//                }
+//        }
+//    }
 
     fun getAllUsers(callback: UsersCallback) {
-        callback(listOf())
-        database.collection(Constants.COLLECTIONS.USERS).get().addOnCompleteListener {
-            when (it.isSuccessful){
-                true -> { // Operation succeeded
-                    val users: MutableList<User> = mutableListOf()
-                    for (userJson in it.result) {
-                        users.add(User.fromJson(userJson.data))
+        database.collection(Constants.COLLECTIONS.USERS).get()
+            .addOnCompleteListener {
+                when (it.isSuccessful) {
+                    true -> {
+                        val users: MutableList<User> = mutableListOf()
+                        for (json in it.result) {
+                            users.add(User.fromJSON(json.data))
+                        }
+                        callback(users)
                     }
+                    false -> callback(listOf())
                 }
-                false -> callback(listOf()) // Operation failed
             }
-        }
     }
 
+
     fun addUser(user: User, callback: EmptyCallback) {
-        database.collection(Constants.COLLECTIONS.USERS).document(user.id.toString()).set(user.json)
+        database.collection(Constants.COLLECTIONS.USERS)
+            .document(user.id.toString())
+            .set(user.json)
             .addOnCompleteListener{
                 callback() // Operation succeeded, execute the callback
             }

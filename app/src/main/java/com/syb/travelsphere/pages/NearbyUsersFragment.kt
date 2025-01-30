@@ -23,6 +23,8 @@ import com.syb.travelsphere.services.TravelService
 import com.syb.travelsphere.services.User
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.syb.travelsphere.databinding.FragmentAllPostsBinding
+import com.syb.travelsphere.databinding.FragmentNearbyUsersBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -31,9 +33,9 @@ import org.osmdroid.util.GeoPoint
 class NearbyUsersFragment : Fragment() {
 
     private lateinit var travelService: TravelService
-    private lateinit var userListRecyclerView: RecyclerView
-    private lateinit var mapComponent: MapComponent
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+
+    private var binding: FragmentNearbyUsersBinding? = null
 
     private var users = listOf<User>()
     private var currentRadius = 30000.0 // Default radius 30km
@@ -41,7 +43,9 @@ class NearbyUsersFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_nearby_users, container, false)
+        binding = FragmentNearbyUsersBinding.inflate(inflater, container, false)
+
+        return binding?.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -50,19 +54,16 @@ class NearbyUsersFragment : Fragment() {
 
         travelService = TravelService()
 
-        userListRecyclerView = view.findViewById(R.id.userListRecyclerView)
-        userListRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding?.userListRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
 
         // Adding divider between rows
         val dividerItemDecoration = DividerItemDecoration(requireContext(), LinearLayoutManager.VERTICAL)
-        userListRecyclerView.addItemDecoration(dividerItemDecoration)
-
-        mapComponent = view.findViewById(R.id.mapComponent)
+        binding?.userListRecyclerView?.addItemDecoration(dividerItemDecoration)
 
         // Set up radius buttons
-        view.findViewById<Button>(R.id.radius30k).setOnClickListener { setRadius(30000.0) }
-        view.findViewById<Button>(R.id.radius10k).setOnClickListener { setRadius(10000.0) }
-        view.findViewById<Button>(R.id.radius5k).setOnClickListener { setRadius(500.0) }
+        binding?.radius30kButton?.setOnClickListener { setRadius(30000.0) }
+        binding?.radius10kButton?.setOnClickListener { setRadius(10000.0) }
+        binding?.radius5kButton?.setOnClickListener { setRadius(500.0) }
 
         fetchNearbyUsersAndSetUpScreen()
     }
@@ -77,21 +78,24 @@ class NearbyUsersFragment : Fragment() {
             try {
                 val fetchedUsers = withContext(Dispatchers.IO) {
                     val userLocation = getCurrentUserLocation();
-                    mapComponent.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
+                    binding?.mapComponent?.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
                     travelService.getNearbyUsers(userLocation.longitude, userLocation.latitude, currentRadius)
                 }
 
                 if (fetchedUsers != null) {
                     users = fetchedUsers
-                    userListRecyclerView.adapter = UserListAdapter(users) { user ->
+                    binding?.userListRecyclerView?.adapter = UserListAdapter(users) { user ->
                         showUserEmailPopup(user.email)
-                        mapComponent.centerMapOnLocation(user.location.coordinates[1], user.location.coordinates[0])
+                        binding?.mapComponent?.centerMapOnLocation(user.location.coordinates[1], user.location.coordinates[0])
                     }
 
-                    mapComponent.displayUsers(users) // Assuming we can convert users to posts for display
+                    binding?.mapComponent?.displayUsers(users) // Assuming we can convert users to posts for display
                 }
 
             } catch (e: Exception) {
+                if (!isAdded || context == null) {
+                    return@launch // Exit early if the fragment is not attached
+                }
                 Toast.makeText(requireContext(), "Error fetching nearby users: ${e.message}", Toast.LENGTH_SHORT).show()
                 Log.d("Error", "Error fetching nearby users: ${e.message}")
             }

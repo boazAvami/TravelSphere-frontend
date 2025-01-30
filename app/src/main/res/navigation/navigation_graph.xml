@@ -8,69 +8,24 @@
     <fragment
         android:id="@+id/allPostsFragment"
         android:name="com.syb.travelsphere.pages.AllPostsFragment"
-        android:label="Home"
-        tools:layout="@layout/fragment_all_posts">
-        <action
-            android:id="@+id/action_allPosts_to_nearbyUsers"
-            app:destination="@id/nearbyUsersFragment" />
-        <action
-            android:id="@+id/action_allPosts_to_newPost"
-            app:destination="@id/newPostFragment" />
-        <action
-            android:id="@+id/action_allPosts_to_profile"
-            app:destination="@id/profileFragment" />
-    </fragment>
-
+        android:label="Home" />
 
     <!-- Nearby Travellers Fragment -->
     <fragment
         android:id="@+id/nearbyUsersFragment"
         android:name="com.syb.travelsphere.pages.NearbyUsersFragment"
-        android:label="Nearby"
-        tools:layout="@layout/fragment_nearby_travellers">
-        <action
-            android:id="@+id/action_nearbyUsers_to_allPosts"
-            app:destination="@id/allPostsFragment" />
-        <action
-            android:id="@+id/action_nearbyUsers_to_newPost"
-            app:destination="@id/newPostFragment" />
-        <action
-            android:id="@+id/action_nearbyUsers_to_profile"
-            app:destination="@id/profileFragment" />
-    </fragment>
+        android:label="Nearby" />
 
     <!-- New Post Fragment -->
     <fragment
-        android:id="@+id/newPostFragment"
-        android:name="com.syb.travelsphere.NewPostFragment"
-        android:label="New Post"
-        tools:layout="@layout/fragment_new_post">
-    <action
-        android:id="@+id/action_newPost_to_allPosts"
-        app:destination="@id/allPostsFragment" />
-    <action
-        android:id="@+id/action_newPost_to_nearbyUsers"
-        app:destination="@id/nearbyUsersFragment" />
-    <action
-        android:id="@+id/action_newPost_to_profile"
-        app:destination="@id/profileFragment" />
-    </fragment>
+        android:id="@+id/addPostFragment"
+        android:name="com.syb.travelsphere.pages.AddPostFragment"
+        android:label="New Post" />
 
     <!-- Profile Fragment -->
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.syb.travelsphere.ProfileFragment"
-        android:label="Profile"
-        tools:layout="@layout/fragment_profile">
-        <action
-            android:id="@+id/action_profile_to_allPosts"
-            app:destination="@id/allPostsFragment" />
-        <action
-            android:id="@+id/action_profile_to_nearbyUsers"
-            app:destination="@id/nearbyUsersFragment" />
-        <action
-            android:id="@+id/action_profile_to_newPost"
-            app:destination="@id/newPostFragment" />
-    </fragment>
+        android:label="Profile" />
 
 </navigation>

@@ -2,27 +2,31 @@ package com.syb.travelsphere
 
 import android.os.Bundle
 import android.util.Log
-import androidx.activity.addCallback
+import android.view.Menu
+import android.view.MenuItem
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.findNavController
+import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.setupActionBarWithNavController
-import androidx.navigation.ui.setupWithNavController
-import com.google.firebase.firestore.firestore
+import androidx.navigation.ui.NavigationUI
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.syb.travelsphere.databinding.ActivityMainBinding
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.syb.travelsphere.databinding.ActivityMainBinding
 import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.Post
 import com.syb.travelsphere.model.User
 
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var navController: NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
         // Initialize View Binding
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -39,51 +43,34 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar) // This sets the toolbar as the ActionBar
 
         // Set up NavController with BottomNavigationView
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
-        val navController = navHostFragment.navController
-
-        // Configure AppBarConfiguration for top-level destinations
-        val appBarConfiguration = AppBarConfiguration(
-            setOf(
-                R.id.allPostsFragment,
-                R.id.nearbyUsersFragment,
-                R.id.newPostFragment,
-                R.id.profileFragment
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
+        navController = navHostFragment.navController
+        navController.let {
+            NavigationUI.setupActionBarWithNavController(
+                activity = this,
+                navController = it
             )
-        )
-
-        // Link NavController with Toolbar and BottomNavigationView
-        setupActionBarWithNavController(navController, appBarConfiguration)
-        binding.bottomNavigation.setupWithNavController(navController)
-
-        // Handle Back Stack for Bottom Navigation
-        binding.bottomNavigation.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.allPostsFragment -> navController.navigate(R.id.allPostsFragment)
-                R.id.nearbyUsersFragment -> navController.navigate(R.id.nearbyUsersFragment)
-                R.id.newPostFragment -> navController.navigate(R.id.newPostFragment)
-                R.id.profileFragment -> navController.navigate(R.id.profileFragment)
-                else -> false
-            }
-            true
         }
 
-        // Handle back button navigation
-        onBackPressedDispatcher.addCallback(this) {
-            if (navController.currentDestination?.id == R.id.allPostsFragment) {
-                finish() // Exit app if on the start destination
-            } else {
-                navController.popBackStack() // Navigate back
+        navController.let { NavigationUI.setupWithNavController(binding.bottomNavigationView, it) }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                navController.popBackStack()
+                true
             }
+            else -> NavigationUI.onNavDestinationSelected(item, navController) || super.onOptionsItemSelected(item)
         }
     }
 
-    // Override onSupportNavigateUp to handle up navigation
-    override fun onSupportNavigateUp(): Boolean {
-        val navController = findNavController(R.id.navHostFragment)
-        return navController.navigateUp() || super.onSupportNavigateUp()
-    }
-//
 //    fun testFirestore() {
 //        val db = Firebase.firestore
 //        val user = hashMapOf(
@@ -93,11 +80,11 @@ class MainActivity : AppCompatActivity() {
 //        )
 //
 //        val user2 = hashMapOf(
-//            "email" to "john@example.com",
+//            "email" to "john2222@example.com",
 //            "profilePictureUrl" to "",
 //            "userName" to "John Doe",
 //            "password" to "123",
-//            "phoneNumber" to "0123",
+//           "phoneNumber" to "0123",
 //            "isLocationShared" to true
 //        )
 //
@@ -106,6 +93,7 @@ class MainActivity : AppCompatActivity() {
 //                Log.d("TAG", "added with id: ${documentReference.id}")
 //            }
 //    }
+//
 //    fun testDatabase() {
 //        // Add a user and test
 //        Model.shared.addUser(User(
@@ -131,7 +119,7 @@ class MainActivity : AppCompatActivity() {
 //            imageUrl = "",
 ////            location = ,
 //            ownerId = 1
-//        )) {
+//       )) {
 //            Log.d("DatabaseTest", "Post added successfully!")
 //
 //            // Fetch posts
