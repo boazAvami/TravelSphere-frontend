@@ -1,25 +1,26 @@
 package com.syb.travelsphere
 
 import android.os.Bundle
-import androidx.activity.addCallback
+import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import androidx.navigation.findNavController
+import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.setupActionBarWithNavController
-import androidx.navigation.ui.setupWithNavController
+import androidx.navigation.ui.NavigationUI
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.syb.travelsphere.pages.AllPostsFragment
-import androidx.appcompat.widget.Toolbar
 import com.syb.travelsphere.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var navController: NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
         // Initialize View Binding
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -27,50 +28,34 @@ class MainActivity : AppCompatActivity() {
 
         // Set up the Toolbar (ActionBar)
         setSupportActionBar(binding.toolbar) // This sets the toolbar as the ActionBar
+//        binding.toolbar.setBackgroundColor(ContextCompat.getColor(this, R.color.white))
 
         // Set up NavController with BottomNavigationView
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
-        val navController = navHostFragment.navController
-
-        // Configure AppBarConfiguration for top-level destinations
-        val appBarConfiguration = AppBarConfiguration(
-            setOf(
-                R.id.allPostsFragment,
-                R.id.nearbyUsersFragment,
-                R.id.newPostFragment,
-                R.id.profileFragment
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
+        navController = navHostFragment.navController
+        navController.let {
+            NavigationUI.setupActionBarWithNavController(
+                activity = this,
+                navController = it
             )
-        )
-
-        // Link NavController with Toolbar and BottomNavigationView
-        setupActionBarWithNavController(navController, appBarConfiguration)
-        binding.bottomNavigation.setupWithNavController(navController)
-
-        // Handle Back Stack for Bottom Navigation
-        binding.bottomNavigation.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.allPostsFragment -> navController.navigate(R.id.allPostsFragment)
-                R.id.nearbyUsersFragment -> navController.navigate(R.id.nearbyUsersFragment)
-                R.id.newPostFragment -> navController.navigate(R.id.newPostFragment)
-                R.id.profileFragment -> navController.navigate(R.id.profileFragment)
-                else -> false
-            }
-            true
         }
 
-        // Handle back button navigation
-        onBackPressedDispatcher.addCallback(this) {
-            if (navController.currentDestination?.id == R.id.allPostsFragment) {
-                finish() // Exit app if on the start destination
-            } else {
-                navController.popBackStack() // Navigate back
-            }
-        }
+        navController.let { NavigationUI.setupWithNavController(binding.bottomNavigationView, it) }
     }
 
-    // Override onSupportNavigateUp to handle up navigation
-    override fun onSupportNavigateUp(): Boolean {
-        val navController = findNavController(R.id.navHostFragment)
-        return navController.navigateUp() || super.onSupportNavigateUp()
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                navController.popBackStack()
+                true
+            }
+            else -> NavigationUI.onNavDestinationSelected(item, navController) || super.onOptionsItemSelected(item)
+        }
     }
 }
