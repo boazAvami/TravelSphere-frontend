@@ -14,6 +14,7 @@ import com.syb.travelsphere.services.TravelService
 import com.syb.travelsphere.services.Post
 import com.syb.travelsphere.R
 import com.syb.travelsphere.components.MapComponent
+import com.syb.travelsphere.databinding.FragmentAllPostsBinding
 import com.syb.travelsphere.ui.PostListAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -21,16 +22,23 @@ import kotlinx.coroutines.withContext
 
 class AllPostsFragment : Fragment() {
 
+    private var binding: FragmentAllPostsBinding? = null
+
     private lateinit var travelService: TravelService
-    private lateinit var postListRecyclerView: RecyclerView
-    private lateinit var mapComponent: MapComponent
 
     private var posts = listOf<Post>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_all_posts, container, false)
+        binding = FragmentAllPostsBinding.inflate(inflater, container, false)
+
+        return binding?.root
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        binding = null
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -38,10 +46,7 @@ class AllPostsFragment : Fragment() {
 
         travelService = TravelService()
 
-        postListRecyclerView = view.findViewById(R.id.postListRecyclerView)
-        postListRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-
-        mapComponent = view.findViewById(R.id.mapComponent)
+        binding?.postListRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
 
         fetchPostsAndSetUpScreen()
     }
@@ -55,10 +60,10 @@ class AllPostsFragment : Fragment() {
 
                 if (fetchedPosts != null) {
                     posts = fetchedPosts
-                    postListRecyclerView.adapter = PostListAdapter(posts) { post ->
+                    binding?.postListRecyclerView?.adapter = PostListAdapter(posts) { post ->
                         centerMapOnPost(post)
                     }
-                    mapComponent.displayPosts(posts)
+                    binding?.mapComponent?.displayPosts(posts)
                 }
 
             } catch (e: Exception) {
@@ -72,6 +77,6 @@ class AllPostsFragment : Fragment() {
         val geotag = post.geotag
         val lat = geotag.coordinates[1]
         val lon = geotag.coordinates[0]
-        mapComponent.centerMapOnLocation(lat, lon)
+        binding?.mapComponent?.centerMapOnLocation(lat, lon)
     }
 }

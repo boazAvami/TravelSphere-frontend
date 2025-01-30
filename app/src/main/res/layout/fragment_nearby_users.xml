@@ -6,7 +6,7 @@
 
     <!-- Title -->
     <TextView
-        android:id="@+id/titleText"
+        android:id="@+id/titleTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Nearby Travellers"
@@ -16,7 +16,7 @@
 
     <!-- Subtitle -->
     <TextView
-        android:id="@+id/subtitleText"
+        android:id="@+id/subtitleTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Find travellers traveling near you!"
@@ -33,7 +33,7 @@
 
         <!-- 30k Button -->
         <Button
-            android:id="@+id/radius30k"
+            android:id="@+id/radius30kButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -44,7 +44,7 @@
 
         <!-- 10k Button -->
         <Button
-            android:id="@+id/radius10k"
+            android:id="@+id/radius10kButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -55,7 +55,7 @@
 
         <!-- 5k Button -->
         <Button
-            android:id="@+id/radius5k"
+            android:id="@+id/radius5kButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
