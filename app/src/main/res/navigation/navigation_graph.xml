@@ -18,8 +18,8 @@
 
     <!-- New Post Fragment -->
     <fragment
-        android:id="@+id/newPostFragment"
-        android:name="com.syb.travelsphere.NewPostFragment"
+        android:id="@+id/addPostFragment"
+        android:name="com.syb.travelsphere.pages.AddPostFragment"
         android:label="New Post" />
 
     <!-- Profile Fragment -->
