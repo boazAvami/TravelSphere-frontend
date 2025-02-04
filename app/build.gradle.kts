@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("kotlin-kapt")
+    alias(libs.plugins.google.services)
     alias(libs.plugins.androidx.navigation.safeargs)
 }
 
@@ -48,6 +50,20 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
 
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.database.ktx)
+
+    // GeoFire
+    implementation(libs.geofire.android.common)
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    kapt(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+
+    // Navigation
     implementation(libs.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui)
 

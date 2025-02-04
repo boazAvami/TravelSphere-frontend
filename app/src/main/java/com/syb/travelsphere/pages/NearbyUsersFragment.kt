@@ -93,6 +93,9 @@ class NearbyUsersFragment : Fragment() {
                 }
 
             } catch (e: Exception) {
+                if (!isAdded || context == null) {
+                    return@launch // Exit early if the fragment is not attached
+                }
                 Toast.makeText(requireContext(), "Error fetching nearby users: ${e.message}", Toast.LENGTH_SHORT).show()
                 Log.d("Error", "Error fetching nearby users: ${e.message}")
             }

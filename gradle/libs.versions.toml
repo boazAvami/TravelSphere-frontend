@@ -1,5 +1,8 @@
 [versions]
 agp = "8.7.3"
+firebaseBom = "33.7.0"
+geofireAndroidCommon = "3.2.0"
+geofireJavaVersion = "3.1.0"
 kotlin = "1.9.24"
 coreKtx = "1.15.0"
 junit = "4.13.2"
@@ -22,10 +25,20 @@ navigationFragmentKtx = "2.8.5"
 navigationUiKtx = "2.8.5"
 navigationRuntimeKtx = "2.8.5"
 recyclerview = "1.3.2"
+roomRuntime = "2.6.1"
+googleServices = "4.4.2"
 
 [libraries]
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
+firebase-auth = { module = "com.google.firebase:firebase-auth" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-database-ktx = { module = "com.google.firebase:firebase-database-ktx" }
+firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 androidx-navigation-safe-args-gradle-plugin = { module = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navigationSafeArgsGradlePlugin" }
 androidx-navigation-ui = { module = "androidx.navigation:navigation-ui", version.ref = "navigationFragmentKtx" }
+geofire-android-common = { module = "com.firebase:geofire-android-common", version.ref = "geofireAndroidCommon" }
 navigation-fragment-ktx = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "navigationFragmentKtx" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version = "4.9.1" }
@@ -55,4 +68,5 @@ androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview"
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices"}
 androidx-navigation-safeargs = { id = "androidx.navigation.safeargs" }
