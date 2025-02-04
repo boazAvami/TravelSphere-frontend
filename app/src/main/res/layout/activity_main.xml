@@ -12,16 +12,16 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:title="@string/app_title"
         android:background="?attr/colorSurface"
-        android:titleTextColor="@android:color/black"
         android:elevation="4dp"
-        app:titleCentered="true"
-        app:titleTextAppearance="@style/ToolbarTitleBold"
-        app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light"
-        app:layout_constraintTop_toTopOf="parent"
+        android:title="@string/app_title"
+        android:titleTextColor="@android:color/black"
+        app:layout_constraintEnd_toStartOf="@+id/navHostFragment"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/navHostFragment"/>
+        app:layout_constraintTop_toTopOf="parent"
+        app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light"
+        app:titleCentered="true"
+        app:titleTextAppearance="@style/ToolbarTitleBold" />
 
     <!-- Fragment Container -->
     <androidx.fragment.app.FragmentContainerView

@@ -18,50 +18,46 @@ class FirebaseModel {
         }
         database.firestoreSettings = settings
     }
-//
-//    fun getAllUsers(callback: UsersCallback) {
-////        callback(listOf())
-//        database.collection(Constants.COLLECTIONS.USERS)
-//            .get()
-//            .addOnCompleteListener {
-//                when (it.isSuccessful){
-//                    true -> { // Operation succeeded
-//                        val users: MutableList<User> = mutableListOf()
-//                        for (userJson in it.result) {
-//                            val userToAdd = User.fromJson(userJson.data)
-//
-//                            if (userToAdd != null) { // Ensure valid user objects
-//                                users.add(userToAdd)
-//                            } else {
-//                                Log.e("FirebaseModel", "Invalid user data: ${userJson?.data}")
-//                            }
-//                            callback(users)
-//                        }
-//                    }
-//                    false -> {
-//                        Log.e("FirebaseModel", "Failed to fetch users", it.exception)
-//                        callback(listOf())
-//                    } // Operation failed}
-//                }
-//        }
-//    }
 
     fun getAllUsers(callback: UsersCallback) {
-        database.collection(Constants.COLLECTIONS.USERS).get()
+        database.collection(Constants.COLLECTIONS.USERS)
+            .get()
             .addOnCompleteListener {
                 when (it.isSuccessful) {
                     true -> {
                         val users: MutableList<User> = mutableListOf()
-                        for (json in it.result) {
-                            users.add(User.fromJSON(json.data))
+                        for (document in it.result) {
+                            users.add(User.fromJSON(document.data))
+                            Log.d("TAG", "${document.id} => ${document.data}")
                         }
                         callback(users)
                     }
                     false -> callback(listOf())
                 }
             }
+            .addOnFailureListener {
+                error -> Log.w("TAG", "Error getting document", error)
+            }
+
     }
 
+    fun getUserById(userId: String, callback: UsersCallback) {
+        database.collection(Constants.COLLECTIONS.USERS)
+            .document(userId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document != null) {
+                    Log.d("TAG","Gey document: ${document.id} successfully")
+                    // TODO: add a callback
+                } else {
+                    Log.d("TAG", "No such document")
+                }
+            }
+            .addOnFailureListener {
+                Log.d("TAG", "Error Getting Document: $userId")
+
+            }
+    }
 
     fun addUser(user: User, callback: EmptyCallback) {
         database.collection(Constants.COLLECTIONS.USERS)
@@ -70,10 +66,13 @@ class FirebaseModel {
             .addOnCompleteListener{
                 callback() // Operation succeeded, execute the callback
             }
+            .addOnFailureListener { error -> Log.w("TAG", "Error writing document", error) }
     }
 
     fun deleteUser(userId: String, callback: EmptyCallback) {
-        database.collection(Constants.COLLECTIONS.USERS).document(userId).delete()
+        database.collection(Constants.COLLECTIONS.USERS)
+            .document(userId)
+            .delete()
             .addOnCompleteListener { task ->
                 when (task.isSuccessful) {
                     true -> {
@@ -88,9 +87,10 @@ class FirebaseModel {
             }
     }
 
-
     fun editUser(user: User, callback: EmptyCallback) {
-        database.collection(Constants.COLLECTIONS.USERS).document(user.id.toString()).set(user.json)
+        database.collection(Constants.COLLECTIONS.USERS)
+            .document(user.id.toString())
+            .set(user.json) // overwrite the entire document
             .addOnCompleteListener { task ->
                 when (task.isSuccessful) {
                     true -> {

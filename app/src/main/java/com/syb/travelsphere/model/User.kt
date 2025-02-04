@@ -44,31 +44,7 @@ data class User(
         }
     }
 
-//    val json: HashMap<String, Any?> //TODO: Why need ANY? and not just Any without the '?'
-//        get() = hashMapOf(
-//            ID_KEY to id,
-//            PASSWORD_KEY to password,
-//            EMAIL_KEY to email,
-//            IS_LOCATION_SHARED_KEY to isLocationShared,
-//            PROFILE_PICTURE_URL_KEY to profilePictureUrl,
-//            PHONE_NUMBER_KEY to phoneNumber,
-//            USERNAME_KEY to userName
-//        )
-
-//    val json: Map<String, Any>
-//        get() = buildMap {
-//            put(ID_KEY, id)
-//            password?.let { put(PASSWORD_KEY, it) }
-//            if (email != null) {
-//                put(EMAIL_KEY, email)
-//            }
-//            isLocationShared?.let { put(IS_LOCATION_SHARED_KEY, it) }
-//            profilePictureUrl?.let { put(PROFILE_PICTURE_URL_KEY, it) }
-//            phoneNumber?.let { put(PHONE_NUMBER_KEY, it) }
-//            userName?.let { put(USERNAME_KEY, it) }
-//        }
-
-    val json: HashMap<String, Any?>
+    val json: HashMap<String, Any?> //TODO: Why need ANY? and not just Any without the '?'
         get() {
             return hashMapOf(
                 ID_KEY to id,
