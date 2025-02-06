@@ -1,5 +1,6 @@
 package com.syb.travelsphere
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -14,6 +15,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.syb.travelsphere.databinding.ActivityMainBinding
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.syb.travelsphere.auth.AuthActivity
 import com.syb.travelsphere.auth.AuthManager
 import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.Post
@@ -30,18 +32,22 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        authManager = AuthManager()
+
+        if (!authManager.isUserLoggedIn()) {
+            // Redirect to AuthActivity
+            startActivity(Intent(this, AuthActivity::class.java))
+            finish()
+            return
+        }
+
         // Initialize View Binding
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         //TODO: Test to delete
-
 //        testDatabase()
 //        testFirestore()
-
-        // Call the function to test authentication
-//        authManager = AuthManager()
-//        testAuthFunctions()
         //TODO: Until here to delete
 
 
