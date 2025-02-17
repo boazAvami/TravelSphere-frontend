@@ -17,6 +17,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
@@ -38,15 +39,16 @@ class SignUpFragment : Fragment() {
     private lateinit var authManager: AuthManager
     private var cameraLauncher: ActivityResultLauncher<Void?>? = null
     private var didSetProfilePicture: Boolean = false
-    private var profileImageUri: Uri? = null
 
     private val galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val imageUri: Uri? = result.data?.data
             imageUri?.let {
-                val inputStream: InputStream? = requireContext().contentResolver.openInputStream(it)
-                val bitmap = BitmapFactory.decodeStream(inputStream)
-                updateProfilePicture(imageUri)
+                if (imageUri == null) {
+                    Toast.makeText(requireContext(),"❌ Failed to select an image.", Toast.LENGTH_SHORT).show()
+                } else {
+                    updateProfilePicture(imageUri)
+                }
             }
         }
     }
@@ -55,7 +57,8 @@ class SignUpFragment : Fragment() {
         if (isGranted) {
             openCamera()
         } else {
-            Toast.makeText(requireContext(), "Camera permission is required to take a photo", Toast.LENGTH_SHORT).show()
+            showCameraPermissionDeniedDialog()
+//            Toast.makeText(requireContext(), "Camera permission is required to take a photo", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -69,7 +72,7 @@ class SignUpFragment : Fragment() {
         val email =  arguments?.let {
             SignUpFragmentArgs.fromBundle(it).email
         }
-        binding?.emailEditText?.setText(email)
+        binding?.emailEditText?.setText(email ?: "")
 
         cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
                 bitmap?.let {
@@ -101,13 +104,9 @@ class SignUpFragment : Fragment() {
             // Get the data from an ImageView as bytes
             binding?.profilePictureImageView?.isDrawingCacheEnabled = true
             binding?.profilePictureImageView?.buildDrawingCache()
-//            val profilePictureBitmap = (binding?.profilePictureImageViewToChange?.drawable as BitmapDrawable).bitmap
 
             val drawable = binding?.profilePictureImageView?.drawable
-            val profilePictureBitmap: Bitmap? = when (drawable) {
-                is BitmapDrawable -> drawable.bitmap
-                else -> null
-            }
+            val profilePictureBitmap: Bitmap? = (drawable as? BitmapDrawable)?.bitmap
 
             val email = binding?.emailEditText?.text.toString().trim()
             val password = binding?.passwordEditText?.text.toString().trim()
@@ -115,38 +114,18 @@ class SignUpFragment : Fragment() {
             val phone = binding?.phoneNumberEditText?.text.toString().trim()
             val isLocationShared = binding?.shareLocationSwitch?.isChecked ?: false
 
-//            if (email.isEmpty() || password.isEmpty()) {
-//                Toast.makeText(requireContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show()
-//                return@setOnClickListener
-//            }
-//
-//            if (password.length < 6) {
-//                Toast.makeText(requireContext(), "Password must be at least 6 characters long", Toast.LENGTH_SHORT).show()
-//                return@setOnClickListener
-//            }
-
-            if (didSetProfilePicture) {
-                signUp(
-                    email, password,
-                    username = username,
-                    phone = phone,
-                    isLocationShared = isLocationShared,
-                    profilePicture = profilePictureBitmap
-                )
-            } else
-                signUp(
-                    email, password,
-                    username = username,
-                    phone = phone,
-                    isLocationShared = isLocationShared,
-                    profilePicture = null
-                )
+            signUp(email = email,
+                password = password,
+                username = username,
+                phone = phone,
+                isLocationShared = isLocationShared,
+                profilePicture = profilePictureBitmap
+            )
         }
 
         // Navigate to Sign In
         binding?.signInLink?.setOnClickListener {
             val email = binding?.emailEditText?.text.toString().trim()
-//            val action = SignUpFragmentDirections.actionSignUpFragmentToSignInFragment(email)
             val action = SignUpFragmentDirections.actionSignUpFragmentToSignInFragment().apply {
                 this.email = email
             }
@@ -183,23 +162,28 @@ class SignUpFragment : Fragment() {
         galleryLauncher.launch(pickPhotoIntent)
     }
 
-    private fun updateProfilePicture(imageUri: Uri) {
-        binding?.profilePictureImageView?.visibility = View.VISIBLE
-        binding?.addProfilePictureImageButton?.visibility = View.INVISIBLE
+    private fun showCameraPermissionDeniedDialog() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Camera Permission Required")
+            .setMessage("To take a photo, enable the camera permission in settings.")
+            .setPositiveButton("Go to Settings") { _, _ ->
+                val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                intent.data = Uri.parse("package:${requireContext().packageName}")
+                startActivity(intent)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
 
+    private fun updateProfilePicture(imageUri: Uri) {
         Picasso.get()
             .load(imageUri)
             .resize(200, 200) // Resize to prevent memory issues
             .centerCrop()
             .into(binding?.profilePictureImageView)
 
-//        binding?.addProfilePictureImageButton?.apply {
-//            visibility = View.INVISIBLE    // Make sure it's still visible
-//            isClickable = true         // Ensure it's clickable
-//            isFocusable = true           // Ensure it can receive touch events
-//            bringToFront()             // Move it on top of the image
-//        }
-
+        binding?.profilePictureImageView?.visibility = View.VISIBLE
+        binding?.addProfilePictureImageButton?.visibility = View.INVISIBLE
         didSetProfilePicture = true
     }
 
@@ -255,7 +239,6 @@ class SignUpFragment : Fragment() {
         return isValid
     }
 
-
     private fun signUp(email: String,
                        password: String,
                        username: String,
@@ -263,21 +246,12 @@ class SignUpFragment : Fragment() {
                        isLocationShared: Boolean,
                        profilePicture: Bitmap?
                        ) {
-        profilePicture?.let {
-            authManager.signUpUser(
-                email,
-                password,
-                username = username,
-                phone = phone,
-                isLocationShared = isLocationShared,
-                profilePicture = it
-            ) { user ->
-                if (user != null) {
-                    Toast.makeText(requireContext(), "Sign up successful!", Toast.LENGTH_SHORT).show()
-                    navigateToMainActivity()
-                } else {
-                    Toast.makeText(requireContext(), "Sign up failed.", Toast.LENGTH_SHORT).show()
-                }
+        authManager.signUpUser(email, password, username, phone, isLocationShared, profilePicture) { user ->
+            if (user != null) {
+                Toast.makeText(requireContext(),"✅ Sign up successful!", Toast.LENGTH_SHORT).show()
+                navigateToMainActivity()
+            } else {
+                Toast.makeText(requireContext(),"❌ Sign up failed.", Toast.LENGTH_SHORT).show()
             }
         }
     }

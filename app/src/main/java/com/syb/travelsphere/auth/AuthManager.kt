@@ -4,6 +4,9 @@ import android.graphics.Bitmap
 import android.util.Log
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.FirebaseUser
 import com.syb.travelsphere.base.AuthCallback
@@ -17,36 +20,30 @@ class AuthManager {
 
     fun signUpUser(email: String, password: String, username: String, phone: String, isLocationShared: Boolean, profilePicture: Bitmap?, callback: AuthCallback) {
         auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val firebaseUser = auth.currentUser
-                    firebaseUser?.let {
-                        val user = User(
-                            id = it.uid,
-                            email = email,
-                            userName = username,
-                            phoneNumber = phone,
-                            profilePictureUrl = "",
-//                            password = password,
-                            isLocationShared = isLocationShared
-                        )
+            .addOnSuccessListener { authResult ->
+                val firebaseUser = authResult.user
+                firebaseUser?.let {
+                    val user = User(
+                        id = it.uid,
+                        userName = username,
+                        phoneNumber = phone,
+                        profilePictureUrl = "",
+                        isLocationShared = isLocationShared
+                    )
 
-                        Model.shared.addUser(user, profilePicture) {
-                            Log.d(TAG, "createUserWithEmail:success")
-                            callback(firebaseUser)
-                        }
+                    Model.shared.addUser(user, profilePicture) {
+                        Log.d(TAG, "✅ User created & added to Firestore successfully!")
+                        callback(firebaseUser)
                     }
-                } else {
-                    // 🔹 Handle Weak Password Error
-                    if (task.exception is FirebaseAuthWeakPasswordException) {
-                        Log.w(TAG, "Weak password: ${task.exception?.message}")
-                        Toast.makeText(context, "Password must be at least 6 characters long", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Log.w(TAG, "createUserWithEmail:failure", task.exception)
-                    }
+                } ?: run {
+                    Log.e(TAG, "⚠️ Firebase user is null after sign-up.")
                     callback(null)
                 }
-            }.addOnSuccessListener {  }
+            }
+            .addOnFailureListener { exception ->
+                handleAuthFailure(exception, "⚠️ Failed to create user")
+                callback(null)
+            }
     }
 
     fun signInUser(email: String, password: String, callback: AuthCallback) {
@@ -59,6 +56,13 @@ class AuthManager {
                     Log.w(TAG, "signInWithEmail:failure", task.exception)
                     callback(null)
                 }
+            }.addOnSuccessListener {
+                Log.d(TAG, "✅ User signed in successfully!")
+                callback(auth.currentUser)
+            }
+            .addOnFailureListener { exception ->
+                handleAuthFailure(exception, "⚠️ Sign-in failed")
+                callback(null)
             }
     }
 
@@ -72,27 +76,90 @@ class AuthManager {
 
     fun signOut(callback: EmptyCallback) {
         auth.signOut()
+        Log.d(TAG, "✅ User signed out successfully.")
         callback()
     }
 
     fun updateUserPassword(newPassword: String, callback: EmptyCallback) {
         val currentUser = auth.currentUser
         if (currentUser == null) {
-            Log.e(TAG, "No authenticated user found.")
+            Log.e(TAG, "⚠️ No authenticated user found.")
             return
         }
 
         currentUser.updatePassword(newPassword)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Log.d(TAG, "Password updated successfully.")
-                    callback()
-                } else {
-                    Log.e(TAG, "Failed to update password: ${task.exception?.message}")
-                }
+            .addOnSuccessListener {
+                Log.d(TAG, "✅ Password updated successfully.")
+                callback()
+            }
+            .addOnFailureListener { exception ->
+                handleAuthFailure(exception, "⚠️ Failed to update password")
             }
     }
 
+    // updateUserEmail: (Requires Re-Authentication)
+    fun updateUserEmail(newEmail: String, callback: EmptyCallback) {
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            Log.e(TAG, "⚠️ No authenticated user found.")
+            return
+        }
+
+        currentUser.verifyBeforeUpdateEmail(newEmail) // Sends an email verification before updating
+            .addOnSuccessListener {
+                Log.d(TAG, "✅ Email update request sent. User must verify.")
+                callback()
+            }
+            .addOnFailureListener { exception ->
+                handleAuthFailure(exception, "⚠️ Failed to request email update")
+            }
+    }
+
+    // 🔹 Centralized Error Handling Function
+    private fun handleAuthFailure(exception: Exception, message: String) {
+        when (exception) {
+            is FirebaseAuthWeakPasswordException -> {
+                Log.w(TAG, "$message: Weak password (${exception.message})")
+                Toast.makeText(
+                    context,
+                    "⚠️ Password must be at least 6 characters long",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            is FirebaseAuthInvalidCredentialsException -> {
+                Log.w(TAG, "$message: Invalid credentials (${exception.message})")
+                Toast.makeText(context, "⚠️ Invalid email or password", Toast.LENGTH_SHORT).show()
+            }
+
+            is FirebaseAuthUserCollisionException -> {
+                Log.w(TAG, "$message: Email already in use (${exception.message})")
+                Toast.makeText(
+                    context,
+                    "⚠️ Email is already associated with another account",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            is FirebaseAuthRecentLoginRequiredException -> {
+                Log.w(TAG, "$message: Recent login required (${exception.message})")
+                Toast.makeText(
+                    context,
+                    "⚠️ Please log in again to perform this action",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            else -> {
+                Log.e(TAG, "$message: ${exception.message}")
+                Toast.makeText(
+                    context,
+                    "⚠️ An error occurred. Please try again.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
 
     companion object {
         private const val TAG = "FirebaseAuthManager"

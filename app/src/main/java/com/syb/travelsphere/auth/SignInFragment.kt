@@ -29,7 +29,7 @@ class SignInFragment : Fragment() {
         val email =  arguments?.let {
             SignInFragmentArgs.fromBundle(it).email
         }
-        binding?.emailEditText?.setText(email)
+        binding?.emailEditText?.setText(email ?: "")
 
         return binding?.root
     }
@@ -40,14 +40,47 @@ class SignInFragment : Fragment() {
         authManager = AuthManager()
 
         // Sign In Button Click
+//        binding?.signInButton?.setOnClickListener {
+//            val email = binding?.emailEditText?.text.toString().trim()
+//            val password = binding?.passwordEditText?.text.toString().trim()
+//
+//            if (email.isNotEmpty() && password.isNotEmpty()) {
+//                signIn(email, password)
+//            } else {
+//                Toast.makeText(requireContext(), "⚠️ lease fill all fields.", Toast.LENGTH_SHORT).show()
+//            }
+//        }
         binding?.signInButton?.setOnClickListener {
             val email = binding?.emailEditText?.text.toString().trim()
             val password = binding?.passwordEditText?.text.toString().trim()
 
-            if (email.isNotEmpty() && password.isNotEmpty()) {
-                signIn(email, password)
+            var isValid = true
+
+            // Validate Email
+            if (email.isEmpty()) {
+                binding?.emailInputLayout?.error = "⚠️ Please enter your email"
+                isValid = false
+            } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                binding?.emailInputLayout?.error = "Please enter a valid email"
+                isValid = false
             } else {
-                Toast.makeText(requireContext(), "Please fill all fields", Toast.LENGTH_SHORT).show()
+                binding?.emailInputLayout?.error = null  // Clear error if valid
+            }
+
+            // Validate Password
+            if (password.isEmpty()) {
+                binding?.passwordInputLayout?.error = "Please enter your password"
+                isValid = false
+            } else if (password.length < 6) { // TODO: make validation globals
+                binding?.passwordInputLayout?.error = "Please enter a valid email"
+                isValid = false
+            } else {
+                binding?.passwordInputLayout?.error = null  // Clear error if valid
+            }
+
+            // Proceed with Sign-In if Input is Valid
+            if (isValid) {
+                signIn(email, password)
             }
         }
 
@@ -65,10 +98,10 @@ class SignInFragment : Fragment() {
     private fun signIn(email: String, password: String) {
         authManager.signInUser(email, password) { user ->
             if (user != null) {
-                Toast.makeText(requireContext(), "Login successful!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "✅ Login successful!", Toast.LENGTH_SHORT).show()
                 navigateToMainActivity()
             } else {
-                Toast.makeText(requireContext(), "Authentication failed.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "⚠️ Authentication failed. Please check your credentials.", Toast.LENGTH_SHORT).show()
             }
         }
     }
