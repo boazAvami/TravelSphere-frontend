@@ -10,6 +10,7 @@ import android.graphics.drawable.VectorDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Patterns
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -96,6 +97,7 @@ class SignUpFragment : Fragment() {
 
         // Sign Up Button Click
         binding?.signUpButton?.setOnClickListener {
+            if (!validateInputs()) return@setOnClickListener  // Stop execution if validation fails
             // Get the data from an ImageView as bytes
             binding?.profilePictureImageView?.isDrawingCacheEnabled = true
             binding?.profilePictureImageView?.buildDrawingCache()
@@ -113,15 +115,15 @@ class SignUpFragment : Fragment() {
             val phone = binding?.phoneNumberEditText?.text.toString().trim()
             val isLocationShared = binding?.shareLocationSwitch?.isChecked ?: false
 
-            if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(requireContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            if (password.length < 6) {
-                Toast.makeText(requireContext(), "Password must be at least 6 characters long", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+//            if (email.isEmpty() || password.isEmpty()) {
+//                Toast.makeText(requireContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show()
+//                return@setOnClickListener
+//            }
+//
+//            if (password.length < 6) {
+//                Toast.makeText(requireContext(), "Password must be at least 6 characters long", Toast.LENGTH_SHORT).show()
+//                return@setOnClickListener
+//            }
 
             if (didSetProfilePicture) {
                 signUp(
@@ -199,6 +201,58 @@ class SignUpFragment : Fragment() {
 //        }
 
         didSetProfilePicture = true
+    }
+
+    private fun validateInputs(): Boolean {
+        val email = binding?.emailEditText?.text.toString().trim()
+        val password = binding?.passwordEditText?.text.toString().trim()
+        val username = binding?.usernameEditText?.text.toString().trim()
+        val phone = binding?.phoneNumberEditText?.text.toString().trim()
+
+        var isValid = true
+
+        // **Email Validation**
+        if (email.isEmpty()) {
+            binding?.emailInputLayout?.error = "Email is required"
+            isValid = false
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            binding?.emailInputLayout?.error = "Invalid email format"
+            isValid = false
+        } else {
+            binding?.emailInputLayout?.error = null
+        }
+
+        // **Password Validation**
+        if (password.isEmpty()) {
+            binding?.passwordInputLayout?.error = "Password is required"
+            isValid = false
+        } else if (password.length < 6) {
+            binding?.passwordInputLayout?.error = "Password must be at least 6 characters long"
+            isValid = false
+        } else {
+            binding?.passwordInputLayout?.error = null
+        }
+
+        // **Username Validation**
+        if (username.isEmpty()) {
+            binding?.usernameInputLayout?.error = "Username is required"
+            isValid = false
+        } else {
+            binding?.usernameInputLayout?.error = null
+        }
+
+        // **Phone Number Validation**
+        if (phone.isEmpty()) {
+            binding?.phoneNumberInputLayout?.error = "Phone number is required"
+            isValid = false
+        } else if (!phone.matches(Regex("^[0-9]{9,15}$"))) {
+            binding?.phoneNumberInputLayout?.error = "Invalid phone number format"
+            isValid = false
+        } else {
+            binding?.phoneNumberInputLayout?.error = null
+        }
+
+        return isValid
     }
 
 
