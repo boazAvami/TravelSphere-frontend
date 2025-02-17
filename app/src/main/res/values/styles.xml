@@ -20,5 +20,9 @@
         <item name="thumbTint">@color/primary</item>
         <item name="trackTint">@color/secondary</item>
     </style>
+    <style name="RoundedImageStyle">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
 </resources>
 

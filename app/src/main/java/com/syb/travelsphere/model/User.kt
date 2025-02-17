@@ -8,7 +8,7 @@ data class User(
     @PrimaryKey val id: String,
     var profilePictureUrl: String?,
     var userName: String,
-    var password: String,
+//    var password: String,
     val email: String,
     var phoneNumber: String?,
     var isLocationShared: Boolean? = false
@@ -29,14 +29,14 @@ data class User(
                 val isLocationShared = json[IS_LOCATION_SHARED_KEY] as? Boolean ?: false
                 val profilePictureUrl = json[PROFILE_PICTURE_URL_KEY] as? String ?: ""
                 val email = json[EMAIL_KEY] as? String ?: ""
-                val password = json[PASSWORD_KEY] as? String ?: ""
+//                val password = json[PASSWORD_KEY] as? String ?: ""
                 val phoneNumber = json[PHONE_NUMBER_KEY] as? String ?: ""
 
                 return User(
                     id = id,
                     profilePictureUrl = profilePictureUrl,
                     userName = userName,
-                    password = password,
+//                    password = password,
                     email = email,
                     phoneNumber = phoneNumber,
                     isLocationShared = isLocationShared
@@ -48,7 +48,7 @@ data class User(
         get() {
             return hashMapOf(
                 ID_KEY to id,
-                PASSWORD_KEY to password,
+//                PASSWORD_KEY to password,
                 EMAIL_KEY to email,
                 IS_LOCATION_SHARED_KEY to isLocationShared,
                 PROFILE_PICTURE_URL_KEY to profilePictureUrl,
