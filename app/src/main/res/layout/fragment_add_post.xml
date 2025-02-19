@@ -8,7 +8,7 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/buttons_container">
+        android:layout_above="@id/buttonsContainer">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -16,7 +16,7 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/pick_location_label"
+                android:id="@+id/locationSpotNameEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Pick Your Location"
@@ -26,15 +26,15 @@
                 android:layout_marginBottom="2dp" />
 
             <!-- Search Bar -->
-<!--            <EditText-->
-<!--                android:id="@+id/search_location"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:hint="Search Location"-->
-<!--                android:inputType="text"-->
-<!--                android:drawableEnd="@drawable/ic_search"-->
-<!--                android:padding="12dp"-->
-<!--                android:background="@drawable/rounded_edittext" />-->
+            <!--            <EditText-->
+            <!--                android:id="@+id/search_location"-->
+            <!--                android:layout_width="match_parent"-->
+            <!--                android:layout_height="wrap_content"-->
+            <!--                android:hint="Search Location"-->
+            <!--                android:inputType="text"-->
+            <!--                android:drawableEnd="@drawable/ic_search"-->
+            <!--                android:padding="12dp"-->
+            <!--                android:background="@drawable/rounded_edittext" />-->
 
 
             <!-- Map View -->
@@ -59,7 +59,7 @@
                     android:contentDescription="Location Icon" />
 
                 <TextView
-                    android:id="@+id/selected_location"
+                    android:id="@+id/selectedLocationTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
@@ -81,7 +81,7 @@
 
             <!-- Description -->
             <EditText
-                android:id="@+id/description"
+                android:id="@+id/descriptionEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Description"
@@ -92,7 +92,7 @@
 
             <!-- Add Photos Button -->
             <Button
-                android:id="@+id/add_photos"
+                android:id="@+id/addPhotosButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Add Photos"
@@ -102,7 +102,7 @@
 
             <!-- Photos Grid -->
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/photos_grid"
+                android:id="@+id/photosGridRecyclerView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp" />
@@ -112,7 +112,7 @@
 
     <!-- Buttons Container (Share Post and Add Photos) -->
     <LinearLayout
-        android:id="@+id/buttons_container"
+        android:id="@+id/buttonsContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -121,7 +121,7 @@
 
         <!-- Share Post Button -->
         <Button
-            android:id="@+id/share_post"
+            android:id="@+id/sharePostButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="Share Post"

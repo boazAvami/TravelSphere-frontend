@@ -30,6 +30,7 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.syb.travelsphere.databinding.FragmentAddPostBinding
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.views.overlay.MapEventsOverlay
 import java.io.ByteArrayOutputStream
@@ -39,15 +40,7 @@ import java.time.ZonedDateTime
 
 class AddPostFragment : Fragment() {
 
-    private lateinit var mapView: MapView
-
-    //    private lateinit var searchLocation: EditText
-    private lateinit var selectedLocation: TextView
-    private lateinit var description: EditText
-    private lateinit var spotName: EditText
-    private lateinit var addPhotosButton: Button
-    private lateinit var sharePostButton: Button
-    private lateinit var photosRecyclerView: RecyclerView
+    private var binding: FragmentAddPostBinding? = null
 
     private val photos = mutableListOf<String>() // Stores Base64 photo strings
     private val travelService = TravelService()
@@ -60,12 +53,13 @@ class AddPostFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        val view = inflater.inflate(R.layout.fragment_add_post, container, false)
-        initViews(view)
+    ): View? {
+        binding = FragmentAddPostBinding.inflate(layoutInflater, container, false)
+
         setupPhotoRecyclerView()
         setupListeners()
-        return view
+
+        return binding?.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -74,50 +68,35 @@ class AddPostFragment : Fragment() {
         setupMap()
     }
 
-
-
-
-    private fun initViews(view: View) {
-        mapView = view.findViewById(R.id.mapView)
-//        searchLocation = view.findViewById(R.id.search_location)
-        selectedLocation = view.findViewById(R.id.selected_location)
-        description = view.findViewById(R.id.description)
-        spotName = view.findViewById(R.id.locationName)
-
-        addPhotosButton = view.findViewById(R.id.add_photos)
-        sharePostButton = view.findViewById(R.id.share_post)
-        photosRecyclerView = view.findViewById(R.id.photos_grid)
-    }
-
     private fun setupPhotoRecyclerView() {
         val layoutManager = GridLayoutManager(requireContext(), 4) // 4 columns in the grid
-        photosRecyclerView.layoutManager = layoutManager
+        binding?.photosGridRecyclerView?.layoutManager = layoutManager
         photosGridAdapter = PhotosGridAdapter(photos, onDeletePhoto = { position ->
             photos.removeAt(position)
             photosGridAdapter.notifyDataSetChanged()
             Toast.makeText(requireContext(), "Photo removed", Toast.LENGTH_SHORT).show()
         })
-        photosRecyclerView.adapter = photosGridAdapter
+        binding?.photosGridRecyclerView?.adapter = photosGridAdapter
     }
 
     private fun setupMap() {
         Configuration.getInstance().load(requireContext(), requireContext().getSharedPreferences("osmdroid", 0))
-        mapView.setMultiTouchControls(true)
+        binding?.mapView?.setMultiTouchControls(true)
 
         // Get the current location of the user
         val currentLocation = getCurrentUserLocation()
 
         // Set the map's initial zoom and center to the user's location
-        mapView.controller.setZoom(100.0) // Adjust zoom level as needed
-        mapView.controller.setCenter(currentLocation) // Set the center to user's location
+        binding?.mapView?.controller?.setZoom(100.0) // Adjust zoom level as needed
+        binding?.mapView?.controller?.setCenter(currentLocation) // Set the center to user's location
 
         // Add an overlay to capture map clicks
         val mapEventsOverlay = MapEventsOverlay(object : MapEventsReceiver {
             override fun singleTapConfirmedHelper(p: GeoPoint): Boolean {
                 // Update the map center and current geo-point
-                mapView.controller.setCenter(p)
+                binding?.mapView?.controller?.setCenter(p)
                 currentGeoPoint = p
-                selectedLocation.text = "Geotag: (Lat: ${p.latitude}, Lon: ${p.longitude})"
+                binding?.selectedLocationTextView?.text = "Geotag: (Lat: ${p.latitude}, Lon: ${p.longitude})"
 
                 return true
             }
@@ -129,20 +108,16 @@ class AddPostFragment : Fragment() {
         })
 
         // Add the overlay to the map
-        mapView.overlays.add(mapEventsOverlay)
+        binding?.mapView?.overlays?.add(mapEventsOverlay)
     }
 
-
-
-
-
     private fun setupListeners() {
-        addPhotosButton.setOnClickListener {
+        binding?.addPhotosButton?.setOnClickListener {
             // Open gallery to add photos
             openGallery()
         }
 
-        sharePostButton.setOnClickListener {
+        binding?.sharePostButton?.setOnClickListener {
             sharePost()
         }
     }
@@ -184,8 +159,8 @@ class AddPostFragment : Fragment() {
     }
 
     private fun sharePost() {
-        val location = spotName.text.toString() // Now contains the geotag info
-        val desc = description.text.toString()
+        val location = binding?.locationSpotNameEditText?.text.toString() // Now contains the geotag info
+        val desc = binding?.descriptionEditText?.text.toString()
         val visitDate = getCurrentTimeISO()
         val photosToUpload =  photos.map { it.replace("data:image/jpeg;base64,", "") }
 
@@ -198,7 +173,8 @@ class AddPostFragment : Fragment() {
                 val response = travelService.createPost(location, desc, visitDate, photosToUpload, geoTag)
                 if (response != null) {
                     Toast.makeText(requireContext(), "Post shared successfully!", Toast.LENGTH_SHORT).show()
-                } else {
+                }
+                else {
                     Toast.makeText(requireContext(), "Failed to share post.", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
@@ -207,7 +183,6 @@ class AddPostFragment : Fragment() {
                 Toast.makeText(requireContext(), "An error occurred: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
-
     }
 
     private fun getCurrentUserLocation(): GeoPoint {
@@ -242,5 +217,10 @@ class AddPostFragment : Fragment() {
         }
 
         return userLocation // Return updated location once fetched
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        binding = null
     }
 }

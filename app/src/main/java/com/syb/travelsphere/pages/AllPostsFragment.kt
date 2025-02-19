@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.syb.travelsphere.services.TravelService
 import com.syb.travelsphere.services.Post
 import com.syb.travelsphere.R
-import com.syb.travelsphere.components.MapComponent
 import com.syb.travelsphere.databinding.FragmentAllPostsBinding
 import com.syb.travelsphere.ui.PostListAdapter
 import kotlinx.coroutines.Dispatchers
