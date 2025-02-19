@@ -8,8 +8,8 @@ data class User(
     @PrimaryKey val id: String,
     var profilePictureUrl: String?,
     var userName: String,
-    var password: String,
-    val email: String,
+//    var password: String,
+//    val email: String,
     var phoneNumber: String?,
     var isLocationShared: Boolean? = false
 ) {
@@ -19,7 +19,7 @@ data class User(
         const val USERNAME_KEY = "userName"
         const val IS_LOCATION_SHARED_KEY = "isLocationShared"
         const val PROFILE_PICTURE_URL_KEY = "profilePictureUrl"
-        const val EMAIL_KEY = "email"
+//        const val EMAIL_KEY = "email"
         const val PASSWORD_KEY = "password"
         const val PHONE_NUMBER_KEY = "phoneNumber"
 
@@ -28,16 +28,16 @@ data class User(
                 val userName = json[USERNAME_KEY] as? String ?: "Unknown"
                 val isLocationShared = json[IS_LOCATION_SHARED_KEY] as? Boolean ?: false
                 val profilePictureUrl = json[PROFILE_PICTURE_URL_KEY] as? String ?: ""
-                val email = json[EMAIL_KEY] as? String ?: ""
-                val password = json[PASSWORD_KEY] as? String ?: ""
+//                val email = json[EMAIL_KEY] as? String ?: ""
+//                val password = json[PASSWORD_KEY] as? String ?: ""
                 val phoneNumber = json[PHONE_NUMBER_KEY] as? String ?: ""
 
                 return User(
                     id = id,
                     profilePictureUrl = profilePictureUrl,
                     userName = userName,
-                    password = password,
-                    email = email,
+//                    password = password,
+//                    email = email,
                     phoneNumber = phoneNumber,
                     isLocationShared = isLocationShared
                 )
@@ -48,13 +48,12 @@ data class User(
         get() {
             return hashMapOf(
                 ID_KEY to id,
-                PASSWORD_KEY to password,
-                EMAIL_KEY to email,
+//                PASSWORD_KEY to password,
+//                EMAIL_KEY to email,
                 IS_LOCATION_SHARED_KEY to isLocationShared,
                 PROFILE_PICTURE_URL_KEY to profilePictureUrl,
                 PHONE_NUMBER_KEY to phoneNumber,
                 USERNAME_KEY to userName
             )
     }
-
 }

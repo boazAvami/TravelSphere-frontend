@@ -1,65 +1,68 @@
 package com.syb.travelsphere
 
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
+import androidx.appcompat.widget.Toolbar
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.syb.travelsphere.databinding.ActivityMainBinding
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.syb.travelsphere.auth.AuthActivity
 import com.syb.travelsphere.auth.AuthManager
-import com.syb.travelsphere.model.Model
-import com.syb.travelsphere.model.Post
-import com.syb.travelsphere.model.User
 
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var navController: NavController
+    private var navController: NavController? = null
     private lateinit var authManager: AuthManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        authManager = AuthManager()
+
+        authManager.signOut {  }
+
+        if (!authManager.isUserLoggedIn()) {
+            // Redirect to AuthActivity
+            navigateToAuthActivity()
+            return
+        }
+
         // Initialize View Binding
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        //TODO: Test to delete
-
-//        testDatabase()
-//        testFirestore()
-
-        // Call the function to test authentication
-//        authManager = AuthManager()
-//        testAuthFunctions()
-        //TODO: Until here to delete
-
 
         // Set up the Toolbar (ActionBar)
         setSupportActionBar(binding.toolbar) // This sets the toolbar as the ActionBar
 
         // Set up NavController with BottomNavigationView
-        val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
-        navController = navHostFragment.navController
-        navController.let {
+        val navHostFragment: NavHostFragment? =
+            supportFragmentManager.findFragmentById(R.id.navHostFragment) as? NavHostFragment
+        navController = navHostFragment?.navController
+        navController?.let {
             NavigationUI.setupActionBarWithNavController(
                 activity = this,
                 navController = it
             )
         }
 
-        navController.let { NavigationUI.setupWithNavController(binding.bottomNavigationView, it) }
+        navController?.let {
+            NavigationUI.setupWithNavController(binding.bottomNavigationView, it)
+        }
+    }
+
+    private fun navigateToAuthActivity() {
+        val intent = Intent(this, AuthActivity::class.java)
+        startActivity(intent)
+        finish() // Closes the AuthActivity so it is removed from the back stack
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -70,110 +73,32 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-                navController.popBackStack()
+                navController?.popBackStack()
                 true
             }
-            else -> NavigationUI.onNavDestinationSelected(item, navController) || super.onOptionsItemSelected(item)
+            else -> {
+                navController?.let { NavigationUI.onNavDestinationSelected(item, it) }
+                true
+            }
         }
     }
-//
-//    private fun testAuthFunctions() {
-//        val testEmail = "testuser@example.com"
-//        val testPassword = "password123"
-//
-//        Log.d("AuthTest", "Starting authentication tests...")
-//
-//        // Step 1: Sign up a user
-//        authManager.signUpUser(testEmail, testPassword) { user ->
-//            if (user != null) {
-//                Log.d("AuthTest", "✅ Sign Up Success: ${user.email}")
-//            } else {
-//                Log.e("AuthTest", "❌ Sign Up Failed")
-//            }
-//
-//            // Step 2: Sign in the user
-//            authManager.signInUser(testEmail, testPassword) { loggedInUser ->
-//                if (loggedInUser != null) {
-//                    Log.d("AuthTest", "✅ Sign In Success: ${loggedInUser.email}")
-//                } else {
-//                    Log.e("AuthTest", "❌ Sign In Failed")
-//                }
-//
-//                // Step 3: Check if user is logged in
-//                val isLoggedIn = authManager.isUserLoggedIn()
-//                Log.d("AuthTest", "🔍 Is User Logged In? $isLoggedIn")
-//
-//                // Step 4: Get current user
-//                val currentUser = authManager.getCurrentUser()
-//                Log.d("AuthTest", "👤 Current User: ${currentUser?.email ?: "No User"}")
-//
-//                // Step 5: Sign out
-//                authManager.signOut {
-//                    Log.d("AuthTest", "🚪 User Signed Out")
-//                    Log.d(
-//                        "AuthTest",
-//                        "🔍 Is User Logged In after sign out? ${authManager.isUserLoggedIn()}"
-//                    )
-//                }
-//            }
-//        }
-//    }
-
-//    fun testFirestore() {
-//        val db = Firebase.firestore
-//        val user = hashMapOf(
-//            "first" to "yael",
-//            "last" to "Hamami",
-//            "born" to 2001
-//        )
-//
-//        val user2 = hashMapOf(
-//            "email" to "john2222@example.com",
-//            "profilePictureUrl" to "",
-//            "userName" to "John Doe",
-//            "password" to "123",
-//           "phoneNumber" to "0123",
-//            "isLocationShared" to true
-//        )
-//
-//        db.collection("users-test")
-//            .add(user2).addOnSuccessListener { documentReference ->
-//                Log.d("TAG", "added with id: ${documentReference.id}")
-//            }
-//    }
-//
-//    fun testDatabase() {
-//        // Add a user and test
-//        Model.shared.addUser(User(
-//            email = "john@example.com",
-//            profilePictureUrl = "",
-//            userName = "John Doe",
-//            password = "123",
-//            phoneNumber = "0123",
-//            isLocationShared = true
-//        )) {
-//            Log.d("DatabaseTest", "User added successfully!")
-//
-//            // Fetch users
-//            Model.shared.getAllUsers { users ->
-//                Log.d("DatabaseTest", "Retrieved users: $users!")
-//            }
-//        }
-//
-//// Add a post and test
-//        Model.shared.addPost(Post(
-//            title = "First Post",
-//            description = "First Post Description",
-//            imageUrl = "",
-////            location = ,
-//            ownerId = 1
-//       )) {
-//            Log.d("DatabaseTest", "Post added successfully!")
-//
-//            // Fetch posts
-//            Model.shared.getAllPosts { posts ->
-//                Log.d("DatabaseTest", "Retrieved posts: $posts")
-//            }
-//        }
-//    }
 }
+
+/*TODO:
+*  - me:
+   1. make signUp profile picture appear. - IN PROGRESS
+   2. add onFailure to everything and error handling ✅
+   3. pass as an argument in each navigation (thinking) - a. addPost_to_all_posts (loading upload)
+   4. make the arrow back work
+   5. add all the functions for posts that needed  - added just check that maybe there will be a change with a geohash and add callbacks
+   6. update to work with geo hash
+   *
+   7. add input validation ✅
+   8. migrate users collections and authentication work together ✅
+   9. add storage (for images) - and work with the posts ✅
+   =====================================================================================================================
+*   - With boaz and shirin:
+*  7. NEED TO IMPLEMETE CHASH + (ViewModel, Live Data, ROOM) ???
+   8. GPS To get localization of the phone using the app - in the add new posts and in the main activity (for the nearby)
+   * 9. add loading circle
+   * 10. in the addpost save the picture to the storage and the rest in the database*/

@@ -1,10 +1,10 @@
 package com.syb.travelsphere.model
 
-import android.os.Handler
+import android.graphics.Bitmap
 import android.os.Looper
-import android.util.Log
 import androidx.core.os.HandlerCompat
 import com.syb.travelsphere.base.EmptyCallback
+import com.syb.travelsphere.base.ImageCallback
 import com.syb.travelsphere.base.PostsCallback
 import com.syb.travelsphere.base.UsersCallback
 import com.syb.travelsphere.model.dao.AppLocalDb
@@ -17,126 +17,58 @@ class Model private constructor() {
     private val mainHandler = HandlerCompat.createAsync(Looper.getMainLooper()) // Main thread
 
     private val firebaseModel = FirebaseModel()
+    private val cloudinaryModel = CloudinaryModel()
 
     companion object {
         val shared = Model()
     }
 
     // User Functions.
-
     fun getAllUsers(callback: UsersCallback) {
         firebaseModel.getAllUsers(callback)
-//        executor.execute {
-//            try {
-//                val users = database.userDao().getAllUsers().toMutableList()
-//                mainHandler.post {
-//                    callback(users)
-//                }
-//            } catch (e: Exception) {
-//                Log.e("Model", "Error fetching users: ${e.message}")
-//            }
-//        }
     }
 
-    fun addUser(user: User, callback: EmptyCallback) {
-        firebaseModel.addUser(user, callback)
-//        executor.execute {
-//            try {
-//                database.userDao().insertUser(user)
-//                Log.d("Model", "Saved user: $user")
-//                mainHandler.post {
-//                    callback()
-//                }
-//            } catch (e: Exception) {
-//                Log.e("Model", "Error saving user: ${e.message}")
-//            }
-//        }
+    fun addUser(user: User, image: Bitmap?, callback: EmptyCallback) {
+        firebaseModel.addUser(user) {
+            image?.let {
+                uploadImage(image) { uri ->
+                    if (!uri.isNullOrBlank()) {
+                        val usr = user.copy(profilePictureUrl = uri)
+                        firebaseModel.addUser(usr, callback)
+                    } else {
+                        callback()
+                    }
+                }
+            } ?: callback()
+        }
     }
 
     fun editUser(user: User, callback: EmptyCallback) {
         firebaseModel.editUser(user, callback)
-//        executor.execute {
-//            try {
-//                database.userDao().updateUser(user)
-//                Log.d("Model", "Updated user: $user")
-//                mainHandler.post {
-//                    callback()
-//                }
-//            } catch (e: Exception) {
-//                Log.e("Model", "Error updating user: ${e.message}")
-//            }
-//        }
-    }
-
-    fun deleteUser(user: User, callback: EmptyCallback) {
-        firebaseModel.deleteUser(user.id.toString(), callback)
-//        executor.execute {
-//            try {
-//                database.userDao().deleteUser(user)
-//                Log.d("Model", "Deleted user: $user")
-//                mainHandler.post {
-//                    callback()
-//                }
-//            } catch (e: Exception) {
-//                Log.e("Model", "Error deleting user: ${e.message}")
-//            }
-//        }
     }
 
     // Post Functions.
-
     fun getAllPosts(callback: PostsCallback) {
-        executor.execute {
-            try {
-                val posts = database.postDao().getAllPosts().toMutableList()
-                mainHandler.post {
-                    callback(posts)
-                }
-            } catch (e: Exception) {
-                Log.e("Model", "Error fetching posts: ${e.message}")
-            }
-        }
+        firebaseModel.getAllPosts(callback)
     }
 
     fun addPost(post: Post, callback: EmptyCallback) {
-        executor.execute {
-            try {
-                database.postDao().insertPost(post)
-                Log.d("Model", "Saved post: $post")
-                mainHandler.post {
-                    callback()
-                }
-            } catch (e: Exception) {
-                Log.e("Model", "Error saving post: ${e.message}")
-            }
-        }
+        firebaseModel.addPost(post, callback)
     }
 
     fun editPost(post: Post, callback: EmptyCallback) {
-        executor.execute {
-            try {
-                database.postDao().updatePost(post)
-                Log.d("Model", "Updated post: $post")
-                mainHandler.post {
-                    callback()
-                }
-            } catch (e: Exception) {
-                Log.e("Model", "Error updating post: ${e.message}")
-            }
-        }
+        firebaseModel.editPost(post, callback)
     }
 
     fun deletePost(post: Post, callback: EmptyCallback) {
-        executor.execute {
-            try {
-                database.postDao().deletePost(post)
-                Log.d("Model", "Deleted post: $post")
-                mainHandler.post {
-                    callback()
-                }
-            } catch (e: Exception) {
-                Log.e("Model", "Error deleting post: ${e.message}")
-            }
-        }
+        firebaseModel.deletePost(post.id, callback)
+    }
+
+    private fun uploadImage(image: Bitmap, callback: ImageCallback) {
+//        firebaseModel.uploadImage(image, name, callback)
+        cloudinaryModel.uploadImage(
+            bitmap = image,
+            callback = callback
+        )
     }
 }

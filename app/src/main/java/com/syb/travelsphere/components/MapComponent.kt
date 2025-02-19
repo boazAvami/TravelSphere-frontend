@@ -45,6 +45,7 @@ class MapComponent @JvmOverloads constructor(
         // Set up marker click listener
         marker.setOnMarkerClickListener { _, _ ->
             // Show post details in a Toast
+            // TODO : add pop up of post with all the details
             Toast.makeText(context, "Post ID: $postId\nDescription: $description", Toast.LENGTH_LONG).show()
             true
         }
