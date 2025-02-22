@@ -26,16 +26,14 @@
                 android:layout_marginBottom="2dp" />
 
             <!-- Search Bar -->
-            <!--            <EditText-->
-            <!--                android:id="@+id/search_location"-->
-            <!--                android:layout_width="match_parent"-->
-            <!--                android:layout_height="wrap_content"-->
-            <!--                android:hint="Search Location"-->
-            <!--                android:inputType="text"-->
-            <!--                android:drawableEnd="@drawable/ic_search"-->
-            <!--                android:padding="12dp"-->
-            <!--                android:background="@drawable/rounded_edittext" />-->
-
+            <AutoCompleteTextView
+                android:id="@+id/search_location"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Search Location"
+                android:padding="12dp"
+                android:background="@drawable/rounded_edittext"
+                android:inputType="text" />
 
             <!-- Map View -->
             <org.osmdroid.views.MapView
@@ -105,8 +103,8 @@
                 android:id="@+id/photosGridRecyclerView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp" />
-
+                android:layout_marginTop="8dp"
+                android:padding="4dp" />
         </LinearLayout>
     </ScrollView>
 
@@ -130,5 +128,4 @@
             android:layout_weight="1"
             android:layout_marginEnd="8dp" />
     </LinearLayout>
-
 </RelativeLayout>
