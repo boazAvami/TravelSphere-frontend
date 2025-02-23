@@ -69,7 +69,7 @@ class AddPostFragment : Fragment() {
         setupMap()
 
         val searchLocation = binding?.searchLocation
-        val locationEditText = binding?.locationSpotNameEditText
+        val locationEditText = binding?.selectedLocationTextView
         val mapView = binding?.mapView
 
         searchLocation?.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, mutableListOf<String>()))
@@ -170,7 +170,7 @@ class AddPostFragment : Fragment() {
                             val geoPoint = GeoPoint(lat, lon)
                             binding?.mapView?.controller?.setCenter(geoPoint)
                             binding?.mapView?.controller?.setZoom(15.0)
-                            binding?.selectedLocationTextView?.text = "Geotag: (Lat: $lat, Lon: $lon)"
+                            currentGeoPoint = geoPoint
                         }
                     }
                 }
@@ -260,7 +260,7 @@ class AddPostFragment : Fragment() {
     }
 
     private fun sharePost() {
-        val location = binding?.locationSpotNameEditText?.text.toString() // Now contains the geotag info
+        val location = binding?.selectedLocationTextView?.text.toString() // Now contains the geotag info
         val desc = binding?.descriptionEditText?.text.toString()
         val visitDate = getCurrentTimeISO()
         val photosToUpload =  photos.map { it.replace("data:image/jpeg;base64,", "") }
