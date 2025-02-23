@@ -10,10 +10,10 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.syb.travelsphere.services.TravelService
-import com.syb.travelsphere.services.Post
 import com.syb.travelsphere.R
 import com.syb.travelsphere.databinding.FragmentAllPostsBinding
+import com.syb.travelsphere.model.Model
+import com.syb.travelsphere.model.Post
 import com.syb.travelsphere.ui.PostListAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -22,9 +22,6 @@ import kotlinx.coroutines.withContext
 class AllPostsFragment : Fragment() {
 
     private var binding: FragmentAllPostsBinding? = null
-
-    private lateinit var travelService: TravelService
-
     private var posts = listOf<Post>()
 
     override fun onCreateView(
@@ -35,47 +32,51 @@ class AllPostsFragment : Fragment() {
         return binding?.root
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        binding = null
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        travelService = TravelService()
-
         binding?.postListRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
 
-        fetchPostsAndSetUpScreen()
+//        fetchPostsAndSetUpScreen()
     }
 
     private fun fetchPostsAndSetUpScreen() {
         lifecycleScope.launch {
             try {
-                val fetchedPosts = withContext(Dispatchers.IO) {
-                    travelService.getAllPosts()
-                }
-
-                if (fetchedPosts != null) {
-                    posts = fetchedPosts
-                    binding?.postListRecyclerView?.adapter = PostListAdapter(posts) { post ->
-                        centerMapOnPost(post)
+                withContext(Dispatchers.IO) {
+                    Model.shared.getAllPosts { fetchedPosts ->
+                        if (fetchedPosts != null && fetchedPosts.isNotEmpty()) {
+                            posts = fetchedPosts
+                            binding?.postListRecyclerView?.adapter = PostListAdapter(posts) { post ->
+                                centerMapOnPost(post)
+                            }
+                        } else {
+                            Log.e(TAG, "No posts found or failed to fetch posts.")
+                            Toast.makeText(requireContext(), "No posts available.", Toast.LENGTH_SHORT).show()
+                        }
+                        binding?.mapComponent?.displayPosts(posts)
                     }
-                    binding?.mapComponent?.displayPosts(posts)
                 }
 
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Error fetching posts: ${e.message}", Toast.LENGTH_SHORT).show()
-                Log.d("Error", "Error fetching posts: ${e.message}")
+                Log.d(TAG, "Error fetching posts: ${e.message}")
             }
         }
     }
 
     private fun centerMapOnPost(post: Post) {
-        val geotag = post.geotag
-        val lat = geotag.coordinates[1]
-        val lon = geotag.coordinates[0]
+        val lat = post.location.latitude
+        val lon = post.location.longitude
         binding?.mapComponent?.centerMapOnLocation(lat, lon)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        binding = null
+    }
+
+    companion object {
+        private const val TAG = "AllPostsFragment"
     }
 }

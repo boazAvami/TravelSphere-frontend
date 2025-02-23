@@ -1,19 +1,26 @@
 package com.syb.travelsphere.components
 
+
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.util.AttributeSet
 import android.widget.Toast
 import com.syb.travelsphere.R
-import com.syb.travelsphere.services.Post
-import com.syb.travelsphere.services.User
+import com.syb.travelsphere.model.Model
+import com.syb.travelsphere.model.Post
+import com.syb.travelsphere.model.User
+import com.squareup.picasso.Picasso
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 
+
 class MapComponent @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : MapView(context, attrs) {
+
 
     init {
         Configuration.getInstance().load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
@@ -21,91 +28,168 @@ class MapComponent @JvmOverloads constructor(
         controller.setCenter(GeoPoint(37.7749, -122.4194))  // Default center
     }
 
-    // Method to add markers to the map based on the posts
+
+    // **Fetch posts from Firestore and display them on the map**
+//    fun displayPosts() {
+//        clearMap()
+//
+//        Model.shared.getAllPosts { posts ->
+//            posts?.forEach { post ->
+//                addPostMarker(
+//                    post.location.latitude,
+//                    post.location.longitude,
+//                    post.id,
+//                    post.description
+//                )
+//            }
+//        }
+//    }
+
     fun displayPosts(posts: List<Post>?) {
-        clearMap();
+        clearMap()
 
         posts?.forEach { post ->
-            val geotag = post.geotag
-            post._id?.let {
-                addPostMarker(geotag.coordinates[1], geotag.coordinates[0], post.location, it, post.description)
+            val lat = post.location.latitude
+            val lon = post.location.longitude
+
+            addPostMarker(lat, lon, post.id, post.description)
+        }
+
+        invalidate() // Refresh the map after adding markers
+    }
+
+    // **Add a marker for a post**
+    private fun addPostMarker(lat: Double, lon: Double, postId: String, description: String) {
+        val marker = Marker(this).apply {
+            icon = resources.getDrawable(R.drawable.location, null)
+            position = GeoPoint(lat, lon)
+            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            this.title = title
+            setOnMarkerClickListener { _, _ ->
+                Toast.makeText(context, "Post ID: $postId\nDescription: $description", Toast.LENGTH_LONG).show()
+                true
             }
         }
-    }
 
-    // Method to add a marker on the map
-    private fun addPostMarker(lat: Double, lon: Double, title: String, postId: String, description: String) {
-        val marker = Marker(this)
-        marker.icon = resources.getDrawable(R.drawable.location, null)
-
-        marker.position = GeoPoint(lat, lon)
-        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-        marker.title = title
-
-        // Set up marker click listener
-        marker.setOnMarkerClickListener { _, _ ->
-            // Show post details in a Toast
-            // TODO : add pop up of post with all the details
-            Toast.makeText(context, "Post ID: $postId\nDescription: $description", Toast.LENGTH_LONG).show()
-            true
-        }
-
-        // Add the marker to the map
         overlays.add(marker)
-        invalidate()  // Refresh the map to show markers
+        invalidate() // Refresh the map
     }
 
-    // Method to add markers to the map based on the users
+    // **Fetch users from Firestore and display them on the map**
     fun displayUsers(users: List<User>?) {
-        clearMap();
+        clearMap()
 
         users?.forEach { user ->
-            val coordinates = user.location?.coordinates
-            if (coordinates != null && coordinates.size == 2) {
-                val lat = coordinates[1] // Latitude
-                val lon = coordinates[0] // Longitude
-                addUserMarker(lat, lon, user.username, user.profilePicture)
+            user.location?.let { location ->
+                addUserMarker(
+                    location.latitude,
+                    location.longitude,
+                    user.userName,
+                    user.profilePictureUrl
+                )
             }
         }
+
+        invalidate() // Refresh the map after adding markers
     }
+//    fun displayUsers() {
+//        clearMap()
+//
+//        Model.shared.getAllUsers { users ->
+//            users?.forEach { user ->
+//                user.location?.let { location ->
+//                    addUserMarker(
+//                        location.latitude,
+//                        location.longitude,
+//                        user.userName,
+//                        user.profilePictureUrl
+//                    )
+//                }
+//            }
+//        }
+//    }
 
-    // Method to add a marker on the map for a user
-    private fun addUserMarker(lat: Double, lon: Double, name: String, profilePicture: String?) {
+
+    // **Add a marker for a user**
+//    private fun addUserMarker(lat: Double, lon: Double, name: String, profilePictureUrl: String?) {
+//        val marker = Marker(this).apply {
+//            icon = resources.getDrawable(R.drawable.location, null)
+//            position = GeoPoint(lat, lon)
+//            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+//            this.title = name
+//            setOnMarkerClickListener { _, _ ->
+//                Toast.makeText(context, "User: $name\nProfile: $profilePictureUrl", Toast.LENGTH_LONG).show()
+//                true
+//            }
+//        }
+//
+//
+//        // Load user profile picture if available
+//        profilePictureUrl?.let { url ->
+//            Picasso.get().load(url).into(marker.icon)
+//        }
+//
+//
+//        overlays.add(marker)
+//        invalidate() // Refresh the map
+//    }
+//
+
+    private fun addUserMarker(lat: Double, lon: Double, name: String, profilePictureUrl: String?) {
         val marker = Marker(this)
-        marker.icon = resources.getDrawable(R.drawable.location, null) // Placeholder icon
-
-        // Set the marker's position and title
         marker.position = GeoPoint(lat, lon)
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
         marker.title = name
 
-        // Optionally, set the profile picture if provided (this assumes you have a method to load images)
-        profilePicture?.let {
-            // Set the icon to the user's profile picture if available (example, you need an image loader)
-            // marker.icon = loadImageFromUrl(it)
+        // Load profile picture if available, otherwise use a default icon
+        if (!profilePictureUrl.isNullOrBlank()) {
+            Picasso.get()
+                .load(profilePictureUrl)
+                .resize(100, 100) // Resize to fit marker
+                .centerCrop()
+                .into(object : com.squareup.picasso.Target {
+                    override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
+                        bitmap?.let {
+                            val drawable = BitmapDrawable(context.resources, it)
+                            marker.icon = drawable
+                            invalidate() // Refresh the map
+                        }
+                    }
+                    override fun onBitmapFailed(e: Exception?, errorDrawable: android.graphics.drawable.Drawable?) {
+                        marker.icon = resources.getDrawable(R.drawable.location, null) // Default icon
+                    }
+                    override fun onPrepareLoad(placeHolderDrawable: android.graphics.drawable.Drawable?) {
+                        marker.icon = resources.getDrawable(R.drawable.location, null) // Placeholder
+                    }
+                })
+        } else {
+            marker.icon = resources.getDrawable(R.drawable.location, null) // Default icon
         }
 
-        // Set up marker click listener
+        // Handle marker click
         marker.setOnMarkerClickListener { _, _ ->
-            // Show user details in a Toast
-            Toast.makeText(context, "User: $name\nProfile: $profilePicture", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "User: $name\nProfile: $profilePictureUrl", Toast.LENGTH_LONG).show()
             true
         }
 
-        // Add the marker to the map
         overlays.add(marker)
-        invalidate()  // Refresh the map to show markers
+        invalidate() // Refresh the map
     }
 
-    // Method to center the map on a specific location
+    // **Center map on a specific location**
     fun centerMapOnLocation(lat: Double, lon: Double) {
-        val geoPoint = GeoPoint(lat, lon)
-        controller.setCenter(geoPoint)
+        controller.setCenter(GeoPoint(lat, lon))
     }
 
-    // New method to clear all markers from the map
+
+    // **Clear all markers from the map**
     fun clearMap() {
-        overlays.clear() // Clears all overlays (markers)
-        invalidate() // Refresh the map to remove all markers
+        overlays.clear()
+        invalidate()
     }
 }
+
+
+
+
+

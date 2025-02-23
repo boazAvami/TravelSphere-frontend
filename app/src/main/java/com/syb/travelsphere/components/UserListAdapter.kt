@@ -10,7 +10,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.syb.travelsphere.R
-import com.syb.travelsphere.services.User
+import com.syb.travelsphere.model.User
 
 class UserListAdapter(private val users: List<User>, private val onUserClick: (User) -> Unit) : RecyclerView.Adapter<UserListAdapter.UserViewHolder>() {
 
@@ -33,23 +33,23 @@ class UserListAdapter(private val users: List<User>, private val onUserClick: (U
 
         fun bind(user: User) {
             // Set the username and origin
-            userName.text = user.username
-            userOrigin.text = user.originCountry
+            userName.text = user.userName
+//            userOrigin.text = user.originCountry // TODO: remove maybe
 
             // Load the profile picture from base64
-            val base64Image = user.profilePicture
-            if (!base64Image.isNullOrEmpty()) {
-                try {
-                    val bitmap = decodeBase64Image(base64Image)
-                    userProfilePicture.setImageBitmap(bitmap)
-                } catch (e: Exception) {
-                    // If decoding fails, set a default image
-                    userProfilePicture.setImageResource(R.drawable.default_user)
-                }
-            } else {
-                // Set default image if no profile picture is provided
-                userProfilePicture.setImageResource(R.drawable.default_user)
-            }
+            val base64Image = user.profilePictureUrl // TODO: change the code commented below to get a picture from saved url if not empty
+//            if (!base64Image.isNullOrEmpty()) {
+//                try {
+//                    val bitmap = decodeBase64Image(base64Image)
+//                    userProfilePicture.setImageBitmap(bitmap)
+//                } catch (e: Exception) {
+//                    // If decoding fails, set a default image
+//                    userProfilePicture.setImageResource(R.drawable.default_user)
+//                }
+//            } else {
+//                // Set default image if no profile picture is provided
+//                userProfilePicture.setImageResource(R.drawable.default_user)
+//            }
 
             // Handle item click
             itemView.setOnClickListener {

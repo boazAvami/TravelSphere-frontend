@@ -19,20 +19,19 @@ import androidx.recyclerview.widget.RecyclerView
 import com.syb.travelsphere.R
 import com.syb.travelsphere.components.MapComponent
 import com.syb.travelsphere.components.UserListAdapter
-import com.syb.travelsphere.services.TravelService
-import com.syb.travelsphere.services.User
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.firebase.firestore.GeoPoint
 import com.syb.travelsphere.databinding.FragmentAllPostsBinding
 import com.syb.travelsphere.databinding.FragmentNearbyUsersBinding
+import com.syb.travelsphere.model.Model
+import com.syb.travelsphere.model.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.osmdroid.util.GeoPoint
 
 class NearbyUsersFragment : Fragment() {
 
-    private lateinit var travelService: TravelService
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private var binding: FragmentNearbyUsersBinding? = null
@@ -51,8 +50,6 @@ class NearbyUsersFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
-
-        travelService = TravelService()
 
         binding?.userListRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
 
@@ -77,19 +74,26 @@ class NearbyUsersFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 val fetchedUsers = withContext(Dispatchers.IO) {
-                    val userLocation = getCurrentUserLocation();
+                    val userLocation = getCurrentUserLocation()
+
+//                    val userGeoPoint = GeoPoint(userLocation.latitude, userLocation.longitude)
+
                     binding?.mapComponent?.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
-                    travelService.getNearbyUsers(userLocation.longitude, userLocation.latitude, currentRadius)
-                }
 
-                if (fetchedUsers != null) {
-                    users = fetchedUsers
-                    binding?.userListRecyclerView?.adapter = UserListAdapter(users) { user ->
-                        showUserEmailPopup(user.email)
-                        binding?.mapComponent?.centerMapOnLocation(user.location.coordinates[1], user.location.coordinates[0])
+                    Model.shared.getNearbyUsers(userLocation, currentRadius) { fetchedUsers ->
+                        if (fetchedUsers != null) {
+                            users = fetchedUsers
+                            binding?.userListRecyclerView?.adapter = UserListAdapter(users) { user ->
+                                showUserEmailPopup(user.userName) // TODO: change to email
+                                binding?.mapComponent?.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
+                            }
+
+                            binding?.mapComponent?.displayUsers(users)  // Assuming we can convert users to posts for display
+                        } else {
+                            Log.e(TAG, "Failed to fetch nearby users.")
+                            Toast.makeText(requireContext(), "Failed to fetch nearby users.", Toast.LENGTH_SHORT).show()
+                        }
                     }
-
-                    binding?.mapComponent?.displayUsers(users) // Assuming we can convert users to posts for display
                 }
 
             } catch (e: Exception) {
@@ -147,5 +151,9 @@ class NearbyUsersFragment : Fragment() {
         }
 
         return userLocation // Return updated location once fetched
+    }
+
+    companion object {
+        private const val TAG = "NearbyUsersFragment"
     }
 }

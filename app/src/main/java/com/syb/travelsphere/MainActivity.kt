@@ -28,8 +28,6 @@ class MainActivity : AppCompatActivity() {
 
         authManager = AuthManager()
 
-        authManager.signOut {  }
-
         if (!authManager.isUserLoggedIn()) {
             // Redirect to AuthActivity
             navigateToAuthActivity()

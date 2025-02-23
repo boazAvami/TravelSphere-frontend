@@ -7,6 +7,7 @@ import com.syb.travelsphere.model.User
 typealias UsersCallback = (List<User>) -> Unit
 typealias UserCallback = (User?) -> Unit
 typealias PostsCallback = (List<Post>) -> Unit
+typealias PostCallback = (Post?) -> Unit
 typealias EmptyCallback = () -> Unit
 typealias AuthCallback = (FirebaseUser?) -> Unit
 typealias ImageCallback = (String?) -> Unit

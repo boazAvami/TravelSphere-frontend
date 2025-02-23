@@ -3,6 +3,7 @@ package com.syb.travelsphere.ui
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,19 +11,34 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.syb.travelsphere.R
-import com.syb.travelsphere.services.Post
+import com.syb.travelsphere.auth.AuthManager
+import com.syb.travelsphere.model.Model
+import com.syb.travelsphere.model.Post
 
-class PostListAdapter(private val posts: List<Post>, private val onPostClick: (Post) -> Unit) : RecyclerView.Adapter<PostListAdapter.PostViewHolder>() {
+class PostListAdapter(private var posts: List<Post>, private val onPostClick: (Post) -> Unit) : RecyclerView.Adapter<PostListAdapter.PostViewHolder>() {
+
+    private lateinit var authManager: AuthManager
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.post_list_item, parent, false)
+        authManager = AuthManager()
+
         return PostViewHolder(view)
     }
 
+//    override fun onBindViewHolder(holder: PostViewHolder, position: Int) {
+//        val post = posts[position]
+//        holder.bind(post)
+//    }
+
     override fun onBindViewHolder(holder: PostViewHolder, position: Int) {
-        val post = posts[position]
-        holder.bind(post)
+        if (posts.isEmpty() || position >= posts.size) {
+            Log.e(TAG, "Attempted to access invalid index: $position")
+            return
+        }
+        holder.bind(posts[position])
     }
+
 
     override fun getItemCount() = posts.size
 
@@ -30,7 +46,7 @@ class PostListAdapter(private val posts: List<Post>, private val onPostClick: (P
         private val postPhoto: ImageView = itemView.findViewById(R.id.postPhoto)
         private val postLocation: TextView = itemView.findViewById(R.id.postLocation)
         private val postDescription: TextView = itemView.findViewById(R.id.postDescription)
-        private val postLikes: TextView = itemView.findViewById(R.id.postLikes)
+//        private val postLikes: TextView = itemView.findViewById(R.id.postLikes)
         private val postUserName: TextView = itemView.findViewById(R.id.postUserName)
 
         fun bind(post: Post) {
@@ -48,11 +64,19 @@ class PostListAdapter(private val posts: List<Post>, private val onPostClick: (P
                 postPhoto.setImageResource(R.drawable.default_post)  // Set a default image if there's no base64 string
             }
 
-            // Set the location, description, and likes count
-            postUserName.text = post.username
-            postLocation.text = post.location
+            // Set the location, description
+            authManager.getCurrentUser()?.let { currentUser ->
+                val currentUserId = currentUser.uid
+                Model.shared.getUserById(currentUserId) { currentUserData ->
+                    if (currentUserData != null) {
+                        postUserName.text = currentUserData.userName
+                    }
+                }
+            }
+//            postUserName.text = post.username
+            postLocation.text = post.locationName
             postDescription.text = post.description
-            postLikes.text = "Likes: ${post.likes}"
+//            postLikes.text = "Likes: ${post.likes}"
 
             // Handle item click
             itemView.setOnClickListener {
@@ -65,5 +89,9 @@ class PostListAdapter(private val posts: List<Post>, private val onPostClick: (P
             val decodedString = Base64.decode(base64String, Base64.DEFAULT)
             return BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
         }
+    }
+
+    companion object {
+        private const val TAG = "PostListAdapter"
     }
 }

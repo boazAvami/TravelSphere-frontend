@@ -3,9 +3,12 @@ package com.syb.travelsphere.model
 import android.graphics.Bitmap
 import android.os.Looper
 import androidx.core.os.HandlerCompat
+import com.google.firebase.firestore.GeoPoint
 import com.syb.travelsphere.base.EmptyCallback
 import com.syb.travelsphere.base.ImageCallback
+import com.syb.travelsphere.base.PostCallback
 import com.syb.travelsphere.base.PostsCallback
+import com.syb.travelsphere.base.UserCallback
 import com.syb.travelsphere.base.UsersCallback
 import com.syb.travelsphere.model.dao.AppLocalDb
 import com.syb.travelsphere.model.dao.AppLocalDbRepository
@@ -24,6 +27,16 @@ class Model private constructor() {
     }
 
     // User Functions.
+    fun getUserById(userId: String, callback: UserCallback) {
+        firebaseModel.getUserById(userId, callback)
+    }
+
+    fun getNearbyUsers(currentLocation: GeoPoint, radiusInKm: Double, callback: UsersCallback) {
+        firebaseModel.getNearbyUsers(
+            currentLocation = currentLocation, radiusInKm = radiusInKm, callback = callback
+        )
+    }
+
     fun getAllUsers(callback: UsersCallback) {
         firebaseModel.getAllUsers(callback)
     }
@@ -48,6 +61,10 @@ class Model private constructor() {
     }
 
     // Post Functions.
+    fun getPostById(postId: String, callback: PostCallback) {
+        firebaseModel.getPostById(postId, callback)
+    }
+
     fun getAllPosts(callback: PostsCallback) {
         firebaseModel.getAllPosts(callback)
     }
@@ -65,7 +82,6 @@ class Model private constructor() {
     }
 
     private fun uploadImage(image: Bitmap, callback: ImageCallback) {
-//        firebaseModel.uploadImage(image, name, callback)
         cloudinaryModel.uploadImage(
             bitmap = image,
             callback = callback
