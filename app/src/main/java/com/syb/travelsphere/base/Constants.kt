@@ -1,5 +1,6 @@
 package com.syb.travelsphere.base
 
+import android.graphics.Bitmap
 import com.google.firebase.auth.FirebaseUser
 import com.syb.travelsphere.model.Post
 import com.syb.travelsphere.model.User
@@ -11,6 +12,8 @@ typealias PostCallback = (Post?) -> Unit
 typealias EmptyCallback = () -> Unit
 typealias AuthCallback = (FirebaseUser?) -> Unit
 typealias ImageCallback = (String?) -> Unit
+typealias BooleanCallback = (Boolean) -> Unit
+typealias BitmapCallback = (Bitmap?) -> Unit
 
 object Constants {
 

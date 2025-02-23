@@ -2,8 +2,11 @@ package com.syb.travelsphere.model
 
 import android.graphics.Bitmap
 import android.os.Looper
+import android.util.Log
 import androidx.core.os.HandlerCompat
 import com.google.firebase.firestore.GeoPoint
+import com.syb.travelsphere.base.BitmapCallback
+import com.syb.travelsphere.base.BooleanCallback
 import com.syb.travelsphere.base.EmptyCallback
 import com.syb.travelsphere.base.ImageCallback
 import com.syb.travelsphere.base.PostCallback
@@ -24,6 +27,7 @@ class Model private constructor() {
 
     companion object {
         val shared = Model()
+        private const val TAG = "Model"
     }
 
     // User Functions.
@@ -56,8 +60,25 @@ class Model private constructor() {
         }
     }
 
-    fun editUser(user: User, callback: EmptyCallback) {
-        firebaseModel.editUser(user, callback)
+    fun editUser(user: User, newProfilePicture: Bitmap?, callback: EmptyCallback) {
+        if (newProfilePicture != null) {
+            // Delete the old image if it exists
+            user.profilePictureUrl?.let { oldUrl ->
+                cloudinaryModel.deleteImage(oldUrl) {}
+            }
+
+            // Upload the new image
+            uploadImage(newProfilePicture) { newUrl ->
+                if (!newUrl.isNullOrBlank()) {
+                    val updatedUser = user.copy(profilePictureUrl = newUrl)
+                    firebaseModel.editUser(updatedUser, callback)
+                } else {
+                    callback()
+                }
+            }
+        } else {
+            firebaseModel.editUser(user, callback)
+        }
     }
 
     // Post Functions.
@@ -69,8 +90,25 @@ class Model private constructor() {
         firebaseModel.getAllPosts(callback)
     }
 
-    fun addPost(post: Post, callback: EmptyCallback) {
-        firebaseModel.addPost(post, callback)
+    fun addPost(post: Post, images: List<Bitmap>?, callback: EmptyCallback) {
+        if (!images.isNullOrEmpty()) {
+            val uploadedUrls = mutableListOf<String>()
+
+            images.forEach { image ->
+                uploadImage(image) { imageUrl ->
+                    if (!imageUrl.isNullOrBlank()) {
+                        uploadedUrls.add(imageUrl)
+                    }
+
+                    if (uploadedUrls.size == images.size) {
+                        val updatedPost = post.copy(photos = uploadedUrls)
+                        firebaseModel.addPost(updatedPost, callback)
+                    }
+                }
+            }
+        } else {
+            firebaseModel.addPost(post, callback)
+        }
     }
 
     fun editPost(post: Post, callback: EmptyCallback) {
@@ -78,13 +116,34 @@ class Model private constructor() {
     }
 
     fun deletePost(post: Post, callback: EmptyCallback) {
-        firebaseModel.deletePost(post.id, callback)
+        var deletedImagesCount = 0
+
+        if (post.photos.isEmpty()) {
+            firebaseModel.deletePost(post.id, callback) // No images, delete post immediately
+            return
+        }
+
+        post.photos.forEach { imageUrl ->
+            cloudinaryModel.deleteImage(imageUrl) { success ->
+                if (!success) {
+                    Log.e(TAG, "⚠️ Failed to delete post image: $imageUrl")
+                }
+                deletedImagesCount++
+
+                // Delete the post only after all images are processed - to prevent
+                if (deletedImagesCount == post.photos.size) {
+                    firebaseModel.deletePost(post.id, callback)
+                }
+            }
+        }
     }
 
+
     private fun uploadImage(image: Bitmap, callback: ImageCallback) {
-        cloudinaryModel.uploadImage(
-            bitmap = image,
-            callback = callback
-        )
+        cloudinaryModel.uploadImage(image, callback)
+    }
+
+    private fun getImageByUrl(imageUrl: String, callback: BitmapCallback) {
+        cloudinaryModel.getImageByUrl(imageUrl, callback)
     }
 }
