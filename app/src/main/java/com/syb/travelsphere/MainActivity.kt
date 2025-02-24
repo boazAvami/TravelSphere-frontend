@@ -41,19 +41,31 @@ class MainActivity : AppCompatActivity() {
         // Set up the Toolbar (ActionBar)
         setSupportActionBar(binding.toolbar) // This sets the toolbar as the ActionBar
 
+        // ✅ Enable the Up button in ActionBar (important!)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
         // Set up NavController with BottomNavigationView
         val navHostFragment: NavHostFragment? =
             supportFragmentManager.findFragmentById(R.id.navHostFragment) as? NavHostFragment
         navController = navHostFragment?.navController
-        navController?.let {
-            NavigationUI.setupActionBarWithNavController(
-                activity = this,
-                navController = it
-            )
-        }
 
         navController?.let {
+            NavigationUI.setupActionBarWithNavController(this, it)
             NavigationUI.setupWithNavController(binding.bottomNavigationView, it)
+        }
+
+        // ✅ Dynamically show/hide settings menu based on current fragment
+        navController?.addOnDestinationChangedListener { _, destination, _ ->
+            invalidateOptionsMenu() // Refresh the menu when navigation changes
+        }
+
+        binding.bottomNavigationView.setOnItemSelectedListener { item ->
+            val currentDestination = navController?.currentDestination?.id
+
+            if (currentDestination != item.itemId) {
+                navController?.navigate(item.itemId)
+            }
+            true
         }
     }
 
@@ -63,8 +75,21 @@ class MainActivity : AppCompatActivity() {
         finish() // Closes the AuthActivity so it is removed from the back stack
     }
 
+    override fun onSupportNavigateUp(): Boolean {
+        return if (navController?.navigateUp() == true) {
+            true
+        } else {
+            super.onBackPressedDispatcher.onBackPressed() // ✅ Fallback if navigation fails
+            false
+        }
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu, menu)
+
+        val isProfileFragment = navController?.currentDestination?.id == R.id.profileFragment
+        menu?.findItem(R.id.settingsFragment)?.isVisible = isProfileFragment // Hide if not in Profile Fragment
+
         return super.onCreateOptionsMenu(menu)
     }
 
