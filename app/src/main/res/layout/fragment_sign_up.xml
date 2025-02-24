@@ -70,8 +70,7 @@
             android:backgroundTint="@android:color/transparent"
             android:scaleType="centerCrop"
             app:strokeWidth="2dp"
-            app:shapeAppearanceOverlay="@style/RoundedImageStyle"
-            app:tint="@color/black" />
+            app:shapeAppearanceOverlay="@style/RoundedImageStyle"/>
 
         <!-- Add Profile Picture Button (Initially Visible) -->
         <ImageButton

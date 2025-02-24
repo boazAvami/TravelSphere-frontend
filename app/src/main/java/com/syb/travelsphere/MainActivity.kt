@@ -79,7 +79,7 @@ class MainActivity : AppCompatActivity() {
         return if (navController?.navigateUp() == true) {
             true
         } else {
-            super.onBackPressedDispatcher.onBackPressed() // ✅ Fallback if navigation fails
+            super.onBackPressedDispatcher.onBackPressed() // Fallback if navigation fails
             false
         }
     }
@@ -114,12 +114,12 @@ class MainActivity : AppCompatActivity() {
 
 /*TODO:
 *  - me:
-   1. make signUp profile picture appear. - IN PROGRESS
-   2. pass as an argument in each navigation (thinking) - a. addPost_to_all_posts (loading upload)
-   3. add all the functions for posts that needed  - added just check that maybe there will be a change with a geohash and add callbacks
-   4. update to work with geo hash
-   5. make input validation an util
+   1.. pass as an argument in each navigation (thinking) - a. addPost_to_all_posts (loading upload)
+   2. add all the functions for posts that needed  - added just check that maybe there will be a change with a geohash and add callbacks
+   3. update to work with geo hash
+   4. make input validation an util
    *
+   4. make signUp profile picture appear ✅
    5. make the arrow back work ✅
    6. add onFailure to everything and error handling ✅
    7. add input validation ✅
