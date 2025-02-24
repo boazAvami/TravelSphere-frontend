@@ -115,12 +115,13 @@ class MainActivity : AppCompatActivity() {
 /*TODO:
 *  - me:
    1. make signUp profile picture appear. - IN PROGRESS
-   2. add onFailure to everything and error handling ✅
-   3. pass as an argument in each navigation (thinking) - a. addPost_to_all_posts (loading upload)
-   4. make the arrow back work
-   5. add all the functions for posts that needed  - added just check that maybe there will be a change with a geohash and add callbacks
-   6. update to work with geo hash
+   2. pass as an argument in each navigation (thinking) - a. addPost_to_all_posts (loading upload)
+   3. add all the functions for posts that needed  - added just check that maybe there will be a change with a geohash and add callbacks
+   4. update to work with geo hash
+   5. make input validation an util
    *
+   5. make the arrow back work ✅
+   6. add onFailure to everything and error handling ✅
    7. add input validation ✅
    8. migrate users collections and authentication work together ✅
    9. add storage (for images) - and work with the posts ✅
