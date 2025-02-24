@@ -87,8 +87,13 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu, menu)
 
+        // Show the Settings only in the profile page
         val isProfileFragment = navController?.currentDestination?.id == R.id.profileFragment
         menu?.findItem(R.id.settingsFragment)?.isVisible = isProfileFragment // Hide if not in Profile Fragment
+
+        // Show the Up button only in the Settings page
+        val isSettingsFragment = navController?.currentDestination?.id == R.id.settingsFragment
+        supportActionBar?.setDisplayHomeAsUpEnabled(isSettingsFragment)
 
         return super.onCreateOptionsMenu(menu)
     }
