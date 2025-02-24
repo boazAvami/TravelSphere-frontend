@@ -34,6 +34,9 @@
         <action
             android:id="@+id/action_nearbyUsersFragment_to_profileFragment"
             app:destination="@id/profileFragment"/>
+        <action
+            android:id="@+id/action_nearbyUsersFragment_to_addPostFragment"
+            app:destination="@id/addPostFragment"/>
     </fragment>
 
     <!-- New Post Fragment -->
@@ -48,6 +51,9 @@
         <action
             android:id="@+id/action_addPostFragment_to_profileFragment"
             app:destination="@id/profileFragment"/>
+        <action
+            android:id="@+id/action_addPostFragment_to_nearbyUsersFragment"
+            app:destination="@id/nearbyUsersFragment"/>
     </fragment>
 
     <!-- Profile Fragment -->
