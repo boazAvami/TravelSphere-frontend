@@ -117,8 +117,8 @@ class MainActivity : AppCompatActivity() {
    1.. pass as an argument in each navigation (thinking) - a. addPost_to_all_posts (loading upload)
    2. add all the functions for posts that needed  - added just check that maybe there will be a change with a geohash and add callbacks
    3. update to work with geo hash
-   4. make input validation an util
    *
+   3. make input validation an util  ✅
    4. make signUp profile picture appear ✅
    5. make the arrow back work ✅
    6. add onFailure to everything and error handling ✅

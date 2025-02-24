@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.text.Editable
@@ -34,6 +35,7 @@ import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.syb.travelsphere.databinding.FragmentAddPostBinding
+import com.syb.travelsphere.utils.ImagePickerUtil
 import com.syb.travelsphere.utils.InputValidator
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.views.overlay.MapEventsOverlay
@@ -44,6 +46,7 @@ import java.time.ZonedDateTime
 class AddPostFragment : Fragment() {
 
     private var binding: FragmentAddPostBinding? = null
+    private lateinit var imagePicker: ImagePickerUtil
 
     private val photos = mutableListOf<String>() // Stores Base64 photo strings
     private val travelService = TravelService()
@@ -69,6 +72,13 @@ class AddPostFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
         setupMap()
+
+        // Initialize ImagePickerUtil for gallery and camera
+        imagePicker = ImagePickerUtil(this) { bitmap ->
+            bitmap?.let {
+                addPhotoToGrid(it)
+            }
+        }
 
         val searchLocation = binding?.searchLocationTextView
         val locationEditText = binding?.selectedLocationTextView
@@ -215,7 +225,7 @@ class AddPostFragment : Fragment() {
     private fun setupListeners() {
         binding?.addPhotosButton?.setOnClickListener {
             // Open gallery to add photos
-            openGallery()
+            imagePicker.showImagePickerDialog() // Opens image picker
         }
 
         binding?.sharePostButton?.setOnClickListener {
@@ -224,24 +234,7 @@ class AddPostFragment : Fragment() {
         }
     }
 
-    private fun openGallery() {
-        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        intent.type = "image/*"
-        startActivityForResult(intent, imagePickerRequestCode)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == imagePickerRequestCode && resultCode == android.app.Activity.RESULT_OK) {
-            data?.data?.let { imageUri ->
-                // Convert image URI to Base64 string
-                val base64Image = convertImageToBase64(imageUri)
-                addPhotoToGrid(base64Image)
-            }
-        }
-    }
-
-    private fun convertImageToBase64(imageUri: android.net.Uri): String {
+    private fun convertImageToBase64(imageUri: Uri): String {
         val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, imageUri)
         val byteArrayOutputStream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
@@ -249,10 +242,10 @@ class AddPostFragment : Fragment() {
         return "data:image/jpeg;base64," + Base64.encodeToString(byteArray, Base64.DEFAULT)
     }
 
-    private fun addPhotoToGrid(photoBase64: String) {
-        photos.add(photoBase64)
+    private fun addPhotoToGrid(bitmap: Bitmap) {
+        val base64Image = imagePicker.convertBitmapToBase64(bitmap)
+        photos.add(base64Image)
         photosGridAdapter.notifyDataSetChanged()
-        Toast.makeText(requireContext(), "Photo added", Toast.LENGTH_SHORT).show()
     }
 
     fun getCurrentTimeISO(): String {
@@ -264,7 +257,7 @@ class AddPostFragment : Fragment() {
         val location = binding?.selectedLocationTextView?.text.toString() // Now contains the geotag info
         val desc = binding?.descriptionEditText?.text.toString()
         val visitDate = getCurrentTimeISO()
-        val photosToUpload =  photos.map { it.replace("data:image/jpeg;base64,", "") }
+//        val photosToUpload =  photos.map { it.replace("data:image/jpeg;base64,", "") }
 
         val geoTag = currentGeoPoint?.let {
             Geotag("Point", listOf(it.latitude, it.longitude))
@@ -272,7 +265,7 @@ class AddPostFragment : Fragment() {
 
         lifecycleScope.launch {
             try {
-                val response = travelService.createPost(location, desc, visitDate, photosToUpload, geoTag)
+                val response = travelService.createPost(location, desc, visitDate, photos, geoTag)
                 if (response != null) {
                     Toast.makeText(requireContext(), "Post shared successfully!", Toast.LENGTH_SHORT).show()
                 }
@@ -320,21 +313,6 @@ class AddPostFragment : Fragment() {
 
         return userLocation // Return updated location once fetched
     }
-
-//    private fun validateInputs(): Boolean {
-//        val description = binding?.descriptionEditText?.text.toString().trim()
-//        var isValid = true
-//
-//        // description Validation
-//        if (description.isEmpty()) {
-//            binding?.descriptionInputLayout?.error = "Description is required"
-//            isValid = false
-//        } else {
-//            binding?.descriptionInputLayout?.error = null
-//        }
-//
-//        return isValid
-//    }
 
     private fun validateInputs(): Boolean {
         val description = binding?.descriptionEditText?.text.toString().trim()
