@@ -17,8 +17,8 @@
         <item name="android:textColor">@color/primary</item>
     </style>
     <style name="CustomSwitch" parent="Widget.MaterialComponents.CompoundButton.Switch">
-        <item name="thumbTint">@color/primary</item>
-        <item name="trackTint">@color/secondary</item>
+        <item name="thumbTint">@color/switch_thumb_color</item>
+        <item name="trackTint">@color/switch_track_color</item>
     </style>
     <style name="RoundedImageStyle">
         <item name="cornerFamily">rounded</item>

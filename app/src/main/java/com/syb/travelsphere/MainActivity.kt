@@ -118,6 +118,7 @@ class MainActivity : AppCompatActivity() {
    2. add all the functions for posts that needed  - added just check that maybe there will be a change with a geohash and add callbacks
    3. update to work with geo hash
    *
+   2. make image util  ✅
    3. make input validation an util  ✅
    4. make signUp profile picture appear ✅
    5. make the arrow back work ✅
