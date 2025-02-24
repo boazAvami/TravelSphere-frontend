@@ -34,6 +34,7 @@ import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.syb.travelsphere.databinding.FragmentAddPostBinding
+import com.syb.travelsphere.utils.InputValidator
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.views.overlay.MapEventsOverlay
 import java.io.ByteArrayOutputStream
@@ -69,7 +70,7 @@ class AddPostFragment : Fragment() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
         setupMap()
 
-        val searchLocation = binding?.searchLocation
+        val searchLocation = binding?.searchLocationTextView
         val locationEditText = binding?.selectedLocationTextView
         val mapView = binding?.mapView
 
@@ -136,7 +137,7 @@ class AddPostFragment : Fragment() {
 
                     activity?.runOnUiThread {
                         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, suggestions)
-                        binding?.searchLocation?.setAdapter(adapter)
+                        binding?.searchLocationTextView?.setAdapter(adapter)
                         adapter.notifyDataSetChanged()
                     }
                 }
@@ -320,16 +321,36 @@ class AddPostFragment : Fragment() {
         return userLocation // Return updated location once fetched
     }
 
+//    private fun validateInputs(): Boolean {
+//        val description = binding?.descriptionEditText?.text.toString().trim()
+//        var isValid = true
+//
+//        // description Validation
+//        if (description.isEmpty()) {
+//            binding?.descriptionInputLayout?.error = "Description is required"
+//            isValid = false
+//        } else {
+//            binding?.descriptionInputLayout?.error = null
+//        }
+//
+//        return isValid
+//    }
+
     private fun validateInputs(): Boolean {
         val description = binding?.descriptionEditText?.text.toString().trim()
+        val locationName = binding?.locationNameEditText?.text.toString().trim()
+
         var isValid = true
 
-        // description Validation
-        if (description.isEmpty()) {
-            binding?.descriptionInputLayout?.error = "Description is required"
+        if (!InputValidator.validateRequiredTextField(locationName, binding?.locationInputLayout)) {
             isValid = false
-        } else {
-            binding?.descriptionInputLayout?.error = null
+        }
+        if (!InputValidator.validateRequiredTextField(description, binding?.descriptionInputLayout)) {
+            isValid = false
+        }
+        if (photos.isEmpty()) {
+            Toast.makeText(requireContext(), "Please add at least one photo", Toast.LENGTH_SHORT).show()
+            isValid = false
         }
 
         return isValid

@@ -29,7 +29,7 @@
                 app:startIconDrawable="@drawable/ic_search">
 
                 <AutoCompleteTextView
-                    android:id="@+id/search_location"
+                    android:id="@+id/searchLocationTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:padding="12dp"
@@ -90,7 +90,7 @@
                 android:layout_marginTop="16dp">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/locationName"
+                    android:id="@+id/locationNameEditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="text"

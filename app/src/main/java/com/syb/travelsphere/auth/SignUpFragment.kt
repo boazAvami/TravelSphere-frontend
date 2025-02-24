@@ -22,7 +22,6 @@ import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.squareup.picasso.Picasso
 import com.syb.travelsphere.MainActivity
@@ -30,6 +29,7 @@ import com.syb.travelsphere.R
 import com.syb.travelsphere.databinding.FragmentSignUpBinding
 import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.User
+import com.syb.travelsphere.utils.InputValidator
 import java.io.File
 import java.io.InputStream
 
@@ -195,45 +195,17 @@ class SignUpFragment : Fragment() {
 
         var isValid = true
 
-        // **Email Validation**
-        if (email.isEmpty()) {
-            binding?.emailInputLayout?.error = "Email is required"
+        if (!InputValidator.validateEmail(email, binding?.emailInputLayout)) {
             isValid = false
-        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding?.emailInputLayout?.error = "Invalid email format"
-            isValid = false
-        } else {
-            binding?.emailInputLayout?.error = null
         }
-
-        // **Password Validation**
-        if (password.isEmpty()) {
-            binding?.passwordInputLayout?.error = "Password is required"
+        if (!InputValidator.validatePassword(password, binding?.passwordInputLayout)) {
             isValid = false
-        } else if (password.length < 6) {
-            binding?.passwordInputLayout?.error = "Password must be at least 6 characters long"
-            isValid = false
-        } else {
-            binding?.passwordInputLayout?.error = null
         }
-
-        // **Username Validation**
-        if (username.isEmpty()) {
-            binding?.usernameInputLayout?.error = "Username is required"
+        if (!InputValidator.validateUsername(username, binding?.usernameInputLayout)) {
             isValid = false
-        } else {
-            binding?.usernameInputLayout?.error = null
         }
-
-        // **Phone Number Validation**
-        if (phone.isEmpty()) {
-            binding?.phoneNumberInputLayout?.error = "Phone number is required"
+        if (!InputValidator.validatePhoneNumber(phone, binding?.phoneNumberInputLayout)) {
             isValid = false
-        } else if (!phone.matches(Regex("^[0-9]{9,15}$"))) {
-            binding?.phoneNumberInputLayout?.error = "Invalid phone number format"
-            isValid = false
-        } else {
-            binding?.phoneNumberInputLayout?.error = null
         }
 
         return isValid
