@@ -37,11 +37,25 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Map View -->
-            <org.osmdroid.views.MapView
-                android:id="@+id/mapView"
+<!--            <org.osmdroid.views.MapView-->
+<!--                android:id="@+id/mapView"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="200dp"-->
+<!--                android:layout_marginTop="16dp" />-->
+
+            <!-- Map View inside Material Card -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:layout_marginTop="16dp" />
+                android:layout_height="220dp"
+                android:layout_marginTop="16dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="6dp">
+
+                <org.osmdroid.views.MapView
+                    android:id="@+id/mapView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- Location Display -->
             <LinearLayout
@@ -103,13 +117,11 @@
             <!-- Add Photos Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/addPhotosButton"
-                style="@style/Widget.MaterialComponents.Button"
+                style="@style/CustomButtonStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Add Photos"
-                android:textColor="@color/white"
-                android:backgroundTint="@android:color/black" />
+                android:text="Add Photos" />
 
             <!-- Photos Grid -->
             <androidx.recyclerview.widget.RecyclerView
@@ -135,12 +147,10 @@
         <!-- Share Post Button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/sharePostButton"
-            style="@style/Widget.MaterialComponents.Button"
+            style="@style/CustomButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="Share Post"
-            android:textColor="@color/white"
-            android:backgroundTint="@android:color/black"
             android:layout_weight="1"
             android:layout_marginEnd="8dp" />
     </LinearLayout>

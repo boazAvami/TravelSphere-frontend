@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import android.util.Log
+import android.util.Patterns
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -178,8 +179,6 @@ class AddPostFragment : Fragment() {
         })
     }
 
-
-
     private fun setupMap() {
         Configuration.getInstance().load(requireContext(), requireContext().getSharedPreferences("osmdroid", 0))
         binding?.mapView?.setMultiTouchControls(true)
@@ -219,6 +218,7 @@ class AddPostFragment : Fragment() {
         }
 
         binding?.sharePostButton?.setOnClickListener {
+            if (!validateInputs()) return@setOnClickListener  // Stop execution if validation fails
             sharePost()
         }
     }
@@ -318,6 +318,21 @@ class AddPostFragment : Fragment() {
         }
 
         return userLocation // Return updated location once fetched
+    }
+
+    private fun validateInputs(): Boolean {
+        val description = binding?.descriptionEditText?.text.toString().trim()
+        var isValid = true
+
+        // description Validation
+        if (description.isEmpty()) {
+            binding?.descriptionInputLayout?.error = "Description is required"
+            isValid = false
+        } else {
+            binding?.descriptionInputLayout?.error = null
+        }
+
+        return isValid
     }
 
     override fun onDestroyView() {
