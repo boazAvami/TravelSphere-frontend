@@ -1,13 +1,13 @@
 package com.syb.travelsphere.pages
 
 import android.Manifest
-import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
@@ -16,17 +16,20 @@ import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.syb.travelsphere.R
+import android.widget.ArrayAdapter
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
+import okhttp3.*
+import java.io.IOException
 import com.syb.travelsphere.components.PhotosGridAdapter
 import com.syb.travelsphere.services.Geotag
 import com.syb.travelsphere.services.TravelService
 import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.MapView
-import android.location.Geocoder
 import android.util.Log
+import android.util.Patterns
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -34,7 +37,6 @@ import com.syb.travelsphere.databinding.FragmentAddPostBinding
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.views.overlay.MapEventsOverlay
 import java.io.ByteArrayOutputStream
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.ZonedDateTime
 
@@ -66,6 +68,33 @@ class AddPostFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
         setupMap()
+
+        val searchLocation = binding?.searchLocation
+        val locationEditText = binding?.selectedLocationTextView
+        val mapView = binding?.mapView
+
+        searchLocation?.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, mutableListOf<String>()))
+        searchLocation?.threshold = 2 // Start search after 2 characters
+
+        searchLocation?.setOnItemClickListener { _, _, position, _ ->
+            val selectedAddress = searchLocation.adapter.getItem(position) as String
+            searchLocation.setText(selectedAddress)
+            locationEditText?.text = selectedAddress
+            fetchGeoLocation(selectedAddress)
+        }
+
+        searchLocation?.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {}
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (s != null && s.length > 2) {
+                    fetchAddressSuggestions(s.toString())
+                }
+            }
+        })
+
     }
 
     private fun setupPhotoRecyclerView() {
@@ -77,6 +106,77 @@ class AddPostFragment : Fragment() {
             Toast.makeText(requireContext(), "Photo removed", Toast.LENGTH_SHORT).show()
         })
         binding?.photosGridRecyclerView?.adapter = photosGridAdapter
+    }
+
+    private fun fetchAddressSuggestions(query: String) {
+        val client = OkHttpClient()
+        val url = "https://nominatim.openstreetmap.org/search?format=json&q=$query"
+
+        val request = Request.Builder()
+            .url(url)
+            .header("User-Agent", "YourAppName") // Required by Nominatim
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                e.printStackTrace()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.body?.let { responseBody ->
+                    val json = responseBody.string()
+                    val jsonArray = JsonParser.parseString(json).asJsonArray
+
+                    val suggestions = mutableListOf<String>()
+                    for (element in jsonArray) {
+                        val obj = element.asJsonObject
+                        val displayName = obj.get("display_name").asString
+                        suggestions.add(displayName)
+                    }
+
+                    activity?.runOnUiThread {
+                        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, suggestions)
+                        binding?.searchLocation?.setAdapter(adapter)
+                        adapter.notifyDataSetChanged()
+                    }
+                }
+            }
+        })
+    }
+    private fun fetchGeoLocation(address: String) {
+        val client = OkHttpClient()
+        val url = "https://nominatim.openstreetmap.org/search?format=json&q=$address&limit=1"
+
+        val request = Request.Builder()
+            .url(url)
+            .header("User-Agent", "YourAppName") // Required by Nominatim
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                e.printStackTrace()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.body?.let { responseBody ->
+                    val json = responseBody.string()
+                    val jsonArray = JsonParser.parseString(json).asJsonArray
+
+                    if (jsonArray.size() > 0) {
+                        val obj = jsonArray[0].asJsonObject
+                        val lat = obj.get("lat").asString.toDouble()
+                        val lon = obj.get("lon").asString.toDouble()
+
+                        activity?.runOnUiThread {
+                            val geoPoint = GeoPoint(lat, lon)
+                            binding?.mapView?.controller?.setCenter(geoPoint)
+                            binding?.mapView?.controller?.setZoom(15.0)
+                            currentGeoPoint = geoPoint
+                        }
+                    }
+                }
+            }
+        })
     }
 
     private fun setupMap() {
@@ -118,6 +218,7 @@ class AddPostFragment : Fragment() {
         }
 
         binding?.sharePostButton?.setOnClickListener {
+            if (!validateInputs()) return@setOnClickListener  // Stop execution if validation fails
             sharePost()
         }
     }
@@ -159,7 +260,7 @@ class AddPostFragment : Fragment() {
     }
 
     private fun sharePost() {
-        val location = binding?.locationSpotNameEditText?.text.toString() // Now contains the geotag info
+        val location = binding?.selectedLocationTextView?.text.toString() // Now contains the geotag info
         val desc = binding?.descriptionEditText?.text.toString()
         val visitDate = getCurrentTimeISO()
         val photosToUpload =  photos.map { it.replace("data:image/jpeg;base64,", "") }
@@ -217,6 +318,21 @@ class AddPostFragment : Fragment() {
         }
 
         return userLocation // Return updated location once fetched
+    }
+
+    private fun validateInputs(): Boolean {
+        val description = binding?.descriptionEditText?.text.toString().trim()
+        var isValid = true
+
+        // description Validation
+        if (description.isEmpty()) {
+            binding?.descriptionInputLayout?.error = "Description is required"
+            isValid = false
+        } else {
+            binding?.descriptionInputLayout?.error = null
+        }
+
+        return isValid
     }
 
     override fun onDestroyView() {
