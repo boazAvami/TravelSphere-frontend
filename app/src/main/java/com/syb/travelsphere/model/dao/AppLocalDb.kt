@@ -5,13 +5,14 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.syb.travelsphere.base.MyApplication
-import com.syb.travelsphere.model.GeoPointConverter
+import com.syb.travelsphere.model.converters.GeoPointConverter
 import com.syb.travelsphere.model.Post
 import com.syb.travelsphere.model.User
-import com.syb.travelsphere.model.TimestampConverter
+import com.syb.travelsphere.model.converters.PrimitiveTypeConverter
+import com.syb.travelsphere.model.converters.TimestampConverter
 
 @Database(entities = [User::class, Post::class], version = 1)
-@TypeConverters(GeoPointConverter::class, TimestampConverter::class) // Register the TypeConverter
+@TypeConverters(GeoPointConverter::class, TimestampConverter::class, PrimitiveTypeConverter::class) // Register the TypeConverter
 abstract class AppLocalDbRepository: RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun postDao(): PostDao

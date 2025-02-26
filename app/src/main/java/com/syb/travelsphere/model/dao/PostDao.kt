@@ -1,5 +1,6 @@
 package com.syb.travelsphere.model.dao
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -12,7 +13,7 @@ import com.syb.travelsphere.model.User
 @Dao
 interface PostDao {
     @Query("SELECT * FROM posts")
-    fun getAllPosts(): List<Post>
+    fun getAllPosts(): LiveData<List<Post>>
 
     @Query("SELECT * FROM posts WHERE id = :id")
     fun getPostById(id: String): Post
