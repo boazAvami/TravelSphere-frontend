@@ -1,46 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp">
 
     <!-- Scrollable Content -->
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@id/buttonsContainer">
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/buttonsContainer">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/locationSpotNameEditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Pick Your Location"
-                android:textSize="16sp"
-                android:textColor="@android:color/black"
-                android:gravity="center"
-                android:layout_marginBottom="2dp" />
-
             <!-- Search Bar -->
-            <AutoCompleteTextView
-                android:id="@+id/search_location"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/searchLocationInputLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Search Location"
-                android:padding="12dp"
-                android:background="@drawable/rounded_edittext"
-                android:inputType="text" />
+                app:startIconDrawable="@drawable/ic_search">
+
+                <AutoCompleteTextView
+                    android:id="@+id/search_location"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="12dp"
+                    android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Map View -->
-            <org.osmdroid.views.MapView
-                android:id="@+id/mapView"
+<!--            <org.osmdroid.views.MapView-->
+<!--                android:id="@+id/mapView"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="200dp"-->
+<!--                android:layout_marginTop="16dp" />-->
+
+            <!-- Map View inside Material Card -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:layout_marginTop="16dp" />
+                android:layout_height="220dp"
+                android:layout_marginTop="16dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="6dp">
+
+                <org.osmdroid.views.MapView
+                    android:id="@+id/mapView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- Location Display -->
             <LinearLayout
@@ -66,37 +81,47 @@
                     android:textColor="@color/gray" />
             </LinearLayout>
 
-            <!-- Location -->
-            <EditText
-                android:id="@+id/locationName"
+            <!-- Location Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/locationInputLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Location"
-                android:inputType="textMultiLine"
-                android:gravity="start"
-                android:padding="12dp"
-                android:layout_marginTop="16dp" />
+                android:hint="What's the spot?"
+                android:layout_marginTop="16dp">
 
-            <!-- Description -->
-            <EditText
-                android:id="@+id/descriptionEditText"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/locationName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:padding="12dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Description Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/descriptionInputLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Description"
-                android:inputType="textMultiLine"
-                android:gravity="start"
-                android:padding="12dp"
-                android:layout_marginTop="16dp" />
+                android:layout_marginTop="16dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/descriptionEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textMultiLine"
+                    android:maxLength="50"
+                    android:padding="12dp" />
+            </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Add Photos Button -->
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/addPhotosButton"
+                style="@style/CustomButtonStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Add Photos"
                 android:layout_marginTop="16dp"
-                android:textColor="@color/white"
-                android:background="@android:color/black" />
+                android:text="Add Photos" />
 
             <!-- Photos Grid -->
             <androidx.recyclerview.widget.RecyclerView
@@ -106,26 +131,28 @@
                 android:layout_marginTop="8dp"
                 android:padding="4dp" />
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
-    <!-- Buttons Container (Share Post and Add Photos) -->
+    <!-- Buttons Container (Share Post) -->
     <LinearLayout
         android:id="@+id/buttonsContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_alignParentBottom="true"
-        android:padding="8dp">
+        android:padding="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <!-- Share Post Button -->
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/sharePostButton"
+            style="@style/CustomButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="Share Post"
-            android:textColor="@color/white"
-            android:background="@android:color/black"
             android:layout_weight="1"
             android:layout_marginEnd="8dp" />
     </LinearLayout>
-</RelativeLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

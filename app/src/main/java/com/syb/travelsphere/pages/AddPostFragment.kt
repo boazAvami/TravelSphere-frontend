@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import android.util.Log
+import android.util.Patterns
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -69,7 +70,7 @@ class AddPostFragment : Fragment() {
         setupMap()
 
         val searchLocation = binding?.searchLocation
-        val locationEditText = binding?.locationSpotNameEditText
+        val locationEditText = binding?.selectedLocationTextView
         val mapView = binding?.mapView
 
         searchLocation?.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, mutableListOf<String>()))
@@ -170,15 +171,13 @@ class AddPostFragment : Fragment() {
                             val geoPoint = GeoPoint(lat, lon)
                             binding?.mapView?.controller?.setCenter(geoPoint)
                             binding?.mapView?.controller?.setZoom(15.0)
-                            binding?.selectedLocationTextView?.text = "Geotag: (Lat: $lat, Lon: $lon)"
+                            currentGeoPoint = geoPoint
                         }
                     }
                 }
             }
         })
     }
-
-
 
     private fun setupMap() {
         Configuration.getInstance().load(requireContext(), requireContext().getSharedPreferences("osmdroid", 0))
@@ -219,6 +218,7 @@ class AddPostFragment : Fragment() {
         }
 
         binding?.sharePostButton?.setOnClickListener {
+            if (!validateInputs()) return@setOnClickListener  // Stop execution if validation fails
             sharePost()
         }
     }
@@ -260,7 +260,7 @@ class AddPostFragment : Fragment() {
     }
 
     private fun sharePost() {
-        val location = binding?.locationSpotNameEditText?.text.toString() // Now contains the geotag info
+        val location = binding?.selectedLocationTextView?.text.toString() // Now contains the geotag info
         val desc = binding?.descriptionEditText?.text.toString()
         val visitDate = getCurrentTimeISO()
         val photosToUpload =  photos.map { it.replace("data:image/jpeg;base64,", "") }
@@ -318,6 +318,21 @@ class AddPostFragment : Fragment() {
         }
 
         return userLocation // Return updated location once fetched
+    }
+
+    private fun validateInputs(): Boolean {
+        val description = binding?.descriptionEditText?.text.toString().trim()
+        var isValid = true
+
+        // description Validation
+        if (description.isEmpty()) {
+            binding?.descriptionInputLayout?.error = "Description is required"
+            isValid = false
+        } else {
+            binding?.descriptionInputLayout?.error = null
+        }
+
+        return isValid
     }
 
     override fun onDestroyView() {
