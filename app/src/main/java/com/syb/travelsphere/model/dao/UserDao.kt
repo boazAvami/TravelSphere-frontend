@@ -7,6 +7,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.syb.travelsphere.base.EmptyCallback
 import com.syb.travelsphere.model.Post
 import com.syb.travelsphere.model.User
 
@@ -22,12 +23,11 @@ interface UserDao {
     """)
     fun getNearbyUsers(minGeoHash: String, maxGeoHash: String): LiveData<List<User>>
 
-
     @Query("SELECT * FROM users WHERE id = :id")
-    fun getUserById(id: String): User
+    fun getUserById(id: String): LiveData<User>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertUser(user: User)
+    fun insertUser(vararg user: User)
 
     @Update
     fun updateUser(user: User)

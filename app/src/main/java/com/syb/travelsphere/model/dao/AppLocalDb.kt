@@ -29,7 +29,7 @@ object AppLocalDb {
             klass = AppLocalDbRepository::class.java,
             name = "dbFileName.db"
         )
-            .fallbackToDestructiveMigration() // just for development purposes
+//            .fallbackToDestructiveMigration() // just for development purposes
             .build()
     }
 }

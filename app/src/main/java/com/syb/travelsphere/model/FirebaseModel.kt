@@ -4,6 +4,7 @@ import android.util.Log
 import com.firebase.geofire.GeoFireUtils
 import com.firebase.geofire.GeoLocation
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.firestoreSettings
@@ -39,7 +40,7 @@ class FirebaseModel {
                         val users: MutableList<User> = mutableListOf()
                         for (document in it.result) {
                             users.add(User.fromJSON(document.data))
-                            Log.d(TAG, "${document.id} => ${document.data}")
+                            Log.d(TAG, "Fetched post: ${document.id} => ${document.data}")
                         }
                         callback(users)
                     }
@@ -58,7 +59,7 @@ class FirebaseModel {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val user = task.result?.data?.let { User.fromJSON(it) }
-                    Log.d(TAG,"Get document: ${task.result?.id} successfully")
+                    Log.d(TAG,"Get user: ${task.result?.id} successfully")
                     callback(user)
                 } else {
                     Log.d(TAG, "Error fetching user: ${task.exception?.message}")
@@ -88,12 +89,13 @@ class FirebaseModel {
 
         // 🔹 If radius or location changed, do a full refresh (ignore `sinceLastUpdated`)
         val query = database.collection(Constants.COLLECTIONS.USERS)
+            .whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, Timestamp(Date(sinceLastUpdated)))
             .whereGreaterThanOrEqualTo(User.GEOHASH_KEY, minGeoHash)
             .whereLessThanOrEqualTo(User.GEOHASH_KEY, maxGeoHash)
 
-        if (!locationChanged && !radiusChanged) {
-            query.whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, Timestamp(Date(sinceLastUpdated)))
-        }
+//        if (!locationChanged && !radiusChanged) {
+//            query.whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, Timestamp(Date(sinceLastUpdated)))
+//        }
 
         query.get()
             .addOnSuccessListener { documents ->
@@ -157,7 +159,7 @@ class FirebaseModel {
                         val posts: MutableList<Post> = mutableListOf()
                         for (document in it.result) {
                             posts.add(Post.fromJSON(document.data))
-                            Log.d(TAG, "${document.id} => ${document.data}")
+                            Log.d(TAG, "Post received: ${document.id} => ${document.data}")
                         }
                         callback(posts)
                     }
@@ -187,16 +189,23 @@ class FirebaseModel {
             }
     }
 
-    fun getPostsByUserId(userId: String, callback: PostsCallback) {
+    fun getPostsByUserId(userId: String, sinceLastUpdated: Long, callback: PostsCallback) {
         database.collection(Constants.COLLECTIONS.POSTS)
             .whereEqualTo(Post.OWNER_ID_KEY, userId)
+            .whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, Timestamp(Date(sinceLastUpdated)))
             .get()
-            .addOnSuccessListener { documents ->
-                val posts = documents.documents.mapNotNull { doc ->
-                    doc.data?.let { Post.fromJSON(it) }
+            .addOnCompleteListener {
+                when (it.isSuccessful) {
+                    true -> {
+                        val posts: MutableList<Post> = mutableListOf()
+                        for (document in it.result) {
+                            posts.add(Post.fromJSON(document.data))
+                            Log.d(TAG, "Post received: ${document.id} => ${document.data}")
+                        }
+                        callback(posts)
+                    }
+                    false -> callback(listOf())
                 }
-                Log.d(TAG, "Fetched ${posts.size} posts for user: $userId")
-                callback(posts)
             }
             .addOnFailureListener { exception ->
                 Log.d(TAG, "Error fetching posts for user: $userId, ${exception.message}")
@@ -204,16 +213,25 @@ class FirebaseModel {
             }
     }
 
+    fun addPost(post: Post, postRef: DocumentReference, callback: EmptyCallback) {
+        val postWithId = post.copy(id = postRef.id)
 
-    fun addPost(post: Post, callback: EmptyCallback) {
-        database.collection(Constants.COLLECTIONS.POSTS)
-            .document(post.id)
-            .set(post.json)
-            .addOnCompleteListener{
+        postRef.set(postWithId.json)
+            .addOnCompleteListener {
                 callback() // Operation succeeded, execute the callback
             }
             .addOnFailureListener { error -> Log.w(TAG, "Error writing document", error) }
     }
+
+//    fun addPost(post: Post, callback: EmptyCallback) {
+//        database.collection(Constants.COLLECTIONS.POSTS)
+//            .document(post.id)
+//            .set(post.json)
+//            .addOnCompleteListener {
+//                callback() // Operation succeeded, execute the callback
+//            }
+//            .addOnFailureListener { error -> Log.w(TAG, "Error writing document", error) }
+//    }
 
     fun deletePost(postId: String, callback: EmptyCallback) {
         database.collection(Constants.COLLECTIONS.POSTS)
@@ -249,6 +267,10 @@ class FirebaseModel {
                     }
                 }
             }
+    }
+
+    fun generatePostReference(): DocumentReference {
+        return database.collection(Constants.COLLECTIONS.POSTS).document() // ✅ Generate Firestore ID
     }
 
     companion object {

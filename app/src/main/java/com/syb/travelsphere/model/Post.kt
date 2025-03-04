@@ -4,12 +4,15 @@ import android.content.Context
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import androidx.room.TypeConverters
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.GeoPoint
 import com.syb.travelsphere.base.MyApplication
 import com.syb.travelsphere.model.User.Companion
 import com.syb.travelsphere.model.User.Companion.LOCAL_LAST_UPDATED_KEY
+import com.syb.travelsphere.model.converters.GeoPointConverter
+import com.syb.travelsphere.model.converters.PrimitiveTypeConverter
 import com.syb.travelsphere.utils.GeoUtils.generateGeoHash
 
 @Entity(
@@ -25,10 +28,14 @@ import com.syb.travelsphere.utils.GeoUtils.generateGeoHash
 data class Post(
     @PrimaryKey val id: String,
     val description: String,
+
+    @TypeConverters(PrimitiveTypeConverter::class)
     val photos: List<String>,
     val locationName : String,
+
+    @TypeConverters(GeoPointConverter::class)
     val location: GeoPoint,  // Stores lat/lng
-    val geoHash: String,      // Stores the hashed location
+    val geoHash: String = location?.let { generateGeoHash(it) } ?: "", // Generate GeoHash
     val creationTime: Timestamp,
     val ownerId: String, // References the `id` in the User table
     val lastUpdated: Long? = null

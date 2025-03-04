@@ -33,6 +33,12 @@ class AuthManager {
 
                     Model.shared.addUser(user, profilePicture) {
                         Log.d(TAG, "✅ User created & added to Firestore successfully!")
+
+                        // Fetch the user (this ensures it's also inserted into Room)
+                        Model.shared.getUserById(it.uid) { fetchedUser ->
+                            callback(firebaseUser) // Callback after data is in Room
+                        }
+
                         callback(firebaseUser)
                     }
                 } ?: run {
@@ -48,17 +54,24 @@ class AuthManager {
 
     fun signInUser(email: String, password: String, callback: AuthCallback) {
         auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Log.d(TAG, "signInWithEmail:success")
-                    callback(auth.currentUser)
-                } else {
-                    Log.w(TAG, "signInWithEmail:failure", task.exception)
-                    callback(null)
-                }
-            }.addOnSuccessListener {
+//            .addOnCompleteListener { task ->
+//                if (task.isSuccessful) {
+//                    Log.d(TAG, "signInWithEmail:success")
+//                    callback(auth.currentUser)
+//                } else {
+//                    Log.w(TAG, "signInWithEmail:failure", task.exception)
+//                    callback(null)
+//                }
+//            }
+            .addOnSuccessListener {
                 Log.d(TAG, "✅ User signed in successfully!")
-                callback(auth.currentUser)
+
+                auth.currentUser?.let { user ->
+                    // Fetch the user (which inserts into Room)
+                    Model.shared.getUserById(user.uid) { fetchedUser ->
+                        callback(auth.currentUser)
+                    }
+                } ?: callback(null)
             }
             .addOnFailureListener { exception ->
                 handleAuthFailure(exception, "⚠️ Sign-in failed")

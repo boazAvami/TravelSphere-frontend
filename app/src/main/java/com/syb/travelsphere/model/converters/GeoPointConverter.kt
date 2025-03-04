@@ -18,4 +18,6 @@ class GeoPointConverter {
             GeoPoint(0.0, 0.0) // Default to (0,0) if parsing fails
         }
     }
+
+
 }
