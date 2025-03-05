@@ -5,25 +5,19 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.syb.travelsphere.services.TravelService
-import com.syb.travelsphere.services.Post
-import com.syb.travelsphere.R
 import com.syb.travelsphere.databinding.FragmentAllPostsBinding
+import com.syb.travelsphere.model.Model
+import com.syb.travelsphere.model.Post
 import com.syb.travelsphere.ui.PostListAdapter
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class AllPostsFragment : Fragment() {
 
     private var binding: FragmentAllPostsBinding? = null
 
-    private lateinit var travelService: TravelService
+    private lateinit var postListAdapter: PostListAdapter
+//    private lateinit var travelService: TravelService
 
     private var posts = listOf<Post>()
 
@@ -32,7 +26,69 @@ class AllPostsFragment : Fragment() {
     ): View? {
         binding = FragmentAllPostsBinding.inflate(inflater, container, false)
 
+        binding?.postListRecyclerView?.setHasFixedSize(true)
+        setupRecyclerView()
+        observePosts()
+
+        binding?.swipeToRefresh?.setOnRefreshListener {
+            onResume()
+        }
+
         return binding?.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+//        travelService = TravelService()
+
+//        binding?.postListRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
+
+//        fetchPostsAndSetUpScreen()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        getAllPosts()
+    }
+
+    private fun setupRecyclerView() {
+        binding?.postListRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
+        postListAdapter = PostListAdapter(mutableListOf()) { post -> centerMapOnPost(post) }
+        binding?.postListRecyclerView?.adapter = postListAdapter
+    }
+
+    private fun observePosts() {
+        Model.shared.posts.observe(viewLifecycleOwner) { posts ->
+            Log.d(TAG, "UI updated: Received ${posts.size} posts")
+
+            if (posts.isNotEmpty()) {
+                postListAdapter.updatePosts(posts)
+                binding?.mapComponent?.displayPosts(posts)
+
+                Log.d(TAG, "UI Updated: Showing ${posts.size} posts")
+            } else {
+                Log.d(TAG, "observePosts: No new posts available yet")
+            }
+        }
+    }
+
+    private fun getAllPosts() {
+        binding?.progressBar?.visibility = View.VISIBLE
+
+        Model.shared.refreshAllUsers {
+            Model.shared.refreshAllPosts {
+                binding?.progressBar?.visibility = View.GONE // Hide progress bar when done
+                binding?.swipeToRefresh?.isRefreshing = false // Stop swipe refresh
+            }
+//            binding?.progressBar?.visibility = View.GONE
+        }
+    }
+
+    private fun centerMapOnPost(post: Post) {
+        val lat = post.location.latitude
+        val lon = post.location.longitude
+        binding?.mapComponent?.centerMapOnLocation(lat, lon)
     }
 
     override fun onDestroy() {
@@ -40,42 +96,7 @@ class AllPostsFragment : Fragment() {
         binding = null
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        travelService = TravelService()
-
-        binding?.postListRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
-
-        fetchPostsAndSetUpScreen()
-    }
-
-    private fun fetchPostsAndSetUpScreen() {
-        lifecycleScope.launch {
-            try {
-                val fetchedPosts = withContext(Dispatchers.IO) {
-                    travelService.getAllPosts()
-                }
-
-                if (fetchedPosts != null) {
-                    posts = fetchedPosts
-                    binding?.postListRecyclerView?.adapter = PostListAdapter(posts) { post ->
-                        centerMapOnPost(post)
-                    }
-                    binding?.mapComponent?.displayPosts(posts)
-                }
-
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Error fetching posts: ${e.message}", Toast.LENGTH_SHORT).show()
-                Log.d("Error", "Error fetching posts: ${e.message}")
-            }
-        }
-    }
-
-    private fun centerMapOnPost(post: Post) {
-        val geotag = post.geotag
-        val lat = geotag.coordinates[1]
-        val lon = geotag.coordinates[0]
-        binding?.mapComponent?.centerMapOnLocation(lat, lon)
+    companion object {
+        private const val TAG = "AllPostsFragment"
     }
 }

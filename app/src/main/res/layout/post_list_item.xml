@@ -40,10 +40,10 @@
             android:paddingTop="5dp" />
 
         <TextView
-            android:id="@+id/postLikes"
+            android:id="@+id/postTimestamp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Likes: 0"
+            android:text="CreatedAt: "
             android:textSize="14sp"
             android:layout_marginTop="10dp" />
     </LinearLayout>

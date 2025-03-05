@@ -1,5 +1,6 @@
 package com.syb.travelsphere.model.dao
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -12,13 +13,13 @@ import com.syb.travelsphere.model.User
 @Dao
 interface PostDao {
     @Query("SELECT * FROM posts")
-    fun getAllPosts(): List<Post>
+    fun getAllPosts(): LiveData<List<Post>>
+
+    @Query("SELECT * FROM posts ORDER BY lastUpdated DESC")
+    fun getAllPostsOrderDesc(): LiveData<List<Post>>
 
     @Query("SELECT * FROM posts WHERE id = :id")
-    fun getPostById(id: String): Post
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertPost(post: Post)
+    fun getPostById(id: String): LiveData<Post>
 
     @Update
     fun updatePost(post: Post)
@@ -26,9 +27,12 @@ interface PostDao {
     @Delete
     fun deletePost(post: Post)
 
-//    @Insert(onConflict = OnConflictStrategy.REPLACE)
-//    suspend fun insertPost(post: Post)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertPost(vararg post: Post)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPosts(posts: List<Post>)  // Batching insertions
 
     @Query("SELECT * FROM posts WHERE ownerId = :ownerId")
-    suspend fun getPostsByUser(ownerId: Int): List<Post>
+    fun getPostsByUser(ownerId: String): LiveData<List<Post>>
 }

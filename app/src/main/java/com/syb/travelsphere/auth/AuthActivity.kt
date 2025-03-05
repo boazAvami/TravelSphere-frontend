@@ -22,8 +22,6 @@ class AuthActivity : AppCompatActivity() {
 
         authManager = AuthManager()
 
-        // TODO: remove line and add the if statement
-//        navigateToMainActivity()
         // Check if user is already logged in and navigate to MainActivity
         if (authManager.isUserLoggedIn()) {
             navigateToMainActivity()

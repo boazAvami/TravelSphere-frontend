@@ -10,7 +10,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.syb.travelsphere.R
-import com.syb.travelsphere.services.User
+import com.syb.travelsphere.model.Model
+import com.syb.travelsphere.model.User
 
 class UserListAdapter(private val users: List<User>, private val onUserClick: (User) -> Unit) : RecyclerView.Adapter<UserListAdapter.UserViewHolder>() {
 
@@ -29,38 +30,34 @@ class UserListAdapter(private val users: List<User>, private val onUserClick: (U
     inner class UserViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val userProfilePicture: ImageView = itemView.findViewById(R.id.userProfilePicture)
         private val userName: TextView = itemView.findViewById(R.id.userName)
-        private val userOrigin: TextView = itemView.findViewById(R.id.userOrigin)
+        private val userPhoneNumber: TextView = itemView.findViewById(R.id.userOrigin)
 
         fun bind(user: User) {
-            // Set the username and origin
-            userName.text = user.username
-            userOrigin.text = user.originCountry
+            // Set the username and phoneNumber
+            userName.text = user.userName
+            userPhoneNumber.text = user.phoneNumber
 
-            // Load the profile picture from base64
-            val base64Image = user.profilePicture
-            if (!base64Image.isNullOrEmpty()) {
+            if (!user.profilePictureUrl.isNullOrEmpty()) {
                 try {
-                    val bitmap = decodeBase64Image(base64Image)
-                    userProfilePicture.setImageBitmap(bitmap)
+                    val userProfilePictureUrl = user.profilePictureUrl
+                    if (userProfilePictureUrl != null) {
+                        Model.shared.getImageByUrl(userProfilePictureUrl) { bitmap ->
+                            userProfilePicture.setImageBitmap(bitmap)
+                        }
+                    } else {
+                        // If decoding fails, set a default image
+                        userProfilePicture.setImageResource(R.drawable.default_user)
+                    }
                 } catch (e: Exception) {
                     // If decoding fails, set a default image
                     userProfilePicture.setImageResource(R.drawable.default_user)
                 }
-            } else {
-                // Set default image if no profile picture is provided
-                userProfilePicture.setImageResource(R.drawable.default_user)
             }
 
             // Handle item click
             itemView.setOnClickListener {
                 onUserClick(user)  // Pass the user data back to the calling function
             }
-        }
-
-        // Helper function to decode base64 string to Bitmap
-        private fun decodeBase64Image(base64String: String): Bitmap {
-            val decodedString = Base64.decode(base64String, Base64.DEFAULT)
-            return BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
         }
     }
 }
