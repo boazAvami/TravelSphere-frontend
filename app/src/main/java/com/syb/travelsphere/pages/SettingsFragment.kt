@@ -36,6 +36,13 @@ class SettingsFragment : Fragment() {
                     binding?.phoneText?.setText(liveData.value?.phoneNumber)
                     binding?.usernameText?.setText(liveData.value?.userName)
                     binding?.locationSwitch?.isChecked = liveData.value?.isLocationShared == true
+                    liveData.value?.profilePictureUrl?.let { it1 ->
+                        Model.shared.getImageByUrl(it1) { image ->
+                            run {
+                                binding?.profileImage?.setImageBitmap(image)
+                            }
+                        }
+                    }
                 }
             }
         }
