@@ -1,4 +1,4 @@
-package com.syb.travelsphere.relations
+package com.syb.travelsphere.model.relations
 
 import androidx.room.Embedded
 import androidx.room.Relation

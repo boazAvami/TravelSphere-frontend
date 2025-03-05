@@ -2,6 +2,7 @@ package com.syb.travelsphere
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
@@ -11,9 +12,11 @@ import androidx.appcompat.widget.Toolbar
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
+import com.google.firebase.firestore.GeoPoint
 import com.syb.travelsphere.databinding.ActivityMainBinding
 import com.syb.travelsphere.auth.AuthActivity
 import com.syb.travelsphere.auth.AuthManager
+import com.syb.travelsphere.utils.GeoUtils.generateGeoHash
 
 
 class MainActivity : AppCompatActivity() {
@@ -27,6 +30,7 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
 
         authManager = AuthManager()
+//        authManager.signOut {  }
 
         if (!authManager.isUserLoggedIn()) {
             // Redirect to AuthActivity
@@ -114,11 +118,13 @@ class MainActivity : AppCompatActivity() {
 
 /*TODO:
 *  - me:
-   1.. pass as an argument in each navigation (thinking) - a. addPost_to_all_posts (loading upload)
    2. add all the functions for posts that needed  - added just check that maybe there will be a change with a geohash and add callbacks
    3. update to work with geo hash
-   4. make input validation an util
+   4. model view to my fragments
+   5. add using is location shared from db
    *
+   2. make image util  ✅
+   3. make input validation an util  ✅
    4. make signUp profile picture appear ✅
    5. make the arrow back work ✅
    6. add onFailure to everything and error handling ✅

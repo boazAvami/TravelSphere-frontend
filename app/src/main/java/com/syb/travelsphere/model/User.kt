@@ -1,46 +1,76 @@
 package com.syb.travelsphere.model
 
+import android.content.Context
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.GeoPoint
+import com.syb.travelsphere.base.MyApplication
+import com.syb.travelsphere.model.Post.Companion.LOCATION_KEY
+import com.syb.travelsphere.utils.GeoUtils.generateGeoHash
 
 @Entity(tableName = "users")
 data class User(
     @PrimaryKey val id: String,
     var profilePictureUrl: String?,
     var userName: String,
-//    var password: String,
-//    val email: String,
+    val location: GeoPoint? = null,
+    val geoHash: String = location?.let { generateGeoHash(it) } ?: "", // Generate GeoHash
     var phoneNumber: String?,
-    var isLocationShared: Boolean? = false
+    var isLocationShared: Boolean? = false,
+    val lastUpdated: Long? = null
 ) {
     companion object {
+        var lastUpdated: Long
+            get() {
+                return MyApplication.Globals.context?.getSharedPreferences(
+                    "TAG",
+                    Context.MODE_PRIVATE
+                )?.getLong(LOCAL_LAST_UPDATED_KEY, 0) ?: 0
+            }
+            set(value) {
+                val sharedPreferences = MyApplication.Globals.context?.getSharedPreferences(
+                    "TAG",
+                    Context.MODE_PRIVATE
+                )
+                sharedPreferences?.edit()
+                    ?.putLong(LOCAL_LAST_UPDATED_KEY, value)
+                    ?.apply()
 
+            }
         const val ID_KEY = "id"
         const val USERNAME_KEY = "userName"
         const val IS_LOCATION_SHARED_KEY = "isLocationShared"
         const val PROFILE_PICTURE_URL_KEY = "profilePictureUrl"
-//        const val EMAIL_KEY = "email"
-        const val PASSWORD_KEY = "password"
+        const val LOCATION_KEY = "location"
+        const val GEOHASH_KEY = "geoHash"
         const val PHONE_NUMBER_KEY = "phoneNumber"
+        const val LAST_UPDATED_KEY = "lastUpdated"
+        const val LOCAL_LAST_UPDATED_KEY = "users_last_updated"
+
 
         fun fromJSON(json: Map<String, Any>): User {
-                val id = json[ID_KEY] as? String ?: "" // type casting
-                val userName = json[USERNAME_KEY] as? String ?: "Unknown"
-                val isLocationShared = json[IS_LOCATION_SHARED_KEY] as? Boolean ?: false
-                val profilePictureUrl = json[PROFILE_PICTURE_URL_KEY] as? String ?: ""
-//                val email = json[EMAIL_KEY] as? String ?: ""
-//                val password = json[PASSWORD_KEY] as? String ?: ""
-                val phoneNumber = json[PHONE_NUMBER_KEY] as? String ?: ""
+            val id = json[ID_KEY] as? String ?: "" // type casting
+            val userName = json[USERNAME_KEY] as? String ?: "Unknown"
+            val isLocationShared = json[IS_LOCATION_SHARED_KEY] as? Boolean ?: false
+            val profilePictureUrl = json[PROFILE_PICTURE_URL_KEY] as? String ?: ""
+            val location = json[LOCATION_KEY] as? GeoPoint ?: GeoPoint(0.0, 0.0)
+            val geoHash = json[GEOHASH_KEY] as? String ?: generateGeoHash(location)
+            val phoneNumber = json[PHONE_NUMBER_KEY] as? String ?: ""
+            val timestamp = json[LAST_UPDATED_KEY] as? Timestamp
+            val longTimestamp = timestamp?.toDate()?.time
 
-                return User(
-                    id = id,
-                    profilePictureUrl = profilePictureUrl,
-                    userName = userName,
-//                    password = password,
-//                    email = email,
-                    phoneNumber = phoneNumber,
-                    isLocationShared = isLocationShared
-                )
+            return User(
+                id = id,
+                profilePictureUrl = profilePictureUrl,
+                userName = userName,
+                location = location,
+                geoHash = geoHash,
+                phoneNumber = phoneNumber,
+                isLocationShared = isLocationShared,
+                lastUpdated = longTimestamp
+            )
         }
     }
 
@@ -48,12 +78,13 @@ data class User(
         get() {
             return hashMapOf(
                 ID_KEY to id,
-//                PASSWORD_KEY to password,
-//                EMAIL_KEY to email,
                 IS_LOCATION_SHARED_KEY to isLocationShared,
                 PROFILE_PICTURE_URL_KEY to profilePictureUrl,
+                LOCATION_KEY to location,
+                GEOHASH_KEY to geoHash,
                 PHONE_NUMBER_KEY to phoneNumber,
-                USERNAME_KEY to userName
+                USERNAME_KEY to userName,
+                LAST_UPDATED_KEY to FieldValue.serverTimestamp()
             )
-    }
+        }
 }

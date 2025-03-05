@@ -7,4 +7,6 @@
     <color name="primary">#F85F6A</color>
     <color name="primary_variant">#B43C46</color>
     <color name="secondary">#FFB4B0</color>
+    <color name="green">#00FF00</color> <!-- Green -->
+    <color name="light_green">#B2FF59</color> <!-- Orange -->
 </resources>

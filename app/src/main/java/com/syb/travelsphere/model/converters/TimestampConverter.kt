@@ -1,4 +1,4 @@
-package com.syb.travelsphere.model
+package com.syb.travelsphere.model.converters
 
 import androidx.room.TypeConverter
 import com.google.firebase.Timestamp

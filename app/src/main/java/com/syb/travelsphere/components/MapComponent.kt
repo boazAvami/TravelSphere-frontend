@@ -4,8 +4,10 @@ import android.content.Context
 import android.util.AttributeSet
 import android.widget.Toast
 import com.syb.travelsphere.R
-import com.syb.travelsphere.services.Post
-import com.syb.travelsphere.services.User
+import com.syb.travelsphere.model.Model
+import com.syb.travelsphere.model.Post
+import com.syb.travelsphere.model.User
+import com.syb.travelsphere.utils.ImagePickerUtil
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -25,10 +27,23 @@ class MapComponent @JvmOverloads constructor(
     fun displayPosts(posts: List<Post>?) {
         clearMap();
 
+//        posts?.forEach { post ->
+//            val geotag = post.geotag
+//            post._id?.let {
+//                addPostMarker(geotag.coordinates[1], geotag.coordinates[0], post.location, it, post.description)
+//            }
+//        }
+
         posts?.forEach { post ->
-            val geotag = post.geotag
-            post._id?.let {
-                addPostMarker(geotag.coordinates[1], geotag.coordinates[0], post.location, it, post.description)
+            val geoPoint = post.location
+            if (geoPoint != null) {
+                addPostMarker(
+                    geoPoint.latitude,
+                    geoPoint.longitude,
+                    post.locationName,
+                    post.id,
+                    post.description
+                )
             }
         }
     }
@@ -60,35 +75,42 @@ class MapComponent @JvmOverloads constructor(
         clearMap();
 
         users?.forEach { user ->
-            val coordinates = user.location?.coordinates
-            if (coordinates != null && coordinates.size == 2) {
-                val lat = coordinates[1] // Latitude
-                val lon = coordinates[0] // Longitude
-                addUserMarker(lat, lon, user.username, user.profilePicture)
+            val geoPoint  = user.location
+            if (geoPoint  != null) {
+                addUserMarker(
+                    geoPoint.latitude,
+                    geoPoint.longitude,
+                    user
+                )
             }
         }
     }
 
     // Method to add a marker on the map for a user
-    private fun addUserMarker(lat: Double, lon: Double, name: String, profilePicture: String?) {
+    private fun addUserMarker(lat: Double, lon: Double, user: User) {
         val marker = Marker(this)
         marker.icon = resources.getDrawable(R.drawable.location, null) // Placeholder icon
 
         // Set the marker's position and title
         marker.position = GeoPoint(lat, lon)
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-        marker.title = name
+        marker.title = user.userName
 
         // Optionally, set the profile picture if provided (this assumes you have a method to load images)
-        profilePicture?.let {
+        user.profilePictureUrl?.let {
             // Set the icon to the user's profile picture if available (example, you need an image loader)
-            // marker.icon = loadImageFromUrl(it)
+//                Model.shared.getImageByUrl(
+//                    imageUrl = it
+//                ) { bitmap ->
+//                    marker.icon = bitmap
+//                }
+             //marker.icon = TODO: set icon to image profile picture
         }
 
         // Set up marker click listener
         marker.setOnMarkerClickListener { _, _ ->
             // Show user details in a Toast
-            Toast.makeText(context, "User: $name\nProfile: $profilePicture", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "User: ${user.userName}\nProfile: ${user.profilePictureUrl}", Toast.LENGTH_LONG).show()
             true
         }
 

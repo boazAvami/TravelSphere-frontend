@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.syb.travelsphere.R
 
 class PhotosGridAdapter(
-    private val photos: MutableList<String>,
+    private val photos: MutableList<Bitmap>,
     private val onDeletePhoto: (Int) -> Unit
 ) : RecyclerView.Adapter<PhotosGridAdapter.PhotoViewHolder>() {
 
@@ -29,23 +29,40 @@ class PhotosGridAdapter(
 
     // Binds the data to the ViewHolder at a given position.
     override fun onBindViewHolder(holder: PhotoViewHolder, position: Int) {
-        val photoData = photos[position]
+        val bitmap = photos[position]
+        holder.photoImageView.setImageBitmap(bitmap) // ✅ Directly use Bitmap
 
-        val bitmap = decodeImage(photoData)
-        if (bitmap != null) {
-            holder.photoImageView.setImageBitmap(bitmap)
-        } else {
-            holder.photoImageView.setImageResource(R.drawable.placeholder_image)
-        }
+
+//        val bitmap = decodeImage(photoData)
+//        if (bitmap != null) {
+//            holder.photoImageView.setImageBitmap(bitmap)
+//        } else {
+//            holder.photoImageView.setImageResource(R.drawable.placeholder_image)
+//        }
 
         // Handle photo delete action
         holder.deleteIcon.setOnClickListener {
             onDeletePhoto(position)
+            removePhoto(position) // ✅ Ensure removal from adapter
         }
     }
 
     // Returns the total number of items in the data set.
     override fun getItemCount(): Int = photos.size
+
+    // ✅ Dynamically add a new photo to the list
+    fun addPhoto(newPhoto: Bitmap) {
+        photos.add(newPhoto)
+        notifyItemInserted(photos.size - 1)
+    }
+
+    // ✅ Remove a photo and update the RecyclerView efficiently
+    private fun removePhoto(position: Int) {
+        if (position in photos.indices) {
+            photos.removeAt(position)
+            notifyItemRemoved(position)
+        }
+    }
 
     // Decodes Base64 or file path to a Bitmap.
     private fun decodeImage(photoData: String): Bitmap? {

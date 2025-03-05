@@ -10,8 +10,16 @@ import com.syb.travelsphere.base.MyApplication
 import java.io.File
 import java.io.FileOutputStream
 import android.content.Context
+import android.graphics.drawable.Drawable
 import com.cloudinary.android.policy.UploadPolicy
+import com.squareup.picasso.Picasso
 import com.syb.travelsphere.BuildConfig
+import com.syb.travelsphere.base.BitmapCallback
+import com.syb.travelsphere.base.BooleanCallback
+import com.syb.travelsphere.base.EmptyCallback
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.lang.Error
 
 class CloudinaryModel {
@@ -60,11 +68,55 @@ class CloudinaryModel {
             .dispatch()
     }
 
-    fun bitmapToFile(bitmap: Bitmap, context: Context): File {
+    fun deleteImage(imageUrl: String, callback: BooleanCallback) {
+        val publicId = extractPublicId(imageUrl) ?: return callback(false)
+
+        // Run the deletion on a background thread
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val result = MediaManager.get().cloudinary.uploader().destroy(publicId, emptyMap<String, Any>())
+                val isSuccess = result["result"] == "ok"
+
+                // Switch back to the main thread to invoke the callback
+                CoroutineScope(Dispatchers.Main).launch {
+                    callback(isSuccess)
+                }
+            } catch (e: Exception) {
+                CoroutineScope(Dispatchers.Main).launch {
+                    callback(false)
+                }
+            }
+        }
+    }
+
+    private fun extractPublicId(imageUrl: String): String {
+        return imageUrl.substringAfter("upload/").substringBeforeLast(".")
+    }
+
+    private fun bitmapToFile(bitmap: Bitmap, context: Context): File {
         val file = File(context.cacheDir, "temp_image_${System.currentTimeMillis()}.jpg")
         FileOutputStream(file).use { outputStream ->
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
         }
         return file
     }
+
+    fun getImageByUrl(imageUrl: String, callback: BitmapCallback) {
+        Picasso.get()
+            .load(imageUrl)
+            .config(Bitmap.Config.ARGB_8888) // Ensures high quality
+            .into(object : com.squareup.picasso.Target {
+                override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
+                    callback(bitmap) // Successfully loaded
+                }
+
+                override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
+                    callback(null) // Failed to load
+                }
+
+                override fun onPrepareLoad(placeHolderDrawable: Drawable?) {}
+            })
+    }
+
+
 }

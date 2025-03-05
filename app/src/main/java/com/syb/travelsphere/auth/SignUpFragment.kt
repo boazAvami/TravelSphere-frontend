@@ -22,7 +22,6 @@ import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.squareup.picasso.Picasso
 import com.syb.travelsphere.MainActivity
@@ -30,6 +29,8 @@ import com.syb.travelsphere.R
 import com.syb.travelsphere.databinding.FragmentSignUpBinding
 import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.User
+import com.syb.travelsphere.utils.ImagePickerUtil
+import com.syb.travelsphere.utils.InputValidator
 import java.io.File
 import java.io.InputStream
 
@@ -37,30 +38,9 @@ class SignUpFragment : Fragment() {
 
     private var binding: FragmentSignUpBinding? = null
     private lateinit var authManager: AuthManager
-    private var cameraLauncher: ActivityResultLauncher<Void?>? = null
+//    private var cameraLauncher: ActivityResultLauncher<Void?>? = null
     private var didSetProfilePicture: Boolean = false
-
-    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val imageUri: Uri? = result.data?.data
-            imageUri?.let {
-                if (imageUri == null) {
-                    Toast.makeText(requireContext(),"❌ Failed to select an image.", Toast.LENGTH_SHORT).show()
-                } else {
-                    updateProfilePicture(imageUri)
-                }
-            }
-        }
-    }
-
-    private val cameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-        if (isGranted) {
-            openCamera()
-        } else {
-            showCameraPermissionDeniedDialog()
-//            Toast.makeText(requireContext(), "Camera permission is required to take a photo", Toast.LENGTH_SHORT).show()
-        }
-    }
+    private lateinit var imagePicker: ImagePickerUtil
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -74,29 +54,30 @@ class SignUpFragment : Fragment() {
         }
         binding?.emailEditText?.setText(email ?: "")
 
-        cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
-                bitmap?.let {
-                    binding?.profilePictureImageView?.setImageBitmap(bitmap)
-                    binding?.profilePictureImageView?.visibility = View.VISIBLE
-                    binding?.addProfilePictureImageButton?.visibility = View.GONE
-                    didSetProfilePicture = true
-                } ?: Toast.makeText(requireContext(), "Failed to capture photo", Toast.LENGTH_SHORT).show()
-        }
-
-        binding?.addProfilePictureImageButton?.setOnClickListener {
-            showImagePickerDialog()
-        }
-
-        binding?.profilePictureImageView?.setOnClickListener {
-            showImagePickerDialog()
-        }
-
         return binding?.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         authManager = AuthManager()
+
+        // Initialize ImagePickerUtil
+        imagePicker = ImagePickerUtil(this) { bitmap ->
+            bitmap?.let {
+                binding?.profilePictureImageView?.setImageBitmap(it)
+                binding?.profilePictureImageView?.visibility = View.VISIBLE
+                binding?.addProfilePictureImageButton?.visibility = View.GONE
+                didSetProfilePicture = true
+            }
+        }
+
+        binding?.addProfilePictureImageButton?.setOnClickListener {
+            imagePicker.showImagePickerDialog()
+        }
+
+        binding?.profilePictureImageView?.setOnClickListener {
+            imagePicker.showImagePickerDialog()
+        }
 
         // Sign Up Button Click
         binding?.signUpButton?.setOnClickListener {
@@ -133,35 +114,6 @@ class SignUpFragment : Fragment() {
         }
     }
 
-    private fun showImagePickerDialog() {
-        val bottomSheetDialog = BottomSheetDialog(requireContext())
-        val view = layoutInflater.inflate(R.layout.dialog_image_picker, null)
-        view.findViewById<View>(R.id.optionCamera).setOnClickListener {
-            bottomSheetDialog.dismiss()
-            openCamera()
-        }
-        view.findViewById<View>(R.id.optionGallery).setOnClickListener {
-            bottomSheetDialog.dismiss()
-            openGallery()
-        }
-        bottomSheetDialog.setContentView(view)
-        bottomSheetDialog.show()
-    }
-
-    private fun openCamera() {
-        if (requireContext().checkSelfPermission(android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            cameraLauncher?.launch(null)
-        } else {
-            // Permission not granted, Request it
-            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
-        }
-    }
-
-    private fun openGallery() {
-        val pickPhotoIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        galleryLauncher.launch(pickPhotoIntent)
-    }
-
     private fun showCameraPermissionDeniedDialog() {
         AlertDialog.Builder(requireContext())
             .setTitle("Camera Permission Required")
@@ -195,45 +147,17 @@ class SignUpFragment : Fragment() {
 
         var isValid = true
 
-        // **Email Validation**
-        if (email.isEmpty()) {
-            binding?.emailInputLayout?.error = "Email is required"
+        if (!InputValidator.validateEmail(email, binding?.emailInputLayout)) {
             isValid = false
-        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding?.emailInputLayout?.error = "Invalid email format"
-            isValid = false
-        } else {
-            binding?.emailInputLayout?.error = null
         }
-
-        // **Password Validation**
-        if (password.isEmpty()) {
-            binding?.passwordInputLayout?.error = "Password is required"
+        if (!InputValidator.validatePassword(password, binding?.passwordInputLayout)) {
             isValid = false
-        } else if (password.length < 6) {
-            binding?.passwordInputLayout?.error = "Password must be at least 6 characters long"
-            isValid = false
-        } else {
-            binding?.passwordInputLayout?.error = null
         }
-
-        // **Username Validation**
-        if (username.isEmpty()) {
-            binding?.usernameInputLayout?.error = "Username is required"
+        if (!InputValidator.validateUsername(username, binding?.usernameInputLayout)) {
             isValid = false
-        } else {
-            binding?.usernameInputLayout?.error = null
         }
-
-        // **Phone Number Validation**
-        if (phone.isEmpty()) {
-            binding?.phoneNumberInputLayout?.error = "Phone number is required"
+        if (!InputValidator.validatePhoneNumber(phone, binding?.phoneNumberInputLayout)) {
             isValid = false
-        } else if (!phone.matches(Regex("^[0-9]{9,15}$"))) {
-            binding?.phoneNumberInputLayout?.error = "Invalid phone number format"
-            isValid = false
-        } else {
-            binding?.phoneNumberInputLayout?.error = null
         }
 
         return isValid

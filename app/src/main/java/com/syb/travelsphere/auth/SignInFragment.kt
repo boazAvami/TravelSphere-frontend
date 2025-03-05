@@ -13,6 +13,7 @@ import androidx.navigation.fragment.navArgs
 import com.syb.travelsphere.MainActivity
 import com.syb.travelsphere.R
 import com.syb.travelsphere.databinding.FragmentSignInBinding
+import com.syb.travelsphere.utils.InputValidator
 
 class SignInFragment : Fragment() {
 
@@ -39,45 +40,11 @@ class SignInFragment : Fragment() {
 
         authManager = AuthManager()
 
-        // Sign In Button Click
-//        binding?.signInButton?.setOnClickListener {
-//            val email = binding?.emailEditText?.text.toString().trim()
-//            val password = binding?.passwordEditText?.text.toString().trim()
-//
-//            if (email.isNotEmpty() && password.isNotEmpty()) {
-//                signIn(email, password)
-//            } else {
-//                Toast.makeText(requireContext(), "⚠️ lease fill all fields.", Toast.LENGTH_SHORT).show()
-//            }
-//        }
         binding?.signInButton?.setOnClickListener {
             val email = binding?.emailEditText?.text.toString().trim()
             val password = binding?.passwordEditText?.text.toString().trim()
 
-            var isValid = true
-
-            // Validate Email
-            if (email.isEmpty()) {
-                binding?.emailInputLayout?.error = "⚠️ Please enter your email"
-                isValid = false
-            } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                binding?.emailInputLayout?.error = "Please enter a valid email"
-                isValid = false
-            } else {
-                binding?.emailInputLayout?.error = null  // Clear error if valid
-            }
-
-            // Validate Password
-            if (password.isEmpty()) {
-                binding?.passwordInputLayout?.error = "Please enter your password"
-                isValid = false
-            } else if (password.length < 6) { // TODO: make validation globals
-                binding?.passwordInputLayout?.error = "Please enter a valid email"
-                isValid = false
-            } else {
-                binding?.passwordInputLayout?.error = null  // Clear error if valid
-            }
-
+            val isValid = validateInputs()
             // Proceed with Sign-In if Input is Valid
             if (isValid) {
                 signIn(email, password)
@@ -86,7 +53,6 @@ class SignInFragment : Fragment() {
 
         // Navigate to Sign Up
         binding?.signUpLink?.setOnClickListener {
-//            Navigation.createNavigateOnClickListener(action)
             val email = binding?.emailEditText?.text.toString().trim()
             val action = SignInFragmentDirections.actionSignInFragmentToSignUpFragment().apply {
                 this.email = email
@@ -94,6 +60,23 @@ class SignInFragment : Fragment() {
             findNavController().navigate(action)
         }
     }
+
+    private fun validateInputs(): Boolean {
+        val email = binding?.emailEditText?.text.toString().trim()
+        val password = binding?.passwordEditText?.text.toString().trim()
+
+        var isValid = true
+
+        if (!InputValidator.validateEmail(email, binding?.emailInputLayout)) {
+            isValid = false
+        }
+        if (!InputValidator.validatePassword(password, binding?.passwordInputLayout)) {
+            isValid = false
+        }
+
+        return isValid
+    }
+
 
     private fun signIn(email: String, password: String) {
         authManager.signInUser(email, password) { user ->

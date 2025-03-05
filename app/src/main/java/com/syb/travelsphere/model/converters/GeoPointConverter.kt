@@ -1,4 +1,4 @@
-package com.syb.travelsphere.model
+package com.syb.travelsphere.model.converters
 
 import androidx.room.TypeConverter
 import com.google.firebase.firestore.GeoPoint
@@ -18,4 +18,6 @@ class GeoPointConverter {
             GeoPoint(0.0, 0.0) // Default to (0,0) if parsing fails
         }
     }
+
+
 }

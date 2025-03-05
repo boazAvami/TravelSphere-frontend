@@ -62,6 +62,9 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.database.ktx)
 
+    // for live data refresh
+    implementation(libs.androidx.swiperefreshlayout)
+
     //cloudinary - storage
     implementation(libs.cloudinary.cloudinary.android)
 
