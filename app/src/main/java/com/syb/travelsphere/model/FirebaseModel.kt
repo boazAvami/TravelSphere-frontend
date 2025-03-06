@@ -18,6 +18,7 @@ import com.syb.travelsphere.base.PostsCallback
 import com.syb.travelsphere.base.UserCallback
 import com.syb.travelsphere.base.UsersCallback
 import com.syb.travelsphere.utils.GeoUtils
+import com.syb.travelsphere.utils.TimeUtil.toFirebaseTimestamp
 import java.util.Date
 
 class FirebaseModel {
@@ -32,7 +33,7 @@ class FirebaseModel {
 
     fun getAllUsers(sinceLastUpdated: Long, callback: UsersCallback) {
         database.collection(Constants.COLLECTIONS.USERS)
-            .whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, Timestamp(Date(sinceLastUpdated)))
+            .whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, sinceLastUpdated.toFirebaseTimestamp)
             .get()
             .addOnCompleteListener {
                 when (it.isSuccessful) {
@@ -42,13 +43,11 @@ class FirebaseModel {
                             users.add(User.fromJSON(document.data))
                             Log.d(TAG, "Fetched post: ${document.id} => ${document.data}")
                         }
+                        Log.d(TAG, "num of users: ${users.size}")
                         callback(users)
                     }
                     false -> callback(listOf())
                 }
-            }
-            .addOnFailureListener {
-                    error -> Log.w(TAG, "Error getting document", error)
             }
     }
 
@@ -151,7 +150,7 @@ class FirebaseModel {
 
     fun getAllPosts(sinceLastUpdated: Long, callback: PostsCallback) {
         database.collection(Constants.COLLECTIONS.POSTS)
-            .whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, Timestamp(Date(sinceLastUpdated)))
+            .whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, sinceLastUpdated.toFirebaseTimestamp)
             .get()
             .addOnCompleteListener {
                 when (it.isSuccessful) {
@@ -161,13 +160,11 @@ class FirebaseModel {
                             posts.add(Post.fromJSON(document.data))
                             Log.d(TAG, "Post received: ${document.id} => ${document.data}")
                         }
+                        Log.d(TAG, "num of posts: ${posts.size}")
                         callback(posts)
                     }
                     false -> callback(listOf())
                 }
-            }
-            .addOnFailureListener {
-                    error -> Log.w(TAG, "Error getting document", error)
             }
     }
 

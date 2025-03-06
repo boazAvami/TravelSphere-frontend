@@ -2,10 +2,12 @@ package com.syb.travelsphere.pages
 
 import android.os.Bundle
 import android.util.Log
+import android.view.Display.Mode
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.syb.travelsphere.databinding.FragmentAllPostsBinding
 import com.syb.travelsphere.model.Model
@@ -17,21 +19,31 @@ class AllPostsFragment : Fragment() {
     private var binding: FragmentAllPostsBinding? = null
 
     private lateinit var postListAdapter: PostListAdapter
-//    private lateinit var travelService: TravelService
 
-    private var posts = listOf<Post>()
+    private var posts: LiveData<List<Post>> = Model.shared.posts
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
         binding = FragmentAllPostsBinding.inflate(inflater, container, false)
 
-        binding?.postListRecyclerView?.setHasFixedSize(true)
         setupRecyclerView()
-        observePosts()
+
+        posts.observe(viewLifecycleOwner) { posts ->
+            Log.d(TAG, "UI updated: Received ${posts.size} posts")
+
+            postListAdapter.update(posts)
+            binding?.mapComponent?.displayPosts(posts)
+            Log.d(TAG, "UI Updated: Showing ${posts.size} posts")
+            postListAdapter?.notifyDataSetChanged()
+        }
 
         binding?.swipeToRefresh?.setOnRefreshListener {
-            onResume()
+            getAllPosts()
+        }
+
+        Model.shared.loadingState.observe(viewLifecycleOwner) { state ->
+            binding?.swipeToRefresh?.isRefreshing = state == Model.LoadingState.LOADING
         }
 
         return binding?.root
@@ -53,36 +65,14 @@ class AllPostsFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        binding?.postListRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
-        postListAdapter = PostListAdapter(mutableListOf()) { post -> centerMapOnPost(post) }
+        binding?.postListRecyclerView?.setHasFixedSize(true)
+        binding?.postListRecyclerView?.layoutManager = LinearLayoutManager(context)
+        postListAdapter = PostListAdapter(posts.value) { post -> centerMapOnPost(post) }
         binding?.postListRecyclerView?.adapter = postListAdapter
     }
 
-    private fun observePosts() {
-        Model.shared.posts.observe(viewLifecycleOwner) { posts ->
-            Log.d(TAG, "UI updated: Received ${posts.size} posts")
-
-            if (posts.isNotEmpty()) {
-                postListAdapter.updatePosts(posts)
-                binding?.mapComponent?.displayPosts(posts)
-
-                Log.d(TAG, "UI Updated: Showing ${posts.size} posts")
-            } else {
-                Log.d(TAG, "observePosts: No new posts available yet")
-            }
-        }
-    }
-
     private fun getAllPosts() {
-        binding?.progressBar?.visibility = View.VISIBLE
-
-        Model.shared.refreshAllUsers {
-            Model.shared.refreshAllPosts {
-                binding?.progressBar?.visibility = View.GONE // Hide progress bar when done
-                binding?.swipeToRefresh?.isRefreshing = false // Stop swipe refresh
-            }
-//            binding?.progressBar?.visibility = View.GONE
-        }
+        Model.shared.refreshAllPosts()
     }
 
     private fun centerMapOnPost(post: Post) {

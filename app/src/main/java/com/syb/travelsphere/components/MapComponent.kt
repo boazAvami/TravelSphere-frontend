@@ -27,12 +27,10 @@ class MapComponent @JvmOverloads constructor(
     fun displayPosts(posts: List<Post>?) {
         clearMap();
 
-//        posts?.forEach { post ->
-//            val geotag = post.geotag
-//            post._id?.let {
-//                addPostMarker(geotag.coordinates[1], geotag.coordinates[0], post.location, it, post.description)
-//            }
-//        }
+        posts?.forEach { post ->
+            val geotag = post.location
+            addPostMarker(geotag.latitude, geotag.longitude, post.locationName, post.id, post.description)
+        }
 
         posts?.forEach { post ->
             val geoPoint = post.location

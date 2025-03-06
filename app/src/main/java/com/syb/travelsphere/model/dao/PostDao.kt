@@ -15,11 +15,11 @@ interface PostDao {
     @Query("SELECT * FROM posts")
     fun getAllPosts(): LiveData<List<Post>>
 
-    @Query("SELECT * FROM posts ORDER BY lastUpdated DESC")
-    fun getAllPostsOrderDesc(): LiveData<List<Post>>
+//    @Query("SELECT * FROM posts ORDER BY lastUpdated DESC")
+//    fun getAllPostsOrderDesc(): LiveData<List<Post>>
 
     @Query("SELECT * FROM posts WHERE id = :id")
-    fun getPostById(id: String): LiveData<Post>
+    fun getPostById(id: String): Post
 
     @Update
     fun updatePost(post: Post)
@@ -30,8 +30,8 @@ interface PostDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertPost(vararg post: Post)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertPosts(posts: List<Post>)  // Batching insertions
+//    @Insert(onConflict = OnConflictStrategy.REPLACE)
+//    suspend fun insertPosts(posts: List<Post>)  // Batching insertions
 
     @Query("SELECT * FROM posts WHERE ownerId = :ownerId")
     fun getPostsByUser(ownerId: String): LiveData<List<Post>>
