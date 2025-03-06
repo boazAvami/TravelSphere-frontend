@@ -62,12 +62,9 @@ class Model private constructor() {
 
     }
 
-    fun getNearbyUsers(currentLocation: GeoPoint, radiusInKm: Double, callback: (LiveData<List<User>>) -> Unit) {
+    fun refreshNearbyUsers(currentLocation: GeoPoint, radiusInKm: Double, callback: (LiveData<List<User>>) -> Unit) {
         loadingState.postValue(LoadingState.LOADING)
 
-//        firebaseModel.getNearbyUsers(
-//            currentLocation = currentLocation, radiusInKm = radiusInKm, callback = callback
-//        )
         executor.execute {
             try {
                 var lastUpdated: Long = User.lastUpdated
@@ -77,25 +74,53 @@ class Model private constructor() {
                     currentLocation = currentLocation, radiusInKm = radiusInKm,
                     sinceLastUpdated = lastUpdated
                 ) { usersList ->
-                    val latestTime = lastUpdated
 
-                    for (user in usersList) {
-                        database.userDao().insertUser(user)
-                        user.lastUpdated?.let {
-                            if (latestTime < it) {
-                                lastUpdated = it
+                    executor.execute {
+                        var currentTime = lastUpdated
+
+                        for (user in usersList) {
+                            database.userDao().insertUser(user)
+                            user.lastUpdated?.let {
+                                if (currentTime  < it) {
+                                    currentTime = it
+                                }
                             }
                         }
+
+                        User.lastUpdated = currentTime
+                        val users = database.userDao().getNearbyUsers(geoHashBounds.first, geoHashBounds.second)
+
+                        mainHandler.post {
+                            callback(users)
+                        }
+                        loadingState.postValue(LoadingState.LOADED)
                     }
-                    User.lastUpdated = latestTime
-                    val users = database.userDao().getNearbyUsers(geoHashBounds.first, geoHashBounds.second)
-                    mainHandler.post {
-                        callback(users)
-                    }
-                    loadingState.postValue(LoadingState.LOADED)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error fetching users: ${e.message}")
+                Log.e(TAG, "Error fetching nearby users: ${e.message}")
+            }
+        }
+    }
+
+    fun getAllUsers() {
+        loadingState.postValue(LoadingState.LOADING)
+        val lastUpdated: Long = User.lastUpdated
+
+        firebaseModel.getAllUsers(0L) { usersList ->
+            executor.execute {
+                var currentTime = lastUpdated
+
+                for (user in usersList) {
+                    database.userDao().insertUser(user)
+                    user.lastUpdated?.let {
+                        if (currentTime  < it) {
+                            currentTime = it
+                        }
+                    }
+                }
+
+                User.lastUpdated = currentTime
+                loadingState.postValue(LoadingState.LOADED)
             }
         }
     }
@@ -122,7 +147,6 @@ class Model private constructor() {
             }
         }
     }
-
 
     fun addUser(user: User, image: Bitmap?, callback: EmptyCallback) {
         firebaseModel.addUser(user) {
@@ -213,101 +237,37 @@ class Model private constructor() {
         }
     }
 
-//    fun refreshAllPosts(callback:  (LiveData<List<Post>>) -> Unit) {
-//        loadingState.postValue(LoadingState.LOADING)
-////        executor.execute {
-//        try {
-//            var lastUpdated: Long = Post.lastUpdated
-////                val existingPosts = database.postDao().getAllPosts() // Fetch all existing posts
-//
-//            // **LOG: Check the current size of Room before fetching new posts**
-//            val currentRoomPosts = database.postDao().getAllPosts().value?.size ?: 0
-//            Log.d(TAG, "Before fetching: Room contains $currentRoomPosts posts")
-//
-//            firebaseModel.getAllPosts(lastUpdated) { postsList ->
-//                Log.d(TAG, "firebase fetching: firebase contains ${postsList.size  ?: 0} posts")
-//
-//                executor.execute {
-//                    val latestTime = lastUpdated
-////                        val mergedPosts = existingPosts.toMutableList() // Merge old + new posts
-//
-//                    for (post in postsList) {
-//                        database.postDao().insertPost(post)
-//                        post.lastUpdated?.let {
-//                            if (latestTime < it) {
-//                                lastUpdated = it
-//                            }
-//                        }
-//                    }
-//                    Post.lastUpdated = latestTime
-//                    val posts = database.postDao().getAllPosts()
-//                    Log.d(TAG, "After fetching: Room contains ${posts.value?.size ?: 0} posts")
-//
-//                    mainHandler.post {
-//                        callback(posts)
-//                    }
-//                }
-//            }
-//        } catch (e: Exception) {
-//            Log.e(TAG, "Error fetching posts: ${e.message}")
-//        }
-////        }
-//
-//        loadingState.postValue(LoadingState.LOADING)
-//    }
+    fun getAllPosts() {
+        loadingState.postValue(LoadingState.LOADING)
+        val lastUpdated: Long = Post.lastUpdated
 
-//    // this was the last good one
-//    fun refreshAllPosts(callback:  (LiveData<List<Post>>) -> Unit) {
-//        loadingState.postValue(LoadingState.LOADING)
-//        var lastUpdated: Long = Post.lastUpdated
-//
-//        firebaseModel.getAllPosts(lastUpdated) { posts ->
-//            executor.execute {
-//                val latestTime = lastUpdated
-//
-//                for (post in posts) {
-//                    var userExists = database.userDao().getUserById(post.ownerId) != null
-//
-//                    if (!userExists) {
-//                        Log.w(TAG, "User ${post.ownerId} not found in Room, fetching from Firebase...")
-//
-//                        shared.getUserById(post.ownerId) { fetchedUser ->
-//                            if (fetchedUser != null) {
-//                                Log.d(TAG, "User ${post.ownerId} fetched from Firebase, inserting into Room")
-//                                try {
-//                                    database.postDao().insertPost(post)
-//                                    post.lastUpdated?.let {
-//                                        if (latestTime < it) {
-//                                            lastUpdated = it
-//                                        }
-//                                    }
-//                                } catch (e: Exception) {
-//                                    Log.e(TAG, "Failed to insert post: ${post.id}", e)
-//                                }
-//
-//                            } else {
-//                                Log.e(TAG, "User ${post.ownerId} not found in Firebase. Skipping post ${post.id}")
-//                            }
-//                        }
-//                    } else {
-//                        try {
-//                            database.postDao().insertPost(post)
-//                            post.lastUpdated?.let {
-//                                if (latestTime < it) {
-//                                    lastUpdated = it
-//                                }
-//                            }
-//                        } catch (e: Exception) {
-//                            Log.e(TAG, "Failed to insert post: ${post.id}", e)
-//                        }
-//                    }
-//                }
-//
-//                Post.lastUpdated = lastUpdated
-//                loadingState.postValue(LoadingState.LOADED)
-//            }
-//        }
-//    }
+        firebaseModel.getAllPosts(0L) { postsList ->
+            executor.execute {
+                var currentTime = lastUpdated
+
+                for (post in postsList) {
+                    val postOwner = database.userDao().getUserById(post.ownerId)
+                    if (postOwner != null) {
+                        database.postDao().insertPost(post)
+                    } else {
+                        firebaseModel.getUserById(post.ownerId) {
+                            database.userDao().insertUser(postOwner)
+                            database.postDao().insertPost(post)
+                        }
+                    }
+                    post.lastUpdated?.let {
+                        if (currentTime  < it) {
+                            currentTime = it
+                        }
+                    }
+                }
+
+                Post.lastUpdated = currentTime
+                loadingState.postValue(LoadingState.LOADED)
+            }
+        }
+    }
+
 
     fun refreshAllPosts() {
         loadingState.postValue(LoadingState.LOADING)

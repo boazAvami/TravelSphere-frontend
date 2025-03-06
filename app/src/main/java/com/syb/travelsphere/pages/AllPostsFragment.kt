@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.syb.travelsphere.databinding.FragmentAllPostsBinding
@@ -17,10 +18,8 @@ import com.syb.travelsphere.ui.PostListAdapter
 class AllPostsFragment : Fragment() {
 
     private var binding: FragmentAllPostsBinding? = null
-
     private lateinit var postListAdapter: PostListAdapter
-
-    private var posts: LiveData<List<Post>> = Model.shared.posts
+    private val viewModel: AllPostsViewModel by viewModels() // ViewModel instance
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -29,7 +28,7 @@ class AllPostsFragment : Fragment() {
 
         setupRecyclerView()
 
-        posts.observe(viewLifecycleOwner) { posts ->
+        viewModel.posts.observe(viewLifecycleOwner) { posts ->
             Log.d(TAG, "UI updated: Received ${posts.size} posts")
 
             postListAdapter.update(posts)
@@ -39,7 +38,7 @@ class AllPostsFragment : Fragment() {
         }
 
         binding?.swipeToRefresh?.setOnRefreshListener {
-            getAllPosts()
+            viewModel.refreshPosts()
         }
 
         Model.shared.loadingState.observe(viewLifecycleOwner) { state ->
@@ -49,30 +48,16 @@ class AllPostsFragment : Fragment() {
         return binding?.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-//        travelService = TravelService()
-
-//        binding?.postListRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
-
-//        fetchPostsAndSetUpScreen()
-    }
-
     override fun onResume() {
         super.onResume()
-        getAllPosts()
+        viewModel.refreshPosts()
     }
 
     private fun setupRecyclerView() {
         binding?.postListRecyclerView?.setHasFixedSize(true)
         binding?.postListRecyclerView?.layoutManager = LinearLayoutManager(context)
-        postListAdapter = PostListAdapter(posts.value) { post -> centerMapOnPost(post) }
+        postListAdapter = PostListAdapter(viewModel.posts.value) { post -> centerMapOnPost(post) }
         binding?.postListRecyclerView?.adapter = postListAdapter
-    }
-
-    private fun getAllPosts() {
-        Model.shared.refreshAllPosts()
     }
 
     private fun centerMapOnPost(post: Post) {
