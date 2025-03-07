@@ -23,21 +23,19 @@ data class User(
 ) {
     companion object {
         var lastUpdated: Long
-            get() {
-                return MyApplication.Globals.context?.getSharedPreferences(
+            get() = MyApplication.Globals.context?.getSharedPreferences(
                     "TAG",
-                    Context.MODE_PRIVATE
-                )?.getLong(LOCAL_LAST_UPDATED_KEY, 0) ?: 0
-            }
-            set(value) {
-                val sharedPreferences = MyApplication.Globals.context?.getSharedPreferences(
-                    "TAG",
-                    Context.MODE_PRIVATE
-                )
-                sharedPreferences?.edit()
-                    ?.putLong(LOCAL_LAST_UPDATED_KEY, value)
-                    ?.apply()
+                    Context.MODE_PRIVATE)
+                ?.getLong(LOCAL_LAST_UPDATED_KEY, 0) ?: 0
 
+            set(value) {
+                MyApplication.Globals.context
+                    ?.getSharedPreferences(
+                    "TAG",
+                    Context.MODE_PRIVATE
+                )?.apply {
+                    edit().putLong(LOCAL_LAST_UPDATED_KEY, value).apply()
+                }
             }
         const val ID_KEY = "id"
         const val USERNAME_KEY = "userName"
@@ -47,7 +45,7 @@ data class User(
         const val GEOHASH_KEY = "geoHash"
         const val PHONE_NUMBER_KEY = "phoneNumber"
         const val LAST_UPDATED_KEY = "lastUpdated"
-        const val LOCAL_LAST_UPDATED_KEY = "users_last_updated"
+        const val LOCAL_LAST_UPDATED_KEY = "localUserLastUpdated"
 
 
         fun fromJSON(json: Map<String, Any>): User {
@@ -59,7 +57,7 @@ data class User(
             val geoHash = json[GEOHASH_KEY] as? String ?: generateGeoHash(location)
             val phoneNumber = json[PHONE_NUMBER_KEY] as? String ?: ""
             val timestamp = json[LAST_UPDATED_KEY] as? Timestamp
-            val longTimestamp = timestamp?.toDate()?.time
+            val lastUpdatedLongTimestamp = timestamp?.toDate()?.time
 
             return User(
                 id = id,
@@ -69,7 +67,7 @@ data class User(
                 geoHash = geoHash,
                 phoneNumber = phoneNumber,
                 isLocationShared = isLocationShared,
-                lastUpdated = longTimestamp
+                lastUpdated = lastUpdatedLongTimestamp
             )
         }
     }

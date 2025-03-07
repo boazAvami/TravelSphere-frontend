@@ -42,21 +42,19 @@ data class Post(
 ) {
     companion object {
         var lastUpdated: Long
-            get() {
-                return MyApplication.Globals.context?.getSharedPreferences(
-                    "TAG",
-                    Context.MODE_PRIVATE
-                )?.getLong(LOCAL_LAST_UPDATED_KEY, 0) ?: 0
-            }
-            set(value) {
-                val sharedPreferences = MyApplication.Globals.context?.getSharedPreferences(
-                    "TAG",
-                    Context.MODE_PRIVATE
-                )
-                sharedPreferences?.edit()
-                    ?.putLong(LOCAL_LAST_UPDATED_KEY, value)
-                    ?.apply()
+            get() = MyApplication.Globals.context?.getSharedPreferences(
+                "TAG",
+                Context.MODE_PRIVATE)
+                ?.getLong(LOCAL_LAST_UPDATED_KEY, 0) ?: 0
 
+            set(value) {
+                MyApplication.Globals.context
+                    ?.getSharedPreferences(
+                        "TAG",
+                        Context.MODE_PRIVATE
+                    )?.apply {
+                        edit().putLong(LOCAL_LAST_UPDATED_KEY, value).apply()
+                    }
             }
         const val ID_KEY = "id"
         const val DESCRIPTION_KEY = "description"
@@ -79,7 +77,7 @@ data class Post(
             val creationTime = json[CREATION_TIME_KEY] as? Timestamp ?: Timestamp(0, 0)
             val ownerId = json[OWNER_ID_KEY] as? String ?: "Unknown"
             val timestamp = json[User.LAST_UPDATED_KEY] as? Timestamp
-            val longTimestamp = timestamp?.toDate()?.time
+            val lastUpdatedLongTimestamp = timestamp?.toDate()?.time
 
             return Post(
                 id = id,
@@ -90,12 +88,12 @@ data class Post(
                 creationTime = creationTime,
                 ownerId = ownerId,
                 locationName = locationName,
-                lastUpdated = longTimestamp
+                lastUpdated = lastUpdatedLongTimestamp
             )
         }
     }
 
-    val json: HashMap<String, Any?> //TODO: Why need ANY? and not just Any without the '?'
+    val json: HashMap<String, Any?>
         get() {
             return hashMapOf(
                 ID_KEY to id,

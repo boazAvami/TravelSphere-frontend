@@ -24,7 +24,7 @@ interface UserDao {
     fun getNearbyUsers(minGeoHash: String, maxGeoHash: String): LiveData<List<User>>
 
     @Query("SELECT * FROM users WHERE id = :id")
-    fun getUserById(id: String): LiveData<User>
+    fun getUserById(id: String): User
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertUser(vararg user: User)
