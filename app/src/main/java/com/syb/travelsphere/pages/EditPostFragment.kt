@@ -22,11 +22,10 @@ class EditPostFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         super.onViewCreated(view, savedInstanceState)
 
-        //todo: get data from the constructor / from model
         post;
         Model.shared.getUserById(post.ownerId) { user ->
-            binding?.userNameText?.text = user.value?.userName
-            user.value?.profilePictureUrl?.let { it1 ->
+            binding?.userNameText?.text = user?.userName
+            user?.profilePictureUrl?.let { it1 ->
                 Model.shared.getImageByUrl(it1) { image ->
                     run {
                         binding?.userProfilePicture?.setImageBitmap(image)

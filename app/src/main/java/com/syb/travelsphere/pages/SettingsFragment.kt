@@ -27,14 +27,16 @@ class SettingsFragment : Fragment() {
         authManager = AuthManager()  // Initialize AuthManager
         binding = FragmentSettingsBinding.inflate(inflater, container, false)
         setupListeners()
-        authManager.getCurrentUser()?.uid?.let {
-            Model.shared.getUserById(it) { liveData: LiveData<User> ->
-                if (liveData != null && authManager.getCurrentUser() != null) {
+        authManager.getCurrentUser()?.uid?.let { userid ->
+            Model.shared.getUserById(
+                userid
+            ) { fetchedUser ->
+                if (fetchedUser != null && authManager.getCurrentUser() != null) {
                     binding?.emailText?.setText(authManager.getCurrentUser()?.email)
-                    binding?.phoneText?.setText(liveData.value?.phoneNumber)
-                    binding?.usernameText?.setText(liveData.value?.userName)
-                    binding?.locationSwitch?.isChecked = liveData.value?.isLocationShared == true
-                    liveData.value?.profilePictureUrl?.let { it1 ->
+                    binding?.phoneText?.setText(fetchedUser.phoneNumber)
+                    binding?.usernameText?.setText(fetchedUser.userName)
+                    binding?.locationSwitch?.isChecked = fetchedUser.isLocationShared == true
+                    fetchedUser.profilePictureUrl?.let { it1 ->
                         Model.shared.getImageByUrl(it1) { image ->
                             run {
                                 binding?.profileImage?.setImageBitmap(image)
@@ -43,6 +45,8 @@ class SettingsFragment : Fragment() {
                     }
                 }
             }
+
+
         }
 
         // Enable back button in toolbar
@@ -53,12 +57,12 @@ class SettingsFragment : Fragment() {
         if (currentUser != null) {
 
             Model.shared.getUserById(currentUser.uid, { liveData ->
-                if (liveData.value != null) {
+                if (liveData != null) {
                     binding?.emailText?.setText(currentUser.email)
-                    binding?.phoneText?.setText(liveData.value?.phoneNumber)
-                    binding?.usernameText?.setText(liveData.value?.userName)
-                    binding?.locationSwitch?.isChecked = liveData.value?.isLocationShared == true
-                    liveData.value?.profilePictureUrl?.let { it1 ->
+                    binding?.phoneText?.setText(liveData.phoneNumber)
+                    binding?.usernameText?.setText(liveData.userName)
+                    binding?.locationSwitch?.isChecked = liveData.isLocationShared == true
+                    liveData.profilePictureUrl?.let { it1 ->
                         Model.shared.getImageByUrl(it1) { image ->
                             run {
                                 binding?.profileImage?.setImageBitmap(image)
@@ -91,9 +95,9 @@ class SettingsFragment : Fragment() {
             val currentUser = authManager.getCurrentUser()
             if (currentUser != null) {
                 Model.shared.getUserById(currentUser.uid) { user ->
-                    if (user.value != null) {
+                    if (user != null) {
                         // Create updated user object (email is not modified)
-                        val updatedUser = user.value?.copy(
+                        val updatedUser = user.copy(
                             phoneNumber = updatedPhone,
                             userName = updatedUsername,
                             isLocationShared = isLocationShared  // ✅ Add location sharing status
