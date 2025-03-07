@@ -1,5 +1,6 @@
 package com.syb.travelsphere.pages
 
+import ViewPostFragment
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -64,7 +65,7 @@ class AllPostsFragment : Fragment() {
 
             if (posts.isNotEmpty()) {
                 postListAdapter.updatePosts(posts)
-                binding?.mapComponent?.displayPosts(posts)
+                binding?.mapComponent?.displayPosts(posts, ViewPostFragment(), ViewPostFragment::class.java)
 
                 Log.d(TAG, "UI Updated: Showing ${posts.size} posts")
             } else {

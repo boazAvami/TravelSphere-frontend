@@ -72,7 +72,7 @@ class ProfileFragment : Fragment() {
                             binding?.postListRecyclerView?.adapter = PostListAdapter(liveData.value.orEmpty().toMutableList()) { post ->
                                 centerMapOnPost(post)
                             }
-                            binding?.mapComponent?.displayPosts(liveData.value)
+                            binding?.mapComponent?.displayPosts(liveData.value, EditPostFragment(), EditPostFragment::class.java)
                         }
                     }
                 }
