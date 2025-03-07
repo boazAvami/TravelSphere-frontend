@@ -99,6 +99,7 @@ class SettingsFragment : Fragment() {
                             isLocationShared = isLocationShared  // ✅ Add location sharing status
                         )
 
+
                         updatedUser?.profilePictureUrl?.let { it1 ->
                             Model.shared.getImageByUrl(it1) { image ->
                                 Model.shared.editUser(

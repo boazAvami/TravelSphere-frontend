@@ -4,6 +4,7 @@ import com.google.firebase.Timestamp
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Date
 
 object TimeUtil {
     fun formatTimestamp(timestamp: Timestamp): String {
@@ -13,4 +14,7 @@ object TimeUtil {
 
         return localDateTime.format(formatter)
     }
+
+    val Long.toFirebaseTimestamp: Timestamp
+        get() = Timestamp(Date(this))
 }

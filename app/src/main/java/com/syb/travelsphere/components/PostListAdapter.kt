@@ -15,8 +15,9 @@ import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.Post
 import com.syb.travelsphere.utils.TimeUtil.formatTimestamp
 
-class PostListAdapter(private val posts: MutableList<Post>, private val onPostClick: (Post) -> Unit) :
-    RecyclerView.Adapter<PostListAdapter.PostViewHolder>() {
+class PostListAdapter(private var posts: List<Post>?, private val onPostClick: (Post) -> Unit) :
+    RecyclerView.Adapter<PostListAdapter.PostViewHolder>()
+{
 
     companion object {
         private const val TAG = "PostListAdapter"
@@ -28,16 +29,16 @@ class PostListAdapter(private val posts: MutableList<Post>, private val onPostCl
     }
 
     override fun onBindViewHolder(holder: PostViewHolder, position: Int) {
-        val post = posts[position]
-        holder.bind(post)
+        val post = posts?.get(position)
+        if (post != null) {
+            holder.bind(post)
+        }
     }
 
-    override fun getItemCount() = posts.size
+    override fun getItemCount() = posts?.size ?: 0
 
-    fun updatePosts(newPosts: List<Post>) {
-        posts.clear()  // Clear old data
-        posts.addAll(newPosts)  // Add new data
-        notifyDataSetChanged()  // Notify RecyclerView of changes
+    fun update(posts: List<Post>?) {
+        this.posts = posts
     }
 
     inner class PostViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -49,7 +50,6 @@ class PostListAdapter(private val posts: MutableList<Post>, private val onPostCl
 
         fun bind(post: Post) {
             // Check if the base64 string is not null or empty
-//            val base64Image = post.photos[0]
             val firstImageUrl = post.photos.getOrNull(0)
             if (!firstImageUrl.isNullOrEmpty()) {
                 try {
@@ -67,7 +67,7 @@ class PostListAdapter(private val posts: MutableList<Post>, private val onPostCl
 
             Model.shared.getUserById(post.ownerId) { user ->
                 Log.d(TAG, "bind: user: $user")
-                postUserName.text = user.value?.userName ?: "Unknown"
+                postUserName.text = user?.userName ?: "Unknown"
             }
 
             // Set the location, description
@@ -79,12 +79,6 @@ class PostListAdapter(private val posts: MutableList<Post>, private val onPostCl
             itemView.setOnClickListener {
                 onPostClick(post)  // Pass the post back to the calling function
             }
-        }
-
-        // Helper function to decode base64 string to Bitmap
-        private fun decodeBase64Image(base64String: String): Bitmap {
-            val decodedString = Base64.decode(base64String, Base64.DEFAULT)
-            return BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
         }
     }
 }

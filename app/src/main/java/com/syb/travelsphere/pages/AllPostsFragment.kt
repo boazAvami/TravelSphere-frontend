@@ -1,13 +1,21 @@
 package com.syb.travelsphere.pages
 
 import ViewPostFragment
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.view.Display.Mode
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.firebase.firestore.GeoPoint
 import com.syb.travelsphere.databinding.FragmentAllPostsBinding
 import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.Post
@@ -16,79 +24,51 @@ import com.syb.travelsphere.ui.PostListAdapter
 class AllPostsFragment : Fragment() {
 
     private var binding: FragmentAllPostsBinding? = null
-
     private lateinit var postListAdapter: PostListAdapter
-//    private lateinit var travelService: TravelService
-
-    private var posts = listOf<Post>()
+    private val viewModel: AllPostsViewModel by viewModels() // ViewModel instance
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
         binding = FragmentAllPostsBinding.inflate(inflater, container, false)
 
-        binding?.postListRecyclerView?.setHasFixedSize(true)
         setupRecyclerView()
-        observePosts()
+
+        viewModel.posts.observe(viewLifecycleOwner) { posts ->
+            Log.d(TAG, "UI updated: Received ${posts.size} posts")
+
+            postListAdapter.update(posts)
+            binding?.mapComponent?.displayPosts(posts, ViewPostFragment(), ViewPostFragment::class.java))
+            Log.d(TAG, "UI Updated: Showing ${posts.size} posts")
+            postListAdapter?.notifyDataSetChanged()
+        }
 
         binding?.swipeToRefresh?.setOnRefreshListener {
-            onResume()
+            viewModel.refreshPosts()
+        }
+
+        Model.shared.loadingState.observe(viewLifecycleOwner) { state ->
+            binding?.swipeToRefresh?.isRefreshing = state == Model.LoadingState.LOADING
         }
 
         return binding?.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-//        travelService = TravelService()
-
-//        binding?.postListRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
-
-//        fetchPostsAndSetUpScreen()
-    }
-
     override fun onResume() {
         super.onResume()
-        getAllPosts()
+        viewModel.refreshPosts()
     }
 
     private fun setupRecyclerView() {
-        binding?.postListRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
-        postListAdapter = PostListAdapter(mutableListOf()) { post -> centerMapOnPost(post) }
+        binding?.postListRecyclerView?.setHasFixedSize(true)
+        binding?.postListRecyclerView?.layoutManager = LinearLayoutManager(context)
+        postListAdapter = PostListAdapter(viewModel.posts.value) { post -> centerMapOnPost(post.location) }
         binding?.postListRecyclerView?.adapter = postListAdapter
     }
 
-    private fun observePosts() {
-        Model.shared.posts.observe(viewLifecycleOwner) { posts ->
-            Log.d(TAG, "UI updated: Received ${posts.size} posts")
-
-            if (posts.isNotEmpty()) {
-                postListAdapter.updatePosts(posts)
-                binding?.mapComponent?.displayPosts(posts, ViewPostFragment(), ViewPostFragment::class.java)
-
-                Log.d(TAG, "UI Updated: Showing ${posts.size} posts")
-            } else {
-                Log.d(TAG, "observePosts: No new posts available yet")
-            }
-        }
-    }
-
-    private fun getAllPosts() {
-        binding?.progressBar?.visibility = View.VISIBLE
-
-        Model.shared.refreshAllUsers {
-            Model.shared.refreshAllPosts {
-                binding?.progressBar?.visibility = View.GONE // Hide progress bar when done
-                binding?.swipeToRefresh?.isRefreshing = false // Stop swipe refresh
-            }
-//            binding?.progressBar?.visibility = View.GONE
-        }
-    }
-
-    private fun centerMapOnPost(post: Post) {
-        val lat = post.location.latitude
-        val lon = post.location.longitude
+    private fun centerMapOnPost(point: GeoPoint) {
+        val lat = point.latitude
+        val lon = point.longitude
         binding?.mapComponent?.centerMapOnLocation(lat, lon)
     }
 

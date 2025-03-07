@@ -5,11 +5,10 @@ import android.content.Intent
 import android.util.AttributeSet
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LiveData
 import com.syb.travelsphere.R
-import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.Post
 import com.syb.travelsphere.model.User
-import com.syb.travelsphere.utils.ImagePickerUtil
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -32,12 +31,10 @@ class MapComponent @JvmOverloads constructor(
     ) {
         clearMap();
 
-//        posts?.forEach { post ->
-//            val geotag = post.geotag
-//            post._id?.let {
-//                addPostMarker(geotag.coordinates[1], geotag.coordinates[0], post.location, it, post.description)
-//            }
-//        }
+        posts?.forEach { post ->
+            val geotag = post.location
+            addPostMarker(geotag.latitude, geotag.longitude, post.locationName, post.id, post.description)
+        }
 
         posts?.forEach { post ->
             val geoPoint = post.location

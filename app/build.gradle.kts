@@ -68,13 +68,12 @@ dependencies {
     //cloudinary - storage
     implementation(libs.cloudinary.cloudinary.android)
 
-
     implementation(libs.picasso)
     // GeoFire
     implementation(libs.geofire.android.common)
 
     // Room
-    implementation(libs.androidx.room.runtime)
+    implementation(libs.room.runtime)
     implementation(libs.androidx.preference)
     kapt(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
