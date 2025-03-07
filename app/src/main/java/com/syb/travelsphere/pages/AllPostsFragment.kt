@@ -1,5 +1,6 @@
 package com.syb.travelsphere.pages
 
+import ViewPostFragment
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -37,7 +38,7 @@ class AllPostsFragment : Fragment() {
             Log.d(TAG, "UI updated: Received ${posts.size} posts")
 
             postListAdapter.update(posts)
-            binding?.mapComponent?.displayPosts(posts)
+            binding?.mapComponent?.displayPosts(posts, ViewPostFragment(), ViewPostFragment::class.java))
             Log.d(TAG, "UI Updated: Showing ${posts.size} posts")
             postListAdapter?.notifyDataSetChanged()
         }

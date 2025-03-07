@@ -1,8 +1,10 @@
 package com.syb.travelsphere.components
 
 import android.content.Context
+import android.content.Intent
 import android.util.AttributeSet
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import com.syb.travelsphere.R
 import com.syb.travelsphere.model.Post
@@ -23,7 +25,10 @@ class MapComponent @JvmOverloads constructor(
     }
 
     // Method to add markers to the map based on the posts
-    fun displayPosts(posts: List<Post>?) {
+    fun displayPosts(
+        posts: List<Post>?,
+        fragment: Fragment, destinationFragmentClass: Class<out Fragment>
+    ) {
         clearMap();
 
         posts?.forEach { post ->
@@ -39,14 +44,19 @@ class MapComponent @JvmOverloads constructor(
                     geoPoint.longitude,
                     post.locationName,
                     post.id,
-                    post.description
+                    post.description,
+                    fragment,
+                    destinationFragmentClass
                 )
             }
         }
     }
 
     // Method to add a marker on the map
-    private fun addPostMarker(lat: Double, lon: Double, title: String, postId: String, description: String) {
+    private fun addPostMarker(
+        lat: Double, lon: Double, title: String, postId: String, description: String,
+        fragment: Fragment, destinationFragmentClass: Class<out Fragment>
+    ) {
         val marker = Marker(this)
         marker.icon = resources.getDrawable(R.drawable.location, null)
 
@@ -56,9 +66,9 @@ class MapComponent @JvmOverloads constructor(
 
         // Set up marker click listener
         marker.setOnMarkerClickListener { _, _ ->
-            // Show post details in a Toast
-            // TODO : add pop up of post with all the details
-            Toast.makeText(context, "Post ID: $postId\nDescription: $description", Toast.LENGTH_LONG).show()
+            val intent = Intent(fragment.requireContext(), destinationFragmentClass)
+            intent.putExtra("postId", postId)
+            fragment.requireContext().startActivity(intent)
             true
         }
 
@@ -67,13 +77,14 @@ class MapComponent @JvmOverloads constructor(
         invalidate()  // Refresh the map to show markers
     }
 
+
     // Method to add markers to the map based on the users
     fun displayUsers(users: List<User>?) {
         clearMap();
 
         users?.forEach { user ->
-            val geoPoint  = user.location
-            if (geoPoint  != null) {
+            val geoPoint = user.location
+            if (geoPoint != null) {
                 addUserMarker(
                     geoPoint.latitude,
                     geoPoint.longitude,
@@ -101,13 +112,17 @@ class MapComponent @JvmOverloads constructor(
 //                ) { bitmap ->
 //                    marker.icon = bitmap
 //                }
-             //marker.icon = TODO: set icon to image profile picture
+            //marker.icon = TODO: set icon to image profile picture
         }
 
         // Set up marker click listener
         marker.setOnMarkerClickListener { _, _ ->
             // Show user details in a Toast
-            Toast.makeText(context, "User: ${user.userName}\nProfile: ${user.profilePictureUrl}", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                context,
+                "User: ${user.userName}\nProfile: ${user.profilePictureUrl}",
+                Toast.LENGTH_LONG
+            ).show()
             true
         }
 
