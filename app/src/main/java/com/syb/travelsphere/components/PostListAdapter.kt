@@ -37,12 +37,6 @@ class PostListAdapter(private var posts: List<Post>?, private val onPostClick: (
 
     override fun getItemCount() = posts?.size ?: 0
 
-    fun updatePosts(newPosts: List<Post>) {
-//        posts.clear()  // Clear old data
-//        posts.addAll(newPosts)  // Add new data
-        notifyDataSetChanged()  // Notify RecyclerView of changes
-    }
-
     fun update(posts: List<Post>?) {
         this.posts = posts
     }
@@ -56,7 +50,6 @@ class PostListAdapter(private var posts: List<Post>?, private val onPostClick: (
 
         fun bind(post: Post) {
             // Check if the base64 string is not null or empty
-//            val base64Image = post.photos[0]
             val firstImageUrl = post.photos.getOrNull(0)
             if (!firstImageUrl.isNullOrEmpty()) {
                 try {
@@ -86,12 +79,6 @@ class PostListAdapter(private var posts: List<Post>?, private val onPostClick: (
             itemView.setOnClickListener {
                 onPostClick(post)  // Pass the post back to the calling function
             }
-        }
-
-        // Helper function to decode base64 string to Bitmap
-        private fun decodeBase64Image(base64String: String): Bitmap {
-            val decodedString = Base64.decode(base64String, Base64.DEFAULT)
-            return BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
         }
     }
 }

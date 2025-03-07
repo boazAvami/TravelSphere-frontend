@@ -73,11 +73,10 @@ dependencies {
     implementation(libs.geofire.android.common)
 
     // Room
-//    implementation(libs.androidx.room.runtime)
-    implementation(libs.room.runtime) // good
+    implementation(libs.room.runtime)
     implementation(libs.androidx.preference)
-    kapt(libs.androidx.room.compiler) // good
-    implementation(libs.androidx.room.ktx) //good
+    kapt(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
 
     // Navigation
     implementation(libs.navigation.fragment.ktx)
