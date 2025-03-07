@@ -76,9 +76,7 @@ class SettingsFragment : Fragment() {
         // ✅ Handle Logout Button Click
         binding?.logoutButton?.setOnClickListener()
         {
-            authManager.signOut {
-                requireActivity().finish()  // Close the activity after logging out
-            }
+            authManager.signOut {}
         }
 
         // ✅ Make email field unchangeable
