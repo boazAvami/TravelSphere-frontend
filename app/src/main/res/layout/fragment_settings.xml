@@ -176,7 +176,7 @@
         android:id="@+id/editButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Save"
+        android:text="Edit"
         android:textColor="@android:color/white"
         android:backgroundTint="@android:color/holo_green_dark"
         android:padding="12dp"
