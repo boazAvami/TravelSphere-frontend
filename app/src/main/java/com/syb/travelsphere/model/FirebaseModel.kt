@@ -73,48 +73,82 @@ class FirebaseModel {
     private var lastQueriedLocation: GeoPoint? = null
     private var lastQueriedRadius: Double = -1.0
 
+//    fun getNearbyUsers(
+//        sinceLastUpdated: Long,
+//        currentLocation: GeoPoint,
+//        radiusInKm: Double,
+//        callback: UsersCallback
+//    ) {
+//        val (minGeoHash, maxGeoHash) = GeoUtils.getGeoHashRange(currentLocation, radiusInKm)
+//        val usersList = mutableListOf<User>()
+//
+//        // 🔹 Detect if radius or location changed
+//        val locationChanged = lastQueriedLocation == null || lastQueriedLocation != currentLocation
+//        val radiusChanged = lastQueriedRadius == -1.0 || lastQueriedRadius != radiusInKm
+//
+//        // 🔹 If radius or location changed, do a full refresh (ignore `sinceLastUpdated`)
+//        val query = database.collection(Constants.COLLECTIONS.USERS)
+//            .whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, Timestamp(Date(sinceLastUpdated)))
+//            .whereGreaterThanOrEqualTo(User.GEOHASH_KEY, minGeoHash)
+//            .whereLessThanOrEqualTo(User.GEOHASH_KEY, maxGeoHash)
+//
+////        if (!locationChanged && !radiusChanged) {
+////            query.whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, Timestamp(Date(sinceLastUpdated)))
+////        }
+//
+//        query.get()
+//            .addOnSuccessListener { documents ->
+//                documents.documents.forEach { doc ->
+//                    val user = User.fromJSON(doc.data ?: emptyMap())
+//
+//                    user.location?.let {
+//                        if (GeoUtils.isWithinRadius(currentLocation, it, radiusInKm)) {
+//                            usersList.add(user)
+//                        }
+//                    }
+//                }
+//
+//                // ✅ Update last queried values
+//                lastQueriedLocation = currentLocation
+//                lastQueriedRadius = radiusInKm
+//
+//                callback(usersList)
+//            }
+//            .addOnFailureListener { callback(emptyList()) }
+//    }
+
     fun getNearbyUsers(
-        sinceLastUpdated: Long,
         currentLocation: GeoPoint,
         radiusInKm: Double,
-        callback: UsersCallback
+        callback: (List<User>) -> Unit
     ) {
         val (minGeoHash, maxGeoHash) = GeoUtils.getGeoHashRange(currentLocation, radiusInKm)
         val usersList = mutableListOf<User>()
 
-        // 🔹 Detect if radius or location changed
-        val locationChanged = lastQueriedLocation == null || lastQueriedLocation != currentLocation
-        val radiusChanged = lastQueriedRadius == -1.0 || lastQueriedRadius != radiusInKm
-
-        // 🔹 If radius or location changed, do a full refresh (ignore `sinceLastUpdated`)
-        val query = database.collection(Constants.COLLECTIONS.USERS)
-            .whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, Timestamp(Date(sinceLastUpdated)))
-            .whereGreaterThanOrEqualTo(User.GEOHASH_KEY, minGeoHash)
-            .whereLessThanOrEqualTo(User.GEOHASH_KEY, maxGeoHash)
-
-//        if (!locationChanged && !radiusChanged) {
-//            query.whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, Timestamp(Date(sinceLastUpdated)))
-//        }
-
-        query.get()
+        database.collection("users")
+            .whereGreaterThanOrEqualTo("geoHash", minGeoHash)
+            .whereLessThanOrEqualTo("geoHash", maxGeoHash)
+            .get()
             .addOnSuccessListener { documents ->
                 documents.documents.forEach { doc ->
                     val user = User.fromJSON(doc.data ?: emptyMap())
 
-                    user.location?.let {
-                        if (GeoUtils.isWithinRadius(currentLocation, it, radiusInKm)) {
+                    user.location?.let { userLocation ->
+                        val distance = GeoUtils.calculateDistance(currentLocation, userLocation)
+                        Log.d("FirestoreModel", "User ${user.userName} is $distance meters away")
+
+                        if (distance <= radiusInKm * 1000) {  // Convert km to meters
                             usersList.add(user)
                         }
                     }
                 }
-
-                // ✅ Update last queried values
-                lastQueriedLocation = currentLocation
-                lastQueriedRadius = radiusInKm
-
+                Log.d("FirestoreModel", "Filtered users: ${usersList.size}")
                 callback(usersList)
             }
-            .addOnFailureListener { callback(emptyList()) }
+            .addOnFailureListener { exception ->
+                Log.e("FirestoreModel", "Error fetching users: ${exception.message}")
+                callback(emptyList()) // Return empty list on failure
+            }
     }
 
 

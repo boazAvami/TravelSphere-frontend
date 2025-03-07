@@ -4,6 +4,7 @@ import android.location.Location
 import com.firebase.geofire.GeoFireUtils
 import com.firebase.geofire.GeoLocation
 import com.google.firebase.firestore.GeoPoint
+import kotlin.math.*
 
 object GeoUtils {
     private const val EARTH_RADIUS_KM = 6371.0
@@ -37,5 +38,22 @@ object GeoUtils {
         val maxGeoHash = geoHashQueryBounds.last().endHash
 
         return Pair(minGeoHash, maxGeoHash)
+    }
+
+    fun calculateDistance(start: GeoPoint, end: GeoPoint): Double {
+        val earthRadius = 6371000.0 // Earth radius in meters
+
+        val lat1 = Math.toRadians(start.latitude)
+        val lon1 = Math.toRadians(start.longitude)
+        val lat2 = Math.toRadians(end.latitude)
+        val lon2 = Math.toRadians(end.longitude)
+
+        val dLat = lat2 - lat1
+        val dLon = lon2 - lon1
+
+        val a = sin(dLat / 2).pow(2) + cos(lat1) * cos(lat2) * sin(dLon / 2).pow(2)
+        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+        return earthRadius * c // Distance in meters
     }
 }

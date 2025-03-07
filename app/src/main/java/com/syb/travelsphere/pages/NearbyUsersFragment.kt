@@ -26,9 +26,11 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.firestore.GeoPoint
 import com.syb.travelsphere.databinding.FragmentNearbyUsersBinding
+import com.syb.travelsphere.model.FirebaseModel
 import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.pages.AllPostsFragment.Companion
 import com.syb.travelsphere.ui.PostListAdapter
+import com.syb.travelsphere.utils.GeoUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -66,7 +68,7 @@ class NearbyUsersFragment : Fragment() {
 
 
         viewModel.nearbyUsers.observe(viewLifecycleOwner) { users ->
-            Log.d(TAG, "UI updated: Received ${users.size ?: 0} users")
+            Log.d(TAG, "UI updated: Received ${users?.size ?: 0} users")
 
             usersListAdapter.update(users)
             binding?.mapComponent?.displayUsers(users)
@@ -110,19 +112,6 @@ class NearbyUsersFragment : Fragment() {
     private fun setRadius(radius: Double) {
         currentRadius = radius
         refreshNearbyUsers()
-//        fetchNearbyUsersAndSetUpScreen() // Refresh with new radius
-    }
-
-    private fun fetchNearbyUsersAndSetUpScreen() {
-            try {
-                refreshNearbyUsers()
-
-                binding?.mapComponent?.displayUsers(viewModel.nearbyUsers.value) // Assuming we can convert users to posts for display
-
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Error fetching nearby users: ${e.message}", Toast.LENGTH_SHORT).show()
-                Log.d("Error", "Error fetching nearby users: ${e.message}")
-            }
     }
 
     // Function to show the user's phone number in a popup
@@ -160,7 +149,7 @@ class NearbyUsersFragment : Fragment() {
             if (location != null) {
                 val userLocation = GeoPoint(location.latitude, location.longitude)
                 Log.d("UserLocation", "Latitude: ${location.latitude}, Longitude: ${location.longitude}")
-                callback(userLocation) // ✅ Return actual location via callback
+                callback(userLocation) // Return actual location via callback
             } else {
                 Log.d("UserLocation", "Location is null, using default")
                 callback(GeoPoint(31.771959, 34.651401)) // Return default location if null
@@ -181,6 +170,6 @@ class NearbyUsersFragment : Fragment() {
     }
 
     companion object {
-        private const val TAG = "AllPostsFragment"
+        private const val TAG = "NearbyUsersFragment"
     }
 }
