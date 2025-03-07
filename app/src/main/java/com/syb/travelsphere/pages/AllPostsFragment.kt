@@ -1,15 +1,20 @@
 package com.syb.travelsphere.pages
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.Display.Mode
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.firebase.firestore.GeoPoint
 import com.syb.travelsphere.databinding.FragmentAllPostsBinding
 import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.Post
@@ -56,13 +61,13 @@ class AllPostsFragment : Fragment() {
     private fun setupRecyclerView() {
         binding?.postListRecyclerView?.setHasFixedSize(true)
         binding?.postListRecyclerView?.layoutManager = LinearLayoutManager(context)
-        postListAdapter = PostListAdapter(viewModel.posts.value) { post -> centerMapOnPost(post) }
+        postListAdapter = PostListAdapter(viewModel.posts.value) { post -> centerMapOnPost(post.location) }
         binding?.postListRecyclerView?.adapter = postListAdapter
     }
 
-    private fun centerMapOnPost(post: Post) {
-        val lat = post.location.latitude
-        val lon = post.location.longitude
+    private fun centerMapOnPost(point: GeoPoint) {
+        val lat = point.latitude
+        val lon = point.longitude
         binding?.mapComponent?.centerMapOnLocation(lat, lon)
     }
 

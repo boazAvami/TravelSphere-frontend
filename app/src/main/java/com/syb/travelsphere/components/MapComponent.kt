@@ -3,11 +3,10 @@ package com.syb.travelsphere.components
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.Toast
+import androidx.lifecycle.LiveData
 import com.syb.travelsphere.R
-import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.Post
 import com.syb.travelsphere.model.User
-import com.syb.travelsphere.utils.ImagePickerUtil
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView

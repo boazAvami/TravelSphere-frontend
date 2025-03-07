@@ -5,6 +5,7 @@ import android.os.Looper
 import android.util.Log
 import androidx.core.os.HandlerCompat
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.firebase.firestore.GeoPoint
 import com.syb.travelsphere.base.BitmapCallback
@@ -16,6 +17,7 @@ import com.syb.travelsphere.model.dao.AppLocalDb
 import com.syb.travelsphere.model.dao.AppLocalDbRepository
 import com.syb.travelsphere.utils.GeoUtils
 import java.util.concurrent.Executors
+
 
 class Model private constructor() {
 
@@ -29,6 +31,24 @@ class Model private constructor() {
 
     val users: LiveData<List<User>> = database.userDao().getAllUsers()
     val posts: LiveData<List<Post>> = database.postDao().getAllPosts()
+
+    private val _geoHashBounds = MutableLiveData<Pair<String, String>>() // Stores min & max geohash
+    val geoHashBounds: LiveData<Pair<String, String>> = _geoHashBounds
+    private val _users = MediatorLiveData<List<User>>()
+    val nearbyUsers: LiveData<List<User>> get() = _users
+
+    init {
+        _users.addSource(geoHashBounds) { bounds ->
+            _users.value = database.userDao().getNearbyUsers(bounds.first, bounds.second).value
+        }
+    }
+
+
+    fun updateGeoHashBounds(currentLocation: GeoPoint, radiusInKm: Double) {
+        val (minGeoHash, maxGeoHash) = GeoUtils.getGeoHashRange(currentLocation, radiusInKm)
+        _geoHashBounds.postValue(Pair(minGeoHash, maxGeoHash)) // ✅ Update bounds
+    }
+
 //    val nearbyUsers: LiveData<List<User>> = database.userDao().getNearbyUsers(
 //        minGeoHash = "",
 //        maxGeoHash = ""
@@ -62,42 +82,32 @@ class Model private constructor() {
 
     }
 
-    fun refreshNearbyUsers(currentLocation: GeoPoint, radiusInKm: Double, callback: (LiveData<List<User>>) -> Unit) {
+    fun refreshNearbyUsers(currentLocation: GeoPoint, radiusInKm: Double) {
         loadingState.postValue(LoadingState.LOADING)
 
-        executor.execute {
-            try {
-                var lastUpdated: Long = User.lastUpdated
-                val geoHashBounds = GeoUtils.getGeoHashRange(currentLocation, radiusInKm)
+        var lastUpdated: Long = User.lastUpdated
+        val geoHashBounds = GeoUtils.getGeoHashRange(currentLocation, radiusInKm)
 
-                firebaseModel.getNearbyUsers(
-                    currentLocation = currentLocation, radiusInKm = radiusInKm,
-                    sinceLastUpdated = lastUpdated
-                ) { usersList ->
+        firebaseModel.getNearbyUsers(
+            currentLocation = currentLocation,
+            radiusInKm = radiusInKm,
+            sinceLastUpdated = lastUpdated
+        ) { usersList ->
 
-                    executor.execute {
-                        var currentTime = lastUpdated
+            executor.execute {
+                var currentTime = lastUpdated
 
-                        for (user in usersList) {
-                            database.userDao().insertUser(user)
-                            user.lastUpdated?.let {
-                                if (currentTime  < it) {
-                                    currentTime = it
-                                }
-                            }
+                for (user in usersList) {
+                    database.userDao().insertUser(user)
+                    user.lastUpdated?.let {
+                        if (currentTime  < it) {
+                            currentTime = it
                         }
-
-                        User.lastUpdated = currentTime
-                        val users = database.userDao().getNearbyUsers(geoHashBounds.first, geoHashBounds.second)
-
-                        mainHandler.post {
-                            callback(users)
-                        }
-                        loadingState.postValue(LoadingState.LOADED)
                     }
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error fetching nearby users: ${e.message}")
+
+                User.lastUpdated = currentTime
+                loadingState.postValue(LoadingState.LOADED)
             }
         }
     }

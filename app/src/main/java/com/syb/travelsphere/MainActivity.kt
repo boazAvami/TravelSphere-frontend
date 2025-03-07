@@ -133,7 +133,5 @@ class MainActivity : AppCompatActivity() {
    9. add storage (for images) - and work with the posts ✅
    =====================================================================================================================
 *   - With boaz and shirin:
-*  7. NEED TO IMPLEMETE CHASH + (ViewModel, Live Data, ROOM) ???
    8. GPS To get localization of the phone using the app - in the add new posts and in the main activity (for the nearby)
-   * 9. add loading circle
-   * 10. in the addpost save the picture to the storage and the rest in the database*/
+   * 9. add loading circle*/

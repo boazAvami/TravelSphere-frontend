@@ -75,11 +75,7 @@ class SettingsFragment : Fragment() {
                             isLocationShared = isLocationShared  // ✅ Add location sharing status
                         )
 
-                        Model.shared.editUser(
-                            updatedUser,
-                            newProfilePicture = TODO(),
-                            callback = TODO()
-                        )
+//                        Model.shared.editUser(updatedUser, {})
                     }
 
 
