@@ -9,20 +9,16 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.LiveData
 import com.syb.travelsphere.auth.AuthManager
 import com.syb.travelsphere.databinding.FragmentSettingsBinding
-import com.syb.travelsphere.model.FirebaseModel
 import com.syb.travelsphere.model.Model
+import com.syb.travelsphere.model.User
 
 class SettingsFragment : Fragment() {
     private var binding: FragmentSettingsBinding? = null
     private lateinit var authManager: AuthManager  // Declare AuthManager
-    private val firebaseModel = FirebaseModel()
     private val imagePickerRequestCode = 1001
-
-    //todo: change to
-    //  private val model = Model.shared.getUser()
-
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -31,6 +27,23 @@ class SettingsFragment : Fragment() {
         authManager = AuthManager()  // Initialize AuthManager
         binding = FragmentSettingsBinding.inflate(inflater, container, false)
         setupListeners()
+        authManager.getCurrentUser()?.uid?.let {
+            Model.shared.getUserById(it) { liveData: LiveData<User> ->
+                if (liveData != null && authManager.getCurrentUser() != null) {
+                    binding?.emailText?.setText(authManager.getCurrentUser()?.email)
+                    binding?.phoneText?.setText(liveData.value?.phoneNumber)
+                    binding?.usernameText?.setText(liveData.value?.userName)
+                    binding?.locationSwitch?.isChecked = liveData.value?.isLocationShared == true
+                    liveData.value?.profilePictureUrl?.let { it1 ->
+                        Model.shared.getImageByUrl(it1) { image ->
+                            run {
+                                binding?.profileImage?.setImageBitmap(image)
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         // Enable back button in toolbar
         (requireActivity() as AppCompatActivity).supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -38,18 +51,27 @@ class SettingsFragment : Fragment() {
         // ✅ Get the current user and display details
         val currentUser = authManager.getCurrentUser()
         if (currentUser != null) {
-            val userInfo = firebaseModel.getUserById(currentUser.uid, { user ->
-                if (user != null) {
+
+            Model.shared.getUserById(currentUser.uid, { liveData ->
+                if (liveData.value != null) {
                     binding?.emailText?.setText(currentUser.email)
-                    binding?.phoneText?.setText(user.phoneNumber)
-                    binding?.usernameText?.setText(user.userName)
-                    binding?.locationSwitch?.isChecked = user.isLocationShared == true
+                    binding?.phoneText?.setText(liveData.value?.phoneNumber)
+                    binding?.usernameText?.setText(liveData.value?.userName)
+                    binding?.locationSwitch?.isChecked = liveData.value?.isLocationShared == true
+                    liveData.value?.profilePictureUrl?.let { it1 ->
+                        Model.shared.getImageByUrl(it1) { image ->
+                            run {
+                                binding?.profileImage?.setImageBitmap(image)
+                            }
+                        }
+                    }
                 }
             })
         }
 
         // ✅ Handle Logout Button Click
-        binding?.logoutButton?.setOnClickListener {
+        binding?.logoutButton?.setOnClickListener()
+        {
             authManager.signOut {
                 requireActivity().finish()  // Close the activity after logging out
             }
@@ -59,25 +81,34 @@ class SettingsFragment : Fragment() {
         binding?.emailText?.isEnabled = false
 
         // ✅ Handle Edit Button Click
-        binding?.editButton?.setOnClickListener {
+        binding?.editButton?.setOnClickListener()
+        {
             val updatedPhone = binding?.phoneText?.text.toString().trim()
             val updatedUsername = binding?.usernameText?.text.toString().trim()
             val isLocationShared = binding?.locationSwitch?.isChecked ?: false
 
+
             val currentUser = authManager.getCurrentUser()
             if (currentUser != null) {
-                firebaseModel.getUserById(currentUser.uid) { user ->
-                    if (user != null) {
+                Model.shared.getUserById(currentUser.uid) { user ->
+                    if (user.value != null) {
                         // Create updated user object (email is not modified)
-                        val updatedUser = user.copy(
+                        val updatedUser = user.value?.copy(
                             phoneNumber = updatedPhone,
                             userName = updatedUsername,
                             isLocationShared = isLocationShared  // ✅ Add location sharing status
                         )
 
-//                        Model.shared.editUser(updatedUser, {})
-                    }
 
+                        updatedUser?.profilePictureUrl?.let { it1 ->
+                            Model.shared.getImageByUrl(it1) { image ->
+                                Model.shared.editUser(
+                                    updatedUser,
+                                    image,
+                                    {})
+                            }
+                        }
+                    }
 
                     // Show confirmation (optional)
                     Toast.makeText(
@@ -88,7 +119,6 @@ class SettingsFragment : Fragment() {
                 }
             }
         }
-
 
         return binding?.root
     }
