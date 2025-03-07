@@ -32,28 +32,6 @@ class Model private constructor() {
     val users: LiveData<List<User>> = database.userDao().getAllUsers()
     val posts: LiveData<List<Post>> = database.postDao().getAllPosts()
 
-    private val _geoHashBounds = MutableLiveData<Pair<String, String>>() // Stores min & max geohash
-    val geoHashBounds: LiveData<Pair<String, String>> = _geoHashBounds
-    private val _users = MediatorLiveData<List<User>>()
-    val nearbyUsers: LiveData<List<User>> get() = _users
-
-    init {
-        _users.addSource(geoHashBounds) { bounds ->
-            _users.value = database.userDao().getNearbyUsers(bounds.first, bounds.second).value
-        }
-    }
-
-
-    fun updateGeoHashBounds(currentLocation: GeoPoint, radiusInKm: Double) {
-        val (minGeoHash, maxGeoHash) = GeoUtils.getGeoHashRange(currentLocation, radiusInKm)
-        _geoHashBounds.postValue(Pair(minGeoHash, maxGeoHash)) // ✅ Update bounds
-    }
-
-//    val nearbyUsers: LiveData<List<User>> = database.userDao().getNearbyUsers(
-//        minGeoHash = "",
-//        maxGeoHash = ""
-//    )
-
     val loadingState: MutableLiveData<LoadingState> = MutableLiveData<LoadingState>()
     private val firebaseModel = FirebaseModel()
     private val cloudinaryModel = CloudinaryModel()

@@ -27,6 +27,8 @@ import com.google.android.gms.location.LocationServices
 import com.google.firebase.firestore.GeoPoint
 import com.syb.travelsphere.databinding.FragmentNearbyUsersBinding
 import com.syb.travelsphere.model.Model
+import com.syb.travelsphere.pages.AllPostsFragment.Companion
+import com.syb.travelsphere.ui.PostListAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -36,8 +38,9 @@ class NearbyUsersFragment : Fragment() {
     private var binding: FragmentNearbyUsersBinding? = null
     private val viewModel: NearbyUsersViewModel by viewModels() // ViewModel instance
 
-    private lateinit var userListRecyclerView: RecyclerView
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var usersListAdapter: UserListAdapter
+
 
     private var currentRadius = 30000.0 // Default radius 30km
 
@@ -46,45 +49,11 @@ class NearbyUsersFragment : Fragment() {
     ): View? {
         binding = FragmentNearbyUsersBinding.inflate(inflater, container, false)
 
-        viewModel.nearbyUsers.observe(viewLifecycleOwner) { users ->
-            userListRecyclerView.adapter = UserListAdapter(users) { user ->
-                user.phoneNumber?.let { showUserPhonePopup(it) }
-                user.location?.latitude?.let { lat ->
-                    user.location.longitude.let { lon ->
-                        binding?.mapComponent?.centerMapOnLocation(lat, lon)
-                    }
-                }
-            }
-
-            binding?.mapComponent?.displayUsers(users)
-//            userListRecyclerView.adapter.notifyDataSetChanged()
-        }
-
-        binding?.swipeToRefresh?.setOnRefreshListener {
-//            fetchNearbyUsersAndSetUpScreen()
-            val userLocation = getCurrentUserLocation() { userLocation ->
-                binding?.mapComponent?.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
-                viewModel.refreshNearbyUsers(userLocation, currentRadius)
-            }
-        }
-
-        Model.shared.loadingState.observe(viewLifecycleOwner) { state ->
-            binding?.swipeToRefresh?.isRefreshing = state == Model.LoadingState.LOADING
-        }
-
-        return binding?.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
 
-        userListRecyclerView = view.findViewById(R.id.userListRecyclerView)
-        userListRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding?.userListRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
 
-        // Adding divider between rows
-        val dividerItemDecoration = DividerItemDecoration(requireContext(), LinearLayoutManager.VERTICAL)
-        userListRecyclerView.addItemDecoration(dividerItemDecoration)
+        setupRecyclerView()
 
         // Set up radius buttons
         binding?.radius30kButton?.setOnClickListener {
@@ -95,30 +64,58 @@ class NearbyUsersFragment : Fragment() {
         binding?.radius5kButton?.setOnClickListener {
             setRadius(500.0) }
 
-        fetchNearbyUsersAndSetUpScreen()
+
+        viewModel.nearbyUsers.observe(viewLifecycleOwner) { users ->
+            Log.d(TAG, "UI updated: Received ${users.size ?: 0} users")
+
+            usersListAdapter.update(users)
+            binding?.mapComponent?.displayUsers(users)
+            usersListAdapter?.notifyDataSetChanged()
+        }
+
+        binding?.swipeToRefresh?.setOnRefreshListener {
+            refreshNearbyUsers()
+        }
+
+        Model.shared.loadingState.observe(viewLifecycleOwner) { state ->
+            binding?.swipeToRefresh?.isRefreshing = state == Model.LoadingState.LOADING
+        }
+
+        return binding?.root
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshNearbyUsers()
+    }
+
+    private fun setupRecyclerView() {
+        // Adding divider between rows
+        val dividerItemDecoration = DividerItemDecoration(requireContext(), LinearLayoutManager.VERTICAL)
+        binding?.userListRecyclerView?.addItemDecoration(dividerItemDecoration)
+
+        binding?.userListRecyclerView?.setHasFixedSize(true)
+        binding?.userListRecyclerView?.layoutManager = LinearLayoutManager(context)
+        usersListAdapter = UserListAdapter(viewModel.nearbyUsers.value) { user ->
+            user.phoneNumber?.let { showUserPhonePopup(it) }
+            user.location?.latitude?.let { lat ->
+                user.location.longitude.let { lon ->
+                    binding?.mapComponent?.centerMapOnLocation(lat, lon)
+                }
+            }
+        }
+        binding?.userListRecyclerView?.adapter = usersListAdapter
     }
 
     private fun setRadius(radius: Double) {
         currentRadius = radius
-        fetchNearbyUsersAndSetUpScreen() // Refresh with new radius
+        refreshNearbyUsers()
+//        fetchNearbyUsersAndSetUpScreen() // Refresh with new radius
     }
 
     private fun fetchNearbyUsersAndSetUpScreen() {
             try {
-                getCurrentUserLocation { userLocation ->
-                    binding?.mapComponent?.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
-                    viewModel.refreshNearbyUsers(userLocation, currentRadius)
-                }
-                userListRecyclerView.adapter = UserListAdapter(viewModel.nearbyUsers.value) { user ->
-                    user.phoneNumber?.let { showUserPhonePopup(it) }
-                    user.location?.latitude?.let { lat ->
-                        user.location.longitude.let { lon ->
-                            binding?.mapComponent?.centerMapOnLocation(lat,
-                                lon
-                            )
-                        }
-                    }
-                }
+                refreshNearbyUsers()
 
                 binding?.mapComponent?.displayUsers(viewModel.nearbyUsers.value) // Assuming we can convert users to posts for display
 
@@ -171,10 +168,16 @@ class NearbyUsersFragment : Fragment() {
         }
     }
 
-
     override fun onDestroy() {
         super.onDestroy()
         binding = null
+    }
+
+    private fun refreshNearbyUsers() {
+        getCurrentUserLocation { userLocation ->
+            binding?.mapComponent?.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
+            viewModel.refreshNearbyUsers(userLocation, currentRadius)
+        }
     }
 
     companion object {
