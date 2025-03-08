@@ -18,8 +18,8 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.firebase.firestore.GeoPoint
 import com.syb.travelsphere.databinding.FragmentAllPostsBinding
 import com.syb.travelsphere.model.Model
-import com.syb.travelsphere.model.Post
 import com.syb.travelsphere.ui.PostListAdapter
+import com.syb.travelsphere.model.Post
 
 class AllPostsFragment : Fragment() {
 
@@ -38,7 +38,7 @@ class AllPostsFragment : Fragment() {
             Log.d(TAG, "UI updated: Received ${posts.size} posts")
 
             postListAdapter.update(posts)
-            binding?.mapComponent?.displayPosts(posts, ViewPostFragment(), ViewPostFragment::class.java))
+            binding?.mapComponent?.displayPosts(posts, ViewPostFragment(), ViewPostFragment::class.java)
             Log.d(TAG, "UI Updated: Showing ${posts.size} posts")
             postListAdapter?.notifyDataSetChanged()
         }

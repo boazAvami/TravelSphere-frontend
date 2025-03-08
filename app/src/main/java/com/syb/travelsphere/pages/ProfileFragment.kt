@@ -50,9 +50,9 @@ class ProfileFragment : Fragment() {
             Model.shared.getUserById(currentUser.uid) {liveData ->
 
                 binding?.userEmail?.setText(currentUser.email)
-                binding?.userPhone?.setText(liveData.value?.phoneNumber)
-                binding?.userName?.setText(liveData.value?.userName)
-                liveData.value?.profilePictureUrl?.let { it1 ->
+                binding?.userPhone?.setText(liveData?.phoneNumber)
+                binding?.userName?.setText(liveData?.userName)
+                liveData?.profilePictureUrl?.let { it1 ->
                     Model.shared.getImageByUrl(it1) { image ->
                         run {
                             binding?.userProfilePicture?.setImageBitmap(image)
