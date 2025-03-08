@@ -31,6 +31,28 @@ class FirebaseModel {
         database.firestoreSettings = settings
     }
 
+    fun getUsersByIds(userIds: List<String>, callback: UsersCallback) {
+        if (userIds.isEmpty()) {
+            callback(emptyList()) // If no users to fetch, return empty list
+            return
+        }
+
+        database.collection(Constants.COLLECTIONS.USERS)
+            .whereIn("id", userIds) // Fetch multiple users in one query
+            .get()
+            .addOnSuccessListener { documents ->
+                val users = documents.mapNotNull { doc ->
+                    User.fromJSON(doc.data) // Convert Firestore document to User object
+                }
+                callback(users)
+            }
+            .addOnFailureListener { exception ->
+                Log.e(TAG, "Error fetching users: ${exception.message}")
+                callback(emptyList()) // Return empty list if failed
+            }
+    }
+
+
     fun getAllUsers(sinceLastUpdated: Long, callback: UsersCallback) {
         database.collection(Constants.COLLECTIONS.USERS)
             .whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, sinceLastUpdated.toFirebaseTimestamp)
@@ -70,57 +92,10 @@ class FirebaseModel {
             }
     }
 
-    private var lastQueriedLocation: GeoPoint? = null
-    private var lastQueriedRadius: Double = -1.0
-
-//    fun getNearbyUsers(
-//        sinceLastUpdated: Long,
-//        currentLocation: GeoPoint,
-//        radiusInKm: Double,
-//        callback: UsersCallback
-//    ) {
-//        val (minGeoHash, maxGeoHash) = GeoUtils.getGeoHashRange(currentLocation, radiusInKm)
-//        val usersList = mutableListOf<User>()
-//
-//        // 🔹 Detect if radius or location changed
-//        val locationChanged = lastQueriedLocation == null || lastQueriedLocation != currentLocation
-//        val radiusChanged = lastQueriedRadius == -1.0 || lastQueriedRadius != radiusInKm
-//
-//        // 🔹 If radius or location changed, do a full refresh (ignore `sinceLastUpdated`)
-//        val query = database.collection(Constants.COLLECTIONS.USERS)
-//            .whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, Timestamp(Date(sinceLastUpdated)))
-//            .whereGreaterThanOrEqualTo(User.GEOHASH_KEY, minGeoHash)
-//            .whereLessThanOrEqualTo(User.GEOHASH_KEY, maxGeoHash)
-//
-////        if (!locationChanged && !radiusChanged) {
-////            query.whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, Timestamp(Date(sinceLastUpdated)))
-////        }
-//
-//        query.get()
-//            .addOnSuccessListener { documents ->
-//                documents.documents.forEach { doc ->
-//                    val user = User.fromJSON(doc.data ?: emptyMap())
-//
-//                    user.location?.let {
-//                        if (GeoUtils.isWithinRadius(currentLocation, it, radiusInKm)) {
-//                            usersList.add(user)
-//                        }
-//                    }
-//                }
-//
-//                // ✅ Update last queried values
-//                lastQueriedLocation = currentLocation
-//                lastQueriedRadius = radiusInKm
-//
-//                callback(usersList)
-//            }
-//            .addOnFailureListener { callback(emptyList()) }
-//    }
-
     fun getNearbyUsers(
         currentLocation: GeoPoint,
         radiusInKm: Double,
-        callback: (List<User>) -> Unit
+        callback: UsersCallback
     ) {
         val (minGeoHash, maxGeoHash) = GeoUtils.getGeoHashRange(currentLocation, radiusInKm)
         val usersList = mutableListOf<User>()
@@ -150,7 +125,6 @@ class FirebaseModel {
                 callback(emptyList()) // Return empty list on failure
             }
     }
-
 
 
     fun addUser(user: User, callback: EmptyCallback) {
@@ -301,7 +275,7 @@ class FirebaseModel {
     }
 
     fun generatePostReference(): DocumentReference {
-        return database.collection(Constants.COLLECTIONS.POSTS).document() // ✅ Generate Firestore ID
+        return database.collection(Constants.COLLECTIONS.POSTS).document() // Generate Firestore ID
     }
 
     companion object {

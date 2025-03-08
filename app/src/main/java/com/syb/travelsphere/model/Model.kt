@@ -5,7 +5,6 @@ import android.os.Looper
 import android.util.Log
 import androidx.core.os.HandlerCompat
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.firebase.firestore.GeoPoint
 import com.syb.travelsphere.base.BitmapCallback
@@ -13,6 +12,7 @@ import com.syb.travelsphere.base.EmptyCallback
 import com.syb.travelsphere.base.ImageCallback
 import com.syb.travelsphere.base.PostCallback
 import com.syb.travelsphere.base.UserCallback
+import com.syb.travelsphere.base.UsersCallback
 import com.syb.travelsphere.model.dao.AppLocalDb
 import com.syb.travelsphere.model.dao.AppLocalDbRepository
 import com.syb.travelsphere.utils.GeoUtils
@@ -47,17 +47,52 @@ class Model private constructor() {
         private const val TAG = "Model"
     }
 
+    fun fetchUsersByIds(userIds: List<String>, callback: UsersCallback) {
+        val userMap = mutableMapOf<String, User>()
+        val remainingUsers = userIds.toMutableSet() // Track missing users
+
+        executor.execute {
+            // Check Room database for cached users
+            userIds.forEach { userId ->
+                val cachedUser = database.userDao().getUserById(userId)
+                if (cachedUser != null) {
+                    userMap[userId] = cachedUser
+                    remainingUsers.remove(userId) // Remove found users from the fetch list
+                }
+            }
+
+            // If all users exist in Room, return them immediately
+            if (remainingUsers.isEmpty()) {
+                mainHandler.post { callback(userMap.values.toList()) }
+                return@execute
+            }
+
+            // Fetch missing users from Firestore
+            firebaseModel.getUsersByIds(remainingUsers.toList()) { fetchedUsers ->
+                fetchedUsers.forEach { user ->
+                    userMap[user.id] = user
+                    executor.execute {
+                        database.userDao().insertUser(user) // Cache in Room
+                    }
+                }
+
+                mainHandler.post { callback(userMap.values.toList()) }
+            }
+        }
+    }
+
+
     fun getUserById(userId: String, callback: UserCallback) {
         loadingState.postValue(LoadingState.LOADING)
 
         try {
-            firebaseModel.getUserById(userId) {
-                    loadingState.postValue(LoadingState.LOADED)
+            firebaseModel.getUserById(userId) { user ->
+                callback(user)
+                loadingState.postValue(LoadingState.LOADED)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error fetching users: ${e.message}")
         }
-
     }
 
     fun refreshNearbyUsers(currentLocation: GeoPoint, radiusInKm: Double) {
