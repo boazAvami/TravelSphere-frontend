@@ -47,12 +47,12 @@ class ProfileFragment : Fragment() {
         // ✅ Get the current user and display details
         val currentUser = authManager.getCurrentUser()
         if (currentUser != null) {
-            Model.shared.getUserById(currentUser.uid) {liveData ->
+            Model.shared.getUserById(currentUser.uid) {user ->
 
                 binding?.userEmail?.setText(currentUser.email)
-                binding?.userPhone?.setText(liveData.value?.phoneNumber)
-                binding?.userName?.setText(liveData.value?.userName)
-                liveData.value?.profilePictureUrl?.let { it1 ->
+                binding?.userPhone?.setText(user?.phoneNumber)
+                binding?.userName?.setText(user?.userName)
+                user?.profilePictureUrl?.let { it1 ->
                     Model.shared.getImageByUrl(it1) { image ->
                         run {
                             binding?.userProfilePicture?.setImageBitmap(image)
@@ -68,11 +68,11 @@ class ProfileFragment : Fragment() {
             try {
                  withContext(Dispatchers.IO) {
                     authManager.getCurrentUser()?.let {
-                        Model.shared.getPostsByUserId(it.uid) { liveData ->
-                            binding?.postListRecyclerView?.adapter = PostListAdapter(liveData.value.orEmpty().toMutableList()) { post ->
+                        Model.shared.getPostsByUserId(it.uid) { posts ->
+                            binding?.postListRecyclerView?.adapter = PostListAdapter(posts.orEmpty().toMutableList(), emptyMap()) { post ->
                                 centerMapOnPost(post)
                             }
-                            binding?.mapComponent?.displayPosts(liveData.value, EditPostFragment(), EditPostFragment::class.java)
+                            binding?.mapComponent?.displayPosts(posts)
                         }
                     }
                 }

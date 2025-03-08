@@ -5,14 +5,15 @@ import android.os.Looper
 import android.util.Log
 import androidx.core.os.HandlerCompat
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.firebase.firestore.GeoPoint
 import com.syb.travelsphere.base.BitmapCallback
 import com.syb.travelsphere.base.EmptyCallback
 import com.syb.travelsphere.base.ImageCallback
 import com.syb.travelsphere.base.PostCallback
+import com.syb.travelsphere.base.PostsCallback
 import com.syb.travelsphere.base.UserCallback
+import com.syb.travelsphere.base.UsersCallback
 import com.syb.travelsphere.model.dao.AppLocalDb
 import com.syb.travelsphere.model.dao.AppLocalDbRepository
 import com.syb.travelsphere.utils.GeoUtils
@@ -32,82 +33,100 @@ class Model private constructor() {
     val users: LiveData<List<User>> = database.userDao().getAllUsers()
     val posts: LiveData<List<Post>> = database.postDao().getAllPosts()
 
-    private val _geoHashBounds = MutableLiveData<Pair<String, String>>() // Stores min & max geohash
-    val geoHashBounds: LiveData<Pair<String, String>> = _geoHashBounds
-    private val _users = MediatorLiveData<List<User>>()
-    val nearbyUsers: LiveData<List<User>> get() = _users
-
-    init {
-        _users.addSource(geoHashBounds) { bounds ->
-            _users.value = database.userDao().getNearbyUsers(bounds.first, bounds.second).value
-        }
-    }
-
-
-    fun updateGeoHashBounds(currentLocation: GeoPoint, radiusInKm: Double) {
-        val (minGeoHash, maxGeoHash) = GeoUtils.getGeoHashRange(currentLocation, radiusInKm)
-        _geoHashBounds.postValue(Pair(minGeoHash, maxGeoHash)) // ✅ Update bounds
-    }
-
-//    val nearbyUsers: LiveData<List<User>> = database.userDao().getNearbyUsers(
-//        minGeoHash = "",
-//        maxGeoHash = ""
-//    )
-
     val loadingState: MutableLiveData<LoadingState> = MutableLiveData<LoadingState>()
     private val firebaseModel = FirebaseModel()
     private val cloudinaryModel = CloudinaryModel()
+
+    private val _nearbyUsers = MutableLiveData<List<User>?>() // LiveData for nearby users
+    val nearbyUsers: LiveData<List<User>?> get() = _nearbyUsers
+
+    private val _radius = MutableLiveData<Double>() // LiveData for radius
 
     companion object {
         val shared = Model()
         private const val TAG = "Model"
     }
 
-    // User Functions.
-    fun getNearbyUsers(currentLocation: GeoPoint, radiusInKm: Double): LiveData<List<User>> {
-        val geoHashBounds = GeoUtils.getGeoHashRange(currentLocation, radiusInKm)
-        return database.userDao().getNearbyUsers(geoHashBounds.first, geoHashBounds.second)
+    fun fetchUsersByIds(userIds: List<String>, callback: UsersCallback) {
+        val userMap = mutableMapOf<String, User>()
+        val remainingUsers = userIds.toMutableSet() // Track missing users
+
+        executor.execute {
+            // Check Room database for cached users
+            userIds.forEach { userId ->
+                val cachedUser = database.userDao().getUserById(userId)
+                if (cachedUser != null) {
+                    userMap[userId] = cachedUser
+                    remainingUsers.remove(userId) // Remove found users from the fetch list
+                }
+            }
+
+            // If all users exist in Room, return them immediately
+            if (remainingUsers.isEmpty()) {
+                mainHandler.post { callback(userMap.values.toList()) }
+                return@execute
+            }
+
+            // Fetch missing users from Firestore
+            firebaseModel.getUsersByIds(remainingUsers.toList()) { fetchedUsers ->
+                fetchedUsers.forEach { user ->
+                    userMap[user.id] = user
+                    executor.execute {
+                        database.userDao().insertUser(user) // Cache in Room
+                    }
+                }
+
+                mainHandler.post { callback(userMap.values.toList()) }
+            }
+        }
     }
 
     fun getUserById(userId: String, callback: UserCallback) {
         loadingState.postValue(LoadingState.LOADING)
 
         try {
-            firebaseModel.getUserById(userId) {
-                    loadingState.postValue(LoadingState.LOADED)
+            firebaseModel.getUserById(userId) { user ->
+                callback(user)
+                loadingState.postValue(LoadingState.LOADED)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error fetching users: ${e.message}")
         }
-
     }
 
     fun refreshNearbyUsers(currentLocation: GeoPoint, radiusInKm: Double) {
         loadingState.postValue(LoadingState.LOADING)
 
-        var lastUpdated: Long = User.lastUpdated
-        val geoHashBounds = GeoUtils.getGeoHashRange(currentLocation, radiusInKm)
+        // Generate GeoHash Range
+        val (minGeoHash, maxGeoHash) = GeoUtils.getGeoHashRange(currentLocation, radiusInKm)
 
-        firebaseModel.getNearbyUsers(
-            currentLocation = currentLocation,
-            radiusInKm = radiusInKm,
-            sinceLastUpdated = lastUpdated
-        ) { usersList ->
+        // Get Cached Users from Room
+        executor.execute {
+            val cachedUsers = database.userDao().getUsersInGeoHashRange(minGeoHash, maxGeoHash).value
 
-            executor.execute {
-                var currentTime = lastUpdated
-
-                for (user in usersList) {
-                    database.userDao().insertUser(user)
-                    user.lastUpdated?.let {
-                        if (currentTime  < it) {
-                            currentTime = it
-                        }
-                    }
-                }
-
-                User.lastUpdated = currentTime
+            if (!cachedUsers.isNullOrEmpty()) {
+                Log.d("Model", "Loaded ${cachedUsers.size} users from cache")
+                _nearbyUsers.postValue(cachedUsers)
                 loadingState.postValue(LoadingState.LOADED)
+            }
+
+            // Fetch Updated Users from Firestore
+            firebaseModel.getNearbyUsers(currentLocation, radiusInKm) { fetchedUsers ->
+                executor.execute {
+                    if (fetchedUsers.isNotEmpty()) {
+                        Log.d("Model", "Fetched ${fetchedUsers.size} users from Firestore, updating cache")
+
+                        for (user in fetchedUsers) {
+                            database.userDao().insertUser(user)
+                        }
+
+                        // Update LiveData with new users
+                        _nearbyUsers.postValue(fetchedUsers)
+                    } else {
+                        Log.d("Model", "No users found in Firestore for the given range.")
+                    }
+                    loadingState.postValue(LoadingState.LOADED)
+                }
             }
         }
     }
@@ -199,15 +218,16 @@ class Model private constructor() {
     fun getPostById(postId: String, callback: PostCallback) {
         loadingState.postValue(LoadingState.LOADING)
         try {
-            firebaseModel.getPostById(postId) {
-                    loadingState.postValue(LoadingState.LOADED)
+            firebaseModel.getPostById(postId) { post ->
+                callback(post)
+                loadingState.postValue(LoadingState.LOADED)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error fetching user: ${e.message}")
+            Log.e(TAG, "Error fetching post: ${e.message}")
         }
     }
 
-    fun getPostsByUserId(ownerUserId: String, callback: (LiveData<List<Post>>) -> Unit) {
+    fun getPostsByUserId(ownerUserId: String, callback: PostsCallback) {
         loadingState.postValue(LoadingState.LOADING)
 
         try {
@@ -232,18 +252,20 @@ class Model private constructor() {
                     }
 
                     Post.lastUpdated = latestTime
-                    val posts = database.postDao().getAllPosts()
+
+                    val posts = database.postDao().getPostsByUser(ownerUserId)
                     Log.d(TAG, "After fetching: Room contains ${posts.value?.size ?: 0} posts")
 
                     mainHandler.post {
-                        callback(posts)
+                        posts.value?.let { callback(it) }
                     }
+
                     loadingState.postValue(LoadingState.LOADED)
                 }
             }
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error fetching users: ${e.message}")
+            Log.e(TAG, "Error fetching posts of user with id ${ownerUserId}: ${e.message}")
         }
     }
 
@@ -277,7 +299,6 @@ class Model private constructor() {
             }
         }
     }
-
 
     fun refreshAllPosts() {
         loadingState.postValue(LoadingState.LOADING)

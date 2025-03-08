@@ -17,11 +17,12 @@ interface UserDao {
     @Query("SELECT * FROM users")
     fun getAllUsers(): LiveData<List<User>>
 
-    @Query("""
-    SELECT * FROM users 
-    WHERE geoHash BETWEEN :minGeoHash AND :maxGeoHash
-    """)
-    fun getNearbyUsers(minGeoHash: String, maxGeoHash: String): LiveData<List<User>>
+//    @Query("SELECT * FROM users WHERE geoHash >= :minGeoHash AND geoHash <= :maxGeoHash")
+//    fun getNearbyUsers(minGeoHash: String, maxGeoHash: String): LiveData<List<User>>
+
+    @Query("SELECT * FROM users WHERE geoHash BETWEEN :minGeoHash AND :maxGeoHash")
+    fun getUsersInGeoHashRange(minGeoHash: String, maxGeoHash: String): LiveData<List<User>>
+
 
     @Query("SELECT * FROM users WHERE id = :id")
     fun getUserById(id: String): User
