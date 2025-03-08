@@ -45,8 +45,6 @@ class SettingsFragment : Fragment() {
                     }
                 }
             }
-
-
         }
 
         // Enable back button in toolbar

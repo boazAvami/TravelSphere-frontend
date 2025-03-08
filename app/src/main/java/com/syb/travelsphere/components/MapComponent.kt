@@ -10,24 +10,39 @@ import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import androidx.fragment.app.Fragment
+import android.content.Intent
 
 class MapComponent @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : MapView(context, attrs) {
 
     init {
-        Configuration.getInstance().load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
+        Configuration.getInstance()
+            .load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
         controller.setZoom(15.0)
         controller.setCenter(GeoPoint(37.7749, -122.4194))  // Default center
     }
 
     // Method to add markers to the map based on the posts
-    fun displayPosts(posts: List<Post>?) {
+    fun displayPosts(
+        posts: List<Post>?,
+        fragment: Fragment,
+        destinationFragmentClass: Class<out Fragment>
+    ) {
         clearMap();
 
         posts?.forEach { post ->
             val geotag = post.location
-            addPostMarker(geotag.latitude, geotag.longitude, post.locationName, post.id, post.description, fragment, destinationFragmentClass)
+            addPostMarker(
+                geotag.latitude,
+                geotag.longitude,
+                post.locationName,
+                post.id,
+                post.description,
+                fragment,
+                destinationFragmentClass
+            )
         }
 
         posts?.forEach { post ->
@@ -38,14 +53,19 @@ class MapComponent @JvmOverloads constructor(
                     geoPoint.longitude,
                     post.locationName,
                     post.id,
-                    post.description
+                    post.description,
+                    fragment,
+                    destinationFragmentClass
                 )
             }
         }
     }
 
     // Method to add a marker on the map
-    private fun addPostMarker(lat: Double, lon: Double, title: String, postId: String, description: String) {
+    private fun addPostMarker(
+        lat: Double, lon: Double, title: String, postId: String, description: String,
+        fragment: Fragment, destinationFragmentClass: Class<out Fragment>
+    ) {
         val marker = Marker(this)
         marker.icon = resources.getDrawable(R.drawable.location, null)
 
@@ -55,9 +75,15 @@ class MapComponent @JvmOverloads constructor(
 
         // Set up marker click listener
         marker.setOnMarkerClickListener { _, _ ->
-            // Show post details in a Toast
+            val intent = Intent(fragment.requireContext(), destinationFragmentClass)
             // TODO : add pop up of post with all the details
-            Toast.makeText(context, "Post ID: $postId\nDescription: $description", Toast.LENGTH_LONG).show()
+            intent.putExtra("postId", postId)
+            Toast.makeText(
+                context,
+                "Post ID: $postId\nDescription: $description",
+                Toast.LENGTH_LONG
+            ).show()
+            fragment.requireContext().startActivity(intent)
             true
         }
 
@@ -71,8 +97,8 @@ class MapComponent @JvmOverloads constructor(
         clearMap();
 
         users?.forEach { user ->
-            val geoPoint  = user.location
-            if (geoPoint  != null) {
+            val geoPoint = user.location
+            if (geoPoint != null) {
                 addUserMarker(
                     geoPoint.latitude,
                     geoPoint.longitude,
@@ -106,7 +132,11 @@ class MapComponent @JvmOverloads constructor(
         // Set up marker click listener
         marker.setOnMarkerClickListener { _, _ ->
             // Show user details in a Toast
-            Toast.makeText(context, "User: ${user.userName}\nProfile: ${user.profilePictureUrl}", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                context,
+                "User: ${user.userName}\nProfile: ${user.profilePictureUrl}",
+                Toast.LENGTH_LONG
+            ).show()
             true
         }
 
