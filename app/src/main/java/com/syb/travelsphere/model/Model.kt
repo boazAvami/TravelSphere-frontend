@@ -11,6 +11,7 @@ import com.syb.travelsphere.base.BitmapCallback
 import com.syb.travelsphere.base.EmptyCallback
 import com.syb.travelsphere.base.ImageCallback
 import com.syb.travelsphere.base.PostCallback
+import com.syb.travelsphere.base.PostsCallback
 import com.syb.travelsphere.base.UserCallback
 import com.syb.travelsphere.base.UsersCallback
 import com.syb.travelsphere.model.dao.AppLocalDb
@@ -226,7 +227,7 @@ class Model private constructor() {
         }
     }
 
-    fun getPostsByUserId(ownerUserId: String, callback: (LiveData<List<Post>>) -> Unit) {
+    fun getPostsByUserId(ownerUserId: String, callback: PostsCallback) {
         loadingState.postValue(LoadingState.LOADING)
 
         try {
@@ -251,18 +252,20 @@ class Model private constructor() {
                     }
 
                     Post.lastUpdated = latestTime
-                    val posts = database.postDao().getAllPosts()
+
+                    val posts = database.postDao().getPostsByUser(ownerUserId)
                     Log.d(TAG, "After fetching: Room contains ${posts.value?.size ?: 0} posts")
 
                     mainHandler.post {
-                        callback(posts)
+                        posts.value?.let { callback(it) }
                     }
+
                     loadingState.postValue(LoadingState.LOADED)
                 }
             }
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error fetching users: ${e.message}")
+            Log.e(TAG, "Error fetching posts of user with id ${ownerUserId}: ${e.message}")
         }
     }
 

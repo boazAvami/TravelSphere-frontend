@@ -16,7 +16,7 @@ class AllPostsViewModel : ViewModel() {
         Model.shared.refreshAllPosts()
     }
 
-     fun fetchPostOwnerUsers(posts: List<Post>, callback: (Map<String, String>) -> Unit) {
+    fun fetchPostOwnerUsers(posts: List<Post>, callback: (Map<String, String>) -> Unit) {
         val ownerIds = posts.map { it.ownerId }.distinct() // Extract unique owner IDs
         if (ownerIds.isEmpty()) {
             _postOwnerUsers.postValue(emptyMap()) // If no owners, return empty map

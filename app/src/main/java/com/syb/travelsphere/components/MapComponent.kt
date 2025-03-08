@@ -3,7 +3,6 @@ package com.syb.travelsphere.components
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.Toast
-import androidx.lifecycle.LiveData
 import com.syb.travelsphere.R
 import com.syb.travelsphere.model.Post
 import com.syb.travelsphere.model.User
@@ -101,7 +100,7 @@ class MapComponent @JvmOverloads constructor(
 //                ) { bitmap ->
 //                    marker.icon = bitmap
 //                }
-             //marker.icon = TODO: set icon to image profile picture
+            //marker.icon = TODO: set icon to image profile picture
         }
 
         // Set up marker click listener
