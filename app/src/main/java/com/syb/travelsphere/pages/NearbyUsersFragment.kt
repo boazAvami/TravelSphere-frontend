@@ -56,6 +56,7 @@ class NearbyUsersFragment : Fragment() {
         binding?.userListRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
 
         setupRecyclerView()
+        refreshNearbyUsers()
 
         // Set up radius buttons
         binding?.radius30kButton?.setOnClickListener {

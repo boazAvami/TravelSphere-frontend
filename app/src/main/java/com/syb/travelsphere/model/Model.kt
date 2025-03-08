@@ -40,7 +40,6 @@ class Model private constructor() {
     val nearbyUsers: LiveData<List<User>?> get() = _nearbyUsers
 
     private val _radius = MutableLiveData<Double>() // LiveData for radius
-    val radius: LiveData<Double> get() = _radius
 
     companion object {
         val shared = Model()
@@ -80,7 +79,6 @@ class Model private constructor() {
             }
         }
     }
-
 
     fun getUserById(userId: String, callback: UserCallback) {
         loadingState.postValue(LoadingState.LOADING)
@@ -219,11 +217,12 @@ class Model private constructor() {
     fun getPostById(postId: String, callback: PostCallback) {
         loadingState.postValue(LoadingState.LOADING)
         try {
-            firebaseModel.getPostById(postId) {
-                    loadingState.postValue(LoadingState.LOADED)
+            firebaseModel.getPostById(postId) { post ->
+                callback(post)
+                loadingState.postValue(LoadingState.LOADED)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error fetching user: ${e.message}")
+            Log.e(TAG, "Error fetching post: ${e.message}")
         }
     }
 
@@ -297,7 +296,6 @@ class Model private constructor() {
             }
         }
     }
-
 
     fun refreshAllPosts() {
         loadingState.postValue(LoadingState.LOADING)
