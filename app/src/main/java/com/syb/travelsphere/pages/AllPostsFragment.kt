@@ -12,6 +12,7 @@ import com.google.firebase.firestore.GeoPoint
 import com.syb.travelsphere.databinding.FragmentAllPostsBinding
 import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.ui.PostListAdapter
+import com.syb.travelsphere.model.Post
 
 class AllPostsFragment : Fragment() {
 
@@ -33,7 +34,7 @@ class AllPostsFragment : Fragment() {
                 Log.d(TAG, "UI Updated: Showing ${posts.size} posts and ${usersMap.size} usernames")
 
                 postListAdapter.update(posts, usersMap) // Update adapter with posts & usernames
-                binding?.mapComponent?.displayPosts(posts)
+                binding?.mapComponent?.displayPosts(posts, ViewPostFragment(), ViewPostFragment::class.java)
                 Log.d(TAG, "UI Updated: Showing ${posts.size} posts")
                 postListAdapter?.notifyDataSetChanged()
             }

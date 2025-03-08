@@ -27,7 +27,7 @@ class MapComponent @JvmOverloads constructor(
 
         posts?.forEach { post ->
             val geotag = post.location
-            addPostMarker(geotag.latitude, geotag.longitude, post.locationName, post.id, post.description)
+            addPostMarker(geotag.latitude, geotag.longitude, post.locationName, post.id, post.description, fragment, destinationFragmentClass)
         }
 
         posts?.forEach { post ->
