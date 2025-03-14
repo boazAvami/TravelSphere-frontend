@@ -248,7 +248,6 @@ class AddPostFragment : Fragment() {
                 description = description,
                 photos = listOf(), // Handled in Model
                 location = currentGeoPoint ?: GeoPoint(0.0, 0.0),
-                geoHash = GeoUtils.generateGeoHash(currentGeoPoint ?: GeoPoint(0.0, 0.0)),
                 creationTime = timestamp,
                 ownerId = it.uid
             )

@@ -26,7 +26,6 @@ data class Post(
 
     @TypeConverters(GeoPointConverter::class)
     val location: GeoPoint,  // Stores lat/lng
-    val geoHash: String = location?.let { generateGeoHash(it) } ?: "", // Generate GeoHash
     val creationTime: Timestamp,
     val ownerId: String, // References the `id` in the User table
     val lastUpdated: Long? = null
@@ -52,7 +51,6 @@ data class Post(
         const val PHOTOS_KEY = "photos"
         const val LOCATION_NAME_KEY = "locationName"
         const val LOCATION_KEY = "location"
-        const val GEOHASH_KEY = "geoHash"
         const val CREATION_TIME_KEY = "creationTime"
         const val OWNER_ID_KEY = "ownerId"
         const val LAST_UPDATED_KEY = "lastUpdated"
@@ -64,7 +62,6 @@ data class Post(
             val photos = json[PHOTOS_KEY] as? List<String> ?: emptyList()
             val locationName = json[LOCATION_NAME_KEY] as? String ?: ""
             val location = json[LOCATION_KEY] as? GeoPoint ?: GeoPoint(0.0, 0.0)
-            val geoHash = json[GEOHASH_KEY] as? String ?: generateGeoHash(location)
             val creationTime = json[CREATION_TIME_KEY] as? Timestamp ?: Timestamp(0, 0)
             val ownerId = json[OWNER_ID_KEY] as? String ?: "Unknown"
             val timestamp = json[User.LAST_UPDATED_KEY] as? Timestamp
@@ -75,7 +72,6 @@ data class Post(
                 description = description,
                 photos = photos,
                 location = location,
-                geoHash = geoHash,
                 creationTime = creationTime,
                 ownerId = ownerId,
                 locationName = locationName,
@@ -92,7 +88,6 @@ data class Post(
                 PHOTOS_KEY to photos,
                 LOCATION_NAME_KEY to locationName,
                 LOCATION_KEY to location,
-                GEOHASH_KEY to geoHash,  // Added GeoHash for Firestore queries
                 CREATION_TIME_KEY to creationTime,
                 OWNER_ID_KEY to ownerId,
                 LAST_UPDATED_KEY to FieldValue.serverTimestamp()
