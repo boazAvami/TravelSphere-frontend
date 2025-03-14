@@ -189,15 +189,19 @@ class AddPostFragment : Fragment() {
         })
     }
 
+    private fun centerMapOnUser(point: GeoPoint) {
+        val lat = point.latitude
+        val lon = point.longitude
+        binding?.mapView?.centerMapOnLocation(lat, lon)
+    }
+
     private fun setupMap() {
         Configuration.getInstance().load(requireContext(), requireContext().getSharedPreferences("osmdroid", 0))
         binding?.mapView?.setMultiTouchControls(true)
 
         // Get user location if available
         getCurrentUserLocation { userGeoPoint ->
-            currentGeoPoint = userGeoPoint
-            binding?.mapView?.controller?.setCenter(OSGeoPoint(userGeoPoint.latitude, userGeoPoint.longitude))
-            binding?.mapView?.controller?.setZoom(15.0)
+            centerMapOnUser(userGeoPoint)
         }
 
         // Add an overlay to capture map clicks
@@ -270,22 +274,28 @@ class AddPostFragment : Fragment() {
                 requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
+            // Request permissions if not granted
             ActivityCompat.requestPermissions(
                 requireActivity(),
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
                 1
             )
+            callback(GeoPoint(31.771959, 34.651401)) // Return default location if no permission
             return
         }
 
         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
             if (location != null) {
-                callback(GeoPoint(location.latitude, location.longitude))
+                val userLocation = GeoPoint(location.latitude, location.longitude)
+                Log.d("UserLocation", "Latitude: ${location.latitude}, Longitude: ${location.longitude}")
+                callback(userLocation) // Return actual location via callback
             } else {
-                callback(GeoPoint(0.0, 0.0)) // Default location
+                Log.d("UserLocation", "Location is null, using default")
+                callback(GeoPoint(31.771959, 34.651401)) // Return default location if null
             }
         }
     }
+
 
     private fun validateInputs(): Boolean {
         val description = binding?.descriptionEditText?.text.toString().trim()
