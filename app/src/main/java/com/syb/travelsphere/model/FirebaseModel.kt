@@ -5,6 +5,7 @@ import com.firebase.geofire.GeoFireUtils
 import com.firebase.geofire.GeoLocation
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.firestoreSettings
@@ -140,13 +141,15 @@ class FirebaseModel {
     }
 
     fun editUser(user: User, callback: EmptyCallback) {
+        val updatedUser = user.copy(lastUpdated = System.currentTimeMillis()) // Convert to Long
+
         database.collection(Constants.COLLECTIONS.USERS)
-            .document(user.id)
-            .set(user.json, SetOptions.merge()) // overwrite the document
+            .document(updatedUser.id)
+            .set(updatedUser.json, SetOptions.merge()) // overwrite the document
             .addOnCompleteListener { task ->
                 when (task.isSuccessful) {
                     true -> {
-                        Log.d(TAG, "User ${user.id} updated successfully.")
+                        Log.d(TAG, "User ${updatedUser.id} updated successfully.")
                         callback() // Operation succeeded
                     }
                     false -> {
@@ -249,9 +252,11 @@ class FirebaseModel {
     }
 
     fun editPost(post: Post, callback: EmptyCallback) {
+        val updatedPost = post.copy(lastUpdated = System.currentTimeMillis()) // Convert to Long
+
         database.collection(Constants.COLLECTIONS.POSTS)
-            .document(post.id.toString())
-            .set(post.json) // overwrite the entire document
+            .document(updatedPost.id.toString())
+            .set(updatedPost.json) // overwrite the entire document
             .addOnCompleteListener { task ->
                 when (task.isSuccessful) {
                     true -> {
