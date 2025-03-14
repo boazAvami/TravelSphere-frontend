@@ -79,13 +79,16 @@ class SignInFragment : Fragment() {
 
 
     private fun signIn(email: String, password: String) {
+        binding?.progressBar?.visibility = View.VISIBLE
         authManager.signInUser(email, password) { user ->
             if (user != null) {
-                Toast.makeText(requireContext(), "✅ Login successful!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Login successful!", Toast.LENGTH_SHORT).show()
                 navigateToMainActivity()
             } else {
-                Toast.makeText(requireContext(), "⚠️ Authentication failed. Please check your credentials.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Authentication failed. Please check your credentials.", Toast.LENGTH_SHORT).show()
             }
+
+            binding?.progressBar?.visibility = View.GONE
         }
     }
 

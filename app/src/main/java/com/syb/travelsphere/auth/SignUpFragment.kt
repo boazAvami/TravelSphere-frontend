@@ -1,44 +1,28 @@
 package com.syb.travelsphere.auth
 
-import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.VectorDrawable
 import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
-import android.util.Patterns
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
-import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.squareup.picasso.Picasso
 import com.syb.travelsphere.MainActivity
-import com.syb.travelsphere.R
 import com.syb.travelsphere.databinding.FragmentSignUpBinding
-import com.syb.travelsphere.model.Model
-import com.syb.travelsphere.model.User
 import com.syb.travelsphere.utils.ImagePickerUtil
 import com.syb.travelsphere.utils.InputValidator
-import java.io.File
-import java.io.InputStream
 
 class SignUpFragment : Fragment() {
 
     private var binding: FragmentSignUpBinding? = null
     private lateinit var authManager: AuthManager
-//    private var cameraLauncher: ActivityResultLauncher<Void?>? = null
+
     private var didSetProfilePicture: Boolean = false
     private lateinit var imagePicker: ImagePickerUtil
 
@@ -170,13 +154,16 @@ class SignUpFragment : Fragment() {
                        isLocationShared: Boolean,
                        profilePicture: Bitmap?
                        ) {
+        binding?.progressBar?.visibility = View.VISIBLE
         authManager.signUpUser(email, password, username, phone, isLocationShared, profilePicture) { user ->
             if (user != null) {
-                Toast.makeText(requireContext(),"✅ Sign up successful!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(),"Sign up successful!", Toast.LENGTH_SHORT).show()
                 navigateToMainActivity()
             } else {
-                Toast.makeText(requireContext(),"❌ Sign up failed.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(),"Sign up failed.", Toast.LENGTH_SHORT).show()
             }
+
+            binding?.progressBar?.visibility = View.GONE
         }
     }
 
