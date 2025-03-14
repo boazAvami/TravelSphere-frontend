@@ -50,6 +50,12 @@ class PostListAdapter(private var posts: List<Post>?,
 
         fun bind(post: Post) {
             postUserName.text = postOwnerUsers?.get(post.ownerId) ?: "Unknown" // Use pre-fetched usernames map
+
+            // Truncate location name if too long
+            val maxLocationLength = 20
+            postLocation.text = if (post.locationName.length > maxLocationLength)
+                post.locationName.take(maxLocationLength) + "..." else post.locationName
+
             // Check if the base64 string is not null or empty
             val firstImageUrl = post.photos.getOrNull(0)
             if (!firstImageUrl.isNullOrEmpty()) {
@@ -67,7 +73,7 @@ class PostListAdapter(private var posts: List<Post>?,
             }
 
             // Set the location, description and creationTime
-            postLocation.text = post.locationName
+//            postLocation.text = post.locationName
             postDescription.text = post.description
             postCreatedTime.text = formatTimestamp(post.creationTime)
 
