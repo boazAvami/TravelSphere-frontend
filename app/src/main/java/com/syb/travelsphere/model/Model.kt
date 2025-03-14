@@ -37,11 +37,6 @@ class Model private constructor() {
     private val firebaseModel = FirebaseModel()
     private val cloudinaryModel = CloudinaryModel()
 
-    private val _nearbyUsers = MutableLiveData<List<User>?>() // LiveData for nearby users
-    val nearbyUsers: LiveData<List<User>?> get() = _nearbyUsers
-
-    private val _radius = MutableLiveData<Double>() // LiveData for radius
-
     companion object {
         val shared = Model()
         private const val TAG = "Model"
@@ -94,42 +89,42 @@ class Model private constructor() {
         }
     }
 
-    fun refreshNearbyUsers(currentLocation: GeoPoint, radiusInKm: Double) {
-        loadingState.postValue(LoadingState.LOADING)
-
-        // Generate GeoHash Range
-        val (minGeoHash, maxGeoHash) = GeoUtils.getGeoHashRange(currentLocation, radiusInKm)
-
-        // Get Cached Users from Room
-        executor.execute {
-            val cachedUsers = database.userDao().getUsersInGeoHashRange(minGeoHash, maxGeoHash).value
-
-            if (!cachedUsers.isNullOrEmpty()) {
-                Log.d("Model", "Loaded ${cachedUsers.size} users from cache")
-                _nearbyUsers.postValue(cachedUsers)
-                loadingState.postValue(LoadingState.LOADED)
-            }
-
-            // Fetch Updated Users from Firestore
-            firebaseModel.getNearbyUsers(currentLocation, radiusInKm) { fetchedUsers ->
-                executor.execute {
-                    if (fetchedUsers.isNotEmpty()) {
-                        Log.d("Model", "Fetched ${fetchedUsers.size} users from Firestore, updating cache")
-
-                        for (user in fetchedUsers) {
-                            database.userDao().insertUser(user)
-                        }
-
-                        // Update LiveData with new users
-                        _nearbyUsers.postValue(fetchedUsers)
-                    } else {
-                        Log.d("Model", "No users found in Firestore for the given range.")
-                    }
-                    loadingState.postValue(LoadingState.LOADED)
-                }
-            }
-        }
-    }
+//    fun refreshNearbyUsers(currentLocation: GeoPoint, radiusInKm: Double) {
+//        loadingState.postValue(LoadingState.LOADING)
+//
+//        // Generate GeoHash Range
+//        val (minGeoHash, maxGeoHash) = GeoUtils.getGeoHashRange(currentLocation, radiusInKm)
+//
+//        // Get Cached Users from Room
+//        executor.execute {
+//            val cachedUsers = database.userDao().getUsersInGeoHashRange(minGeoHash, maxGeoHash).value
+//
+//            if (!cachedUsers.isNullOrEmpty()) {
+//                Log.d("Model", "Loaded ${cachedUsers.size} users from cache")
+//                _nearbyUsers.postValue(cachedUsers)
+//                loadingState.postValue(LoadingState.LOADED)
+//            }
+//
+//            // Fetch Updated Users from Firestore
+//            firebaseModel.getNearbyUsers(currentLocation, radiusInKm) { fetchedUsers ->
+//                executor.execute {
+//                    if (fetchedUsers.isNotEmpty()) {
+//                        Log.d("Model", "Fetched ${fetchedUsers.size} users from Firestore, updating cache")
+//
+//                        for (user in fetchedUsers) {
+//                            database.userDao().insertUser(user)
+//                        }
+//
+//                        // Update LiveData with new users
+//                        _nearbyUsers.postValue(fetchedUsers)
+//                    } else {
+//                        Log.d("Model", "No users found in Firestore for the given range.")
+//                    }
+//                    loadingState.postValue(LoadingState.LOADED)
+//                }
+//            }
+//        }
+//    }
 
     fun getAllUsers() {
         loadingState.postValue(LoadingState.LOADING)
@@ -309,15 +304,7 @@ class Model private constructor() {
                 var currentTime = lastUpdated
 
                 for (post in postsList) {
-                    val postOwner = database.userDao().getUserById(post.ownerId)
-                    if (postOwner != null) {
-                        database.postDao().insertPost(post)
-                    } else {
-                        firebaseModel.getUserById(post.ownerId) {
-                            database.userDao().insertUser(postOwner)
-                            database.postDao().insertPost(post)
-                        }
-                    }
+                    database.postDao().insertPost(post)
                     post.lastUpdated?.let {
                         if (currentTime  < it) {
                             currentTime = it
@@ -372,13 +359,17 @@ class Model private constructor() {
         post.photos.forEach { imageUrl ->
             cloudinaryModel.deleteImage(imageUrl) { success ->
                 if (!success) {
-                    Log.e(TAG, "⚠️ Failed to delete post image: $imageUrl")
+                    Log.e(TAG, "Failed to delete post image: $imageUrl")
                 }
                 deletedImagesCount++
 
-                // Delete the post only after all images are processed - to prevent
+                // Delete the post only after all images are processed
                 if (deletedImagesCount == post.photos.size) {
-                    firebaseModel.deletePost(post.id, callback)
+                    firebaseModel.deletePost(post.id) {
+                        executor.execute {
+                            database.postDao().deletePostById(post.id)
+                        }
+                    }
                 }
             }
         }
@@ -391,4 +382,44 @@ class Model private constructor() {
     fun getImageByUrl(imageUrl: String, callback: BitmapCallback) {
         cloudinaryModel.getImageByUrl(imageUrl, callback)
     }
+
+    fun refreshAllNearbyUsers(location: GeoPoint, radius: Double) {
+        loadingState.postValue(LoadingState.LOADING)
+        val lastUpdated: Long = User.lastUpdated
+        firebaseModel.getNearbyUsers(
+            lastUpdated,
+            currentLocation = location,
+            radiusInKm = radius
+        ) { usersList ->
+            executor.execute {
+                var currentTime = lastUpdated
+
+                for (user in usersList) {
+//                    val existingUser = database.userDao().getUserById(user.id)
+                    database.userDao().insertUser(user)
+
+                    user.lastUpdated?.let {
+                        if (currentTime < it) {
+                            currentTime = it
+                        }
+                    }
+                }
+
+                User.lastUpdated = currentTime
+                loadingState.postValue(LoadingState.LOADED)
+            }
+        }
+    }
+
+    fun getNearbyUsers(location: GeoPoint, radius: Double): LiveData<List<User>> {
+        val geohashRange = calculateGeohashRange(location, radius) // Calculate geohash range
+        return database.userDao().getUsersInGeoHashRange(geohashRange.first, geohashRange.second)
+    }
+
+    private fun calculateGeohashRange(location: GeoPoint, radius: Double): Pair<String, String> {
+        val (minGeoHash, maxGeoHash) = GeoUtils.getGeoHashRange(location, radius)
+
+        return Pair(minGeoHash, maxGeoHash)
+    }
+
 }

@@ -93,6 +93,7 @@ class FirebaseModel {
     }
 
     fun getNearbyUsers(
+        sinceLastUpdated: Long,
         currentLocation: GeoPoint,
         radiusInKm: Double,
         callback: UsersCallback
@@ -100,9 +101,10 @@ class FirebaseModel {
         val (minGeoHash, maxGeoHash) = GeoUtils.getGeoHashRange(currentLocation, radiusInKm)
         val usersList = mutableListOf<User>()
 
-        database.collection("users")
-            .whereGreaterThanOrEqualTo("geoHash", minGeoHash)
-            .whereLessThanOrEqualTo("geoHash", maxGeoHash)
+        database.collection(Constants.COLLECTIONS.USERS)
+//            .whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, sinceLastUpdated.toFirebaseTimestamp)
+            .whereGreaterThanOrEqualTo(User.GEOHASH_KEY, minGeoHash)
+            .whereLessThanOrEqualTo(User.GEOHASH_KEY, maxGeoHash)
             .get()
             .addOnSuccessListener { documents ->
                 documents.documents.forEach { doc ->
@@ -158,7 +160,7 @@ class FirebaseModel {
 
     fun getAllPosts(sinceLastUpdated: Long, callback: PostsCallback) {
         database.collection(Constants.COLLECTIONS.POSTS)
-            .whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, sinceLastUpdated.toFirebaseTimestamp)
+            .whereGreaterThanOrEqualTo(Post.LAST_UPDATED_KEY, sinceLastUpdated.toFirebaseTimestamp)
             .get()
             .addOnCompleteListener {
                 when (it.isSuccessful) {
@@ -227,16 +229,6 @@ class FirebaseModel {
             }
             .addOnFailureListener { error -> Log.w(TAG, "Error writing document", error) }
     }
-
-//    fun addPost(post: Post, callback: EmptyCallback) {
-//        database.collection(Constants.COLLECTIONS.POSTS)
-//            .document(post.id)
-//            .set(post.json)
-//            .addOnCompleteListener {
-//                callback() // Operation succeeded, execute the callback
-//            }
-//            .addOnFailureListener { error -> Log.w(TAG, "Error writing document", error) }
-//    }
 
     fun deletePost(postId: String, callback: EmptyCallback) {
         database.collection(Constants.COLLECTIONS.POSTS)

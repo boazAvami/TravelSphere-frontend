@@ -17,9 +17,6 @@ interface UserDao {
     @Query("SELECT * FROM users")
     fun getAllUsers(): LiveData<List<User>>
 
-//    @Query("SELECT * FROM users WHERE geoHash >= :minGeoHash AND geoHash <= :maxGeoHash")
-//    fun getNearbyUsers(minGeoHash: String, maxGeoHash: String): LiveData<List<User>>
-
     @Query("SELECT * FROM users WHERE geoHash BETWEEN :minGeoHash AND :maxGeoHash")
     fun getUsersInGeoHashRange(minGeoHash: String, maxGeoHash: String): LiveData<List<User>>
 
@@ -33,6 +30,6 @@ interface UserDao {
     @Update
     fun updateUser(user: User)
 
-    @Delete
-    fun deleteUser(user: User)
+    @Query("DELETE FROM users WHERE id = :userId")
+    fun deleteUserById(userId: String)
 }

@@ -166,6 +166,7 @@ class NearbyUsersFragment : Fragment() {
     private fun refreshNearbyUsers() {
         getCurrentUserLocation { userLocation ->
             binding?.mapComponent?.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
+            viewModel.updateLocationAndRadius(userLocation, currentRadius)
             viewModel.refreshNearbyUsers(userLocation, currentRadius)
         }
     }

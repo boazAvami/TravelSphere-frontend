@@ -15,16 +15,7 @@ import com.syb.travelsphere.model.converters.GeoPointConverter
 import com.syb.travelsphere.model.converters.PrimitiveTypeConverter
 import com.syb.travelsphere.utils.GeoUtils.generateGeoHash
 
-@Entity(
-    tableName = "posts",
-    foreignKeys = [ForeignKey(
-        entity = User::class,
-        parentColumns = ["id"],
-        childColumns = ["ownerId"],
-        onDelete = ForeignKey.CASCADE
-    )]
-)
-
+@Entity(tableName = "posts")
 data class Post(
     @PrimaryKey val id: String,
     val description: String,

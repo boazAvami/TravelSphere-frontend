@@ -11,6 +11,7 @@ import java.io.File
 import java.io.FileOutputStream
 import android.content.Context
 import android.graphics.drawable.Drawable
+import android.util.Log
 import com.cloudinary.android.policy.UploadPolicy
 import com.squareup.picasso.Picasso
 import com.syb.travelsphere.BuildConfig
@@ -62,7 +63,8 @@ class CloudinaryModel {
                     callback(error?.description ?: "Unknown error")
                 }
                 override fun onReschedule(requestId: String?, error: ErrorInfo?) {
-                    TODO("Not yet implemented")
+                    callback(error?.description ?: "Unknown error")
+                    Log.e("CloudinaryModel", "Upload rescheduled for request: $requestId due to ${error?.description}")
                 }
             })
             .dispatch()
