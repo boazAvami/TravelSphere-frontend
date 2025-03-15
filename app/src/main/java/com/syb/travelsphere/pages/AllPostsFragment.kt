@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.GeoPoint
 import com.syb.travelsphere.databinding.FragmentAllPostsBinding
@@ -26,6 +27,10 @@ class AllPostsFragment : Fragment() {
 
         setupRecyclerView()
 
+        // Pass the Fragment's NavController to the MapComponent
+        val navController = findNavController()
+        binding?.mapComponent?.setNavController(navController)
+
         viewModel.posts.observe(viewLifecycleOwner) { posts ->
             Log.d(TAG, "UI updated: Received ${posts.size} posts")
 
@@ -33,7 +38,11 @@ class AllPostsFragment : Fragment() {
                 Log.d(TAG, "UI Updated: Showing ${posts.size} posts and ${usersMap.size} usernames")
 
                 postListAdapter.update(posts, usersMap) // Update adapter with posts & usernames
-                binding?.mapComponent?.displayPosts(posts)
+                binding?.mapComponent?.displayPosts(posts) { postId ->
+                    val action = AllPostsFragmentDirections.actionGlobalSinglePostFragment(postId)
+                    findNavController().navigate(action)
+                }
+
                 Log.d(TAG, "UI Updated: Showing ${posts.size} posts")
                 postListAdapter?.notifyDataSetChanged()
             }

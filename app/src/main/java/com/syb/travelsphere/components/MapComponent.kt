@@ -1,11 +1,17 @@
 package com.syb.travelsphere.components
 
 import android.content.Context
+import android.content.Intent
 import android.util.AttributeSet
 import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.navigation.NavController
+import androidx.navigation.NavDirections
+import androidx.navigation.Navigation
 import com.syb.travelsphere.R
 import com.syb.travelsphere.model.Post
 import com.syb.travelsphere.model.User
+import com.syb.travelsphere.pages.AllPostsFragmentDirections
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -15,6 +21,12 @@ class MapComponent @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : MapView(context, attrs) {
 
+    private var navController: NavController? = null
+
+    fun setNavController(navController: NavController) {
+        this.navController = navController
+    }
+
     init {
         Configuration.getInstance().load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
         controller.setZoom(15.0)
@@ -22,12 +34,26 @@ class MapComponent @JvmOverloads constructor(
     }
 
     // Method to add markers to the map based on the posts
-    fun displayPosts(posts: List<Post>?) {
-        clearMap();
+    fun displayPosts(posts: List<Post>?,
+//                     fragment: Fragment,
+//                     destinationFragmentClass: Class<out Fragment>,
+//                     action: NavDirections
+                     onPostClick: (String) -> Unit
+    ) {
+        clearMap()
 
         posts?.forEach { post ->
             val geotag = post.location
-            addPostMarker(geotag.latitude, geotag.longitude, post.locationName, post.id, post.description)
+            addPostMarker(
+                geotag.latitude,
+                geotag.longitude,
+                post.locationName,
+                post.id,
+                post.description,
+//                fragment,
+//                destinationFragmentClass,
+                onPostClick
+            )
         }
 
         posts?.forEach { post ->
@@ -38,14 +64,27 @@ class MapComponent @JvmOverloads constructor(
                     geoPoint.longitude,
                     post.locationName,
                     post.id,
-                    post.description
+                    post.description,
+//                    fragment,
+//                    destinationFragmentClass,
+                    onPostClick
                 )
             }
         }
     }
 
     // Method to add a marker on the map
-    private fun addPostMarker(lat: Double, lon: Double, title: String, postId: String, description: String) {
+    private fun addPostMarker(
+        lat: Double,
+        lon: Double,
+        title: String,
+        postId: String,
+        description: String,
+//        fragment: Fragment,
+//        destinationFragmentClass: Class<out Fragment>,
+//        action: NavDirections
+        onPostClick: (String) -> Unit
+    ) {
         val marker = Marker(this)
         marker.icon = resources.getDrawable(R.drawable.location, null)
 
@@ -54,7 +93,29 @@ class MapComponent @JvmOverloads constructor(
         marker.title = title
 
         // Set up marker click listener
+
         marker.setOnMarkerClickListener { _, _ ->
+//            val intent = Intent(fragment.requireContext(), destinationFragmentClass)
+            // TODO : add pop up of post with all the details
+//            intent.putExtra("postId", postId)
+
+//            Navigation.createNavigateOnClickListener(action)
+//                val action = StudentsListFragmentDirections.actionStudentsListFragmentToBlueFragment(it.name)
+//            navController?.let {
+//                val action1 = AllPostsFragmentDirections.actionGlobalSinglePostFragment(postId)
+//                it.navigate(action1)
+//            }
+            onPostClick(postId) // Call the navigation function passed from the fragment
+//            navController?.navigate(action)
+
+
+            Toast.makeText(
+                context,
+                "Post ID: $postId\nDescription: $description",
+                Toast.LENGTH_LONG
+            ).show()
+//            fragment.requireContext().startActivity(intent)
+            true
             // Show post details in a Toast
             // TODO : add pop up of post with all the details
             Toast.makeText(context, "Post ID: $postId\nDescription: $description", Toast.LENGTH_LONG).show()

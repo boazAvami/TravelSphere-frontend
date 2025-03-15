@@ -5,30 +5,137 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.GeoPoint
+import com.syb.travelsphere.R
 import com.syb.travelsphere.auth.AuthManager
 import com.syb.travelsphere.databinding.FragmentProfileBinding
 import com.syb.travelsphere.model.Model
-import com.syb.travelsphere.model.Post
-import com.syb.travelsphere.services.TravelService
+import com.syb.travelsphere.model.User
 import com.syb.travelsphere.ui.PostListAdapter
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class ProfileFragment : Fragment() {
     private var binding: FragmentProfileBinding? = null
-    private lateinit var travelService: TravelService
+    private val viewModel: ProfileViewModel by viewModels() // ViewModel instance
+
     private lateinit var authManager: AuthManager
+    private lateinit var postListAdapter: PostListAdapter
+    private lateinit var userObject: User
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
         binding = FragmentProfileBinding.inflate(inflater, container, false)
+        authManager = AuthManager()  // Initialize AuthManager
+        val currentUser = authManager.getCurrentUser()
+
+        // Pass the Fragment's NavController to the MapComponent
+        val navController = findNavController()
+        binding?.mapComponent?.setNavController(navController)
+
+        fetchUserData(currentUser)
+
+        if (currentUser != null) {
+            Model.shared.getUserById(currentUser.uid) { user ->
+                if (user != null) {
+                    userObject = user
+                    setupRecyclerView(mapOf(currentUser.uid to userObject.id))
+                    Log.d(TAG, "onCreateView: ${currentUser.uid} ${userObject.userName}")
+                }
+            }
+        }
+
+        viewModel.userPosts.observe(viewLifecycleOwner) { posts ->
+            Log.d(TAG, "UI updated: Received ${posts.size?:0} posts")
+
+            if (currentUser != null) {
+                Model.shared.getUserById(currentUser.uid) { user ->
+                    if (user != null) {
+                        userObject = user
+
+                        postListAdapter.update(posts, mapOf(currentUser.uid to user.userName))
+
+                        binding?.mapComponent?.displayPosts(posts) { postId ->
+                            val action = ProfileFragmentDirections.actionGlobalSinglePostFragment(postId)
+                            findNavController().navigate(action)
+                        }
+
+                        Log.d(TAG, "UI Updated: Showing ${posts.size} posts")
+                        postListAdapter?.notifyDataSetChanged()
+                    }
+                }// Update adapter with posts & username
+
+                }
+            }
+
+        binding?.swipeToRefresh?.setOnRefreshListener {
+            fetchUserData(currentUser)
+
+            viewModel.refreshUserPosts(userObject.id)
+        }
+
+        Model.shared.loadingState.observe(viewLifecycleOwner) { state ->
+            binding?.swipeToRefresh?.isRefreshing = state == Model.LoadingState.LOADING
+        }
+
         return binding?.root
+    }
+
+    private fun fetchUserData(currentUser: FirebaseUser?) {
+        // Get the current user and display details
+        if (currentUser != null) {
+            Model.shared.getUserById(currentUser.uid) { user ->
+
+                binding?.userEmail?.text = currentUser.email
+                binding?.userPhone?.text = user?.phoneNumber
+                binding?.userName?.text = user?.userName
+                Log.d(TAG, "onCreateView: Image URL loading photo $user?.profilePictureUrl")
+                if (!user?.profilePictureUrl.isNullOrEmpty()) {
+                    try {
+                        val userProfilePictureUrl = user?.profilePictureUrl
+                        if (userProfilePictureUrl != null) {
+                            Model.shared.getImageByUrl(userProfilePictureUrl) { bitmap ->
+                                binding?.userProfilePicture?.setImageBitmap(bitmap)
+                                Log.d(TAG, "fetchUserData: bitmap $bitmap")
+                            }
+                        } else {
+                            // If decoding fails, set a default image
+                            binding?.userProfilePicture?.setImageResource(R.drawable.default_user)
+                        }
+                    } catch (e: Exception) {
+                        // If decoding fails, set a default image
+                        binding?.userProfilePicture?.setImageResource(R.drawable.default_user)
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val currentUser = authManager.getCurrentUser()
+        if (currentUser != null) {
+            viewModel.refreshUserPosts(currentUser.uid)
+        }
+    }
+
+    private fun setupRecyclerView(userMap: Map<String, String>) {
+        binding?.postListRecyclerView?.setHasFixedSize(true)
+        binding?.postListRecyclerView?.layoutManager = LinearLayoutManager(context)
+        postListAdapter = PostListAdapter(viewModel.userPosts.value, userMap) {
+            post -> centerMapOnPost(post.location)
+        }
+        binding?.postListRecyclerView?.adapter = postListAdapter
+    }
+
+    private fun centerMapOnPost(point: GeoPoint) {
+        val lat = point.latitude
+        val lon = point.longitude
+        binding?.mapComponent?.centerMapOnLocation(lat, lon)
     }
 
     override fun onDestroy() {
@@ -36,62 +143,7 @@ class ProfileFragment : Fragment() {
         binding = null
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        travelService = TravelService()
-        binding?.postListRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
-        fetchUserData()
-        fetchPostsAndSetUpScreen()
-    }
-
-    private fun fetchUserData() {
-        authManager = AuthManager()  // Initialize AuthManager
-        // ✅ Get the current user and display details
-        val currentUser = authManager.getCurrentUser()
-        if (currentUser != null) {
-            Model.shared.getUserById(currentUser.uid) {user ->
-
-                binding?.userEmail?.setText(currentUser.email)
-                binding?.userPhone?.setText(user?.phoneNumber)
-                binding?.userName?.setText(user?.userName)
-                user?.profilePictureUrl?.let { it1 ->
-                    Model.shared.getImageByUrl(it1) { image ->
-                        run {
-                            binding?.userProfilePicture?.setImageBitmap(image)
-                        }
-                    }
-                }
-             }
-        }
-    }
-
-    private fun fetchPostsAndSetUpScreen() {
-        lifecycleScope.launch {
-            try {
-                 withContext(Dispatchers.IO) {
-                    authManager.getCurrentUser()?.let {
-                        Model.shared.getPostsByUserId(it.uid) { posts ->
-                            binding?.postListRecyclerView?.adapter = PostListAdapter(posts.orEmpty().toMutableList(), emptyMap()) { post ->
-                                centerMapOnPost(post)
-                            }
-                            binding?.mapComponent?.displayPosts(posts)
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                Toast.makeText(
-                    requireContext(),
-                    "Error fetching posts: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
-                Log.d("Error", "Error fetching posts: ${e.message}")
-            }
-        }
-    }
-
-    private fun centerMapOnPost(post: Post) {
-        val lat = post.location.latitude
-        val lon = post.location.longitude
-        binding?.mapComponent?.centerMapOnLocation(lat, lon)
+    companion object {
+        private const val TAG = "ProfileFragment"
     }
 }

@@ -87,4 +87,15 @@
             android:id="@+id/action_settingsFragment_to_profileFragment"
             app:destination="@+id/profileFragment"/>
     </fragment>
+    <fragment
+        android:id="@+id/singlePostFragment"
+        android:name="com.syb.travelsphere.pages.SinglePostFragment"
+        android:label="fragment_single_post"
+        tools:layout="@layout/fragment_single_post">
+    <argument
+        android:name="postId"
+        app:argType="string"/>
+    </fragment>
+    <action android:id="@+id/action_global_SinglePostFragment" app:destination="@id/singlePostFragment" />
+<!--    <action android:id="@+id/action_global_addStudentFragment" app:destination="@id/addStudentFragment" />-->
 </navigation>
