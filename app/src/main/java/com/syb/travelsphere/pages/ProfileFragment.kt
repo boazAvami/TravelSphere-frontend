@@ -50,7 +50,7 @@ class ProfileFragment : Fragment() {
         }
 
         viewModel.userPosts.observe(viewLifecycleOwner) { posts ->
-            Log.d(TAG, "UI updated: Received ${posts.size?:0} posts")
+            Log.d(TAG, "UI updated: Received ${posts.size} posts")
 
             if (currentUser != null) {
                 Model.shared.getUserById(currentUser.uid) { user ->
@@ -60,7 +60,7 @@ class ProfileFragment : Fragment() {
                         postListAdapter.update(posts, mapOf(currentUser.uid to user.userName))
 
                         binding?.mapComponent?.displayPosts(posts) { postId ->
-                            val action = ProfileFragmentDirections.actionGlobalSinglePostFragment(postId)
+                            val action = ProfileFragmentDirections.actionGlobalEditPostFragment(postId)
                             findNavController().navigate(action)
                         }
 

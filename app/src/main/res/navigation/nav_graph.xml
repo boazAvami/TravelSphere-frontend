@@ -90,12 +90,21 @@
     <fragment
         android:id="@+id/singlePostFragment"
         android:name="com.syb.travelsphere.pages.SinglePostFragment"
-        android:label="fragment_single_post"
+        android:label="Interesting Post.."
         tools:layout="@layout/fragment_single_post">
     <argument
         android:name="postId"
         app:argType="string"/>
     </fragment>
     <action android:id="@+id/action_global_SinglePostFragment" app:destination="@id/singlePostFragment" />
-<!--    <action android:id="@+id/action_global_addStudentFragment" app:destination="@id/addStudentFragment" />-->
+    <action android:id="@+id/action_global_EditPostFragment" app:destination="@id/editPostFragment" />
+    <fragment
+        android:id="@+id/editPostFragment"
+        android:name="com.syb.travelsphere.pages.EditPostFragment"
+        android:label="Edit Your Post">
+        <argument
+            android:name="postId"
+            app:argType="string"/>
+    </fragment>
+    <!--    <action android:id="@+id/action_global_addStudentFragment" app:destination="@id/addStudentFragment" />-->
 </navigation>

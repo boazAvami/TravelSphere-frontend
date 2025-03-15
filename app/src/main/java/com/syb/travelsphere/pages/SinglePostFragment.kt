@@ -27,9 +27,7 @@ class SinglePostFragment : Fragment() {
         postId =  arguments?.let {
             SinglePostFragmentArgs.fromBundle(it).postId
         }
-//        binding?.userNameText?.text = postId ?: ""
 
-//        postId = arguments?.getString("postId")
         return binding?.root
     }
 

@@ -35,9 +35,6 @@ class MapComponent @JvmOverloads constructor(
 
     // Method to add markers to the map based on the posts
     fun displayPosts(posts: List<Post>?,
-//                     fragment: Fragment,
-//                     destinationFragmentClass: Class<out Fragment>,
-//                     action: NavDirections
                      onPostClick: (String) -> Unit
     ) {
         clearMap()
@@ -50,8 +47,6 @@ class MapComponent @JvmOverloads constructor(
                 post.locationName,
                 post.id,
                 post.description,
-//                fragment,
-//                destinationFragmentClass,
                 onPostClick
             )
         }
@@ -65,8 +60,6 @@ class MapComponent @JvmOverloads constructor(
                     post.locationName,
                     post.id,
                     post.description,
-//                    fragment,
-//                    destinationFragmentClass,
                     onPostClick
                 )
             }
@@ -80,9 +73,6 @@ class MapComponent @JvmOverloads constructor(
         title: String,
         postId: String,
         description: String,
-//        fragment: Fragment,
-//        destinationFragmentClass: Class<out Fragment>,
-//        action: NavDirections
         onPostClick: (String) -> Unit
     ) {
         val marker = Marker(this)
@@ -95,30 +85,7 @@ class MapComponent @JvmOverloads constructor(
         // Set up marker click listener
 
         marker.setOnMarkerClickListener { _, _ ->
-//            val intent = Intent(fragment.requireContext(), destinationFragmentClass)
-            // TODO : add pop up of post with all the details
-//            intent.putExtra("postId", postId)
-
-//            Navigation.createNavigateOnClickListener(action)
-//                val action = StudentsListFragmentDirections.actionStudentsListFragmentToBlueFragment(it.name)
-//            navController?.let {
-//                val action1 = AllPostsFragmentDirections.actionGlobalSinglePostFragment(postId)
-//                it.navigate(action1)
-//            }
             onPostClick(postId) // Call the navigation function passed from the fragment
-//            navController?.navigate(action)
-
-
-            Toast.makeText(
-                context,
-                "Post ID: $postId\nDescription: $description",
-                Toast.LENGTH_LONG
-            ).show()
-//            fragment.requireContext().startActivity(intent)
-            true
-            // Show post details in a Toast
-            // TODO : add pop up of post with all the details
-            Toast.makeText(context, "Post ID: $postId\nDescription: $description", Toast.LENGTH_LONG).show()
             true
         }
 
