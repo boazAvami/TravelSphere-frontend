@@ -238,7 +238,7 @@ class Model private constructor() {
                     val latestTime = lastUpdated
 
                     for (post in postsList) {
-                        Log.d(TAG, "🔹 Attempting to insert post: ${post.id}") // Debugging insert
+                        Log.d(TAG, "Attempting to insert post: ${post.id}") // Debugging insert
 
                         database.postDao().insertPost(post)
 
@@ -249,13 +249,11 @@ class Model private constructor() {
                         }
                     }
 
-                    Post.lastUpdated = latestTime
-
                     val posts = database.postDao().getPostsByUser(ownerUserId)
-                    Log.d(TAG, "After fetching: Room contains ${posts.value?.size ?: 0} posts")
 
                     mainHandler.post {
-                        posts.value?.let { callback(it) }
+                        Log.d(TAG, "After fetching: Room contains ${posts.size ?: 0} posts")
+                        callback(posts)
                     }
 
                     loadingState.postValue(LoadingState.LOADED)
