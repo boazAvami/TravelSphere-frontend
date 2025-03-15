@@ -19,7 +19,7 @@ class ImagePickerUtil(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            cameraLauncher.launch(null) // ✅ If permission is granted, open the camera
+            cameraLauncher.launch(null) // If permission is granted, open the camera
         } else {
             Toast.makeText(fragment.requireContext(), "Camera permission denied", Toast.LENGTH_SHORT).show()
         }
@@ -60,9 +60,9 @@ class ImagePickerUtil(
         if (ContextCompat.checkSelfPermission(fragment.requireContext(), Manifest.permission.CAMERA)
             == android.content.pm.PackageManager.PERMISSION_GRANTED
         ) {
-            cameraLauncher.launch(null) // ✅ Open camera if permission is granted
+            cameraLauncher.launch(null) // Open camera if permission is granted
         } else {
-            permissionLauncher.launch(Manifest.permission.CAMERA) // ❌ Request permission
+            permissionLauncher.launch(Manifest.permission.CAMERA) // Request permission
         }
     }
 

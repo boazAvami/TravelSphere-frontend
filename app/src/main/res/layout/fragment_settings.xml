@@ -1,202 +1,157 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="24dp"
-    tools:context="pages.SettingsFragment">
+    android:layout_height="wrap_content"
+    android:padding="16dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    android:background="?android:attr/colorBackground">
 
-    <!-- Profile Picture -->
-    <ImageView
-        android:id="@+id/profileImage"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:src="@drawable/profile_ic"
-        android:contentDescription="Profile Picture"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="36dp"/>
-
-    <!-- Edit Profile Picture Button -->
-    <Button
-        android:id="@+id/editProfileButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Edit Profile Picture"
-        android:textSize="12sp"
-        android:textColor="@android:color/holo_orange_dark"
-        android:background="@android:color/transparent"
-        app:layout_constraintTop_toBottomOf="@id/profileImage"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="8dp"/>
-
-    <View
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@android:color/darker_gray"
-        app:layout_constraintTop_toBottomOf="@id/editProfileButton"
-        android:layout_marginTop="24dp"/>
+        android:layout_height="wrap_content">
 
-    <!-- Email Field -->
-    <TextView
-        android:id="@+id/emailLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Email"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/editProfileButton"
-        android:layout_marginTop="16dp"/>
+        <!-- Profile Picture -->
+        <ImageView
+            android:id="@+id/profileImage"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:contentDescription="Profile Picture"
+            android:layout_gravity="center"
+            android:layout_marginTop="24dp"
+            android:src="@drawable/default_user"
+            android:backgroundTint="@android:color/transparent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:outlineProvider="background"
+            android:clipToOutline="true"
+            app:shapeAppearanceOverlay="@style/RoundedImageStyle"
+            android:background="@drawable/circle_shape"
+            android:scaleType="centerCrop"/>
 
-    <EditText
-        android:id="@+id/emailText"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:hint="Enter email"
-        android:text="myEmail@gmail.com"
-        android:inputType="textEmailAddress"
-        android:background="@null"
-        android:textSize="16sp"
-        app:layout_constraintStart_toEndOf="@id/emailLabel"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBaseline_toBaselineOf="@id/emailLabel"
-        android:layout_marginStart="12dp"/>
+        <!-- Edit Profile Picture Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/editProfileButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Edit Profile Picture"
+            app:iconPadding="8dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@id/profileImage"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@android:color/darker_gray"
-        app:layout_constraintTop_toBottomOf="@id/emailLabel"
-        android:layout_marginTop="8dp"/>
+        <!-- Email Field -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/emailInputLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="Email"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/editProfileButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
-    <!-- Phone Field -->
-    <TextView
-        android:id="@+id/phoneLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Phone"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/emailText"
-        android:layout_marginTop="16dp"/>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/emailText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textEmailAddress"
+                android:text="myEmail@gmail.com" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-    <EditText
-        android:id="@+id/phoneText"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:hint="Enter phone number"
-        android:text="0546707541"
-        android:inputType="phone"
-        android:background="@null"
-        android:textSize="16sp"
-        app:layout_constraintStart_toEndOf="@id/phoneLabel"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBaseline_toBaselineOf="@id/phoneLabel"
-        android:layout_marginStart="12dp"/>
+        <!-- Phone Field -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/phoneInputLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="Phone"
+            android:layout_marginTop="12dp"
+            app:layout_constraintTop_toBottomOf="@id/emailInputLayout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@android:color/darker_gray"
-        app:layout_constraintTop_toBottomOf="@id/phoneLabel"
-        android:layout_marginTop="8dp"/>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/phoneText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="phone"
+                android:text="0546707541" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Username Field -->
-    <TextView
-        android:id="@+id/usernameLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Username"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/phoneText"
-        android:layout_marginTop="16dp"/>
+        <!-- Username Field -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/usernameInputLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="Username"
+            android:layout_marginTop="12dp"
+            app:layout_constraintTop_toBottomOf="@id/phoneInputLayout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
-    <EditText
-        android:id="@+id/usernameText"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:hint="Enter username"
-        android:text="myUserName233"
-        android:inputType="text"
-        android:background="@null"
-        android:textSize="16sp"
-        app:layout_constraintStart_toEndOf="@id/usernameLabel"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBaseline_toBaselineOf="@id/usernameLabel"
-        android:layout_marginStart="12dp"/>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/usernameText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:text="myUserName233" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@android:color/darker_gray"
-        app:layout_constraintTop_toBottomOf="@id/usernameLabel"
-        android:layout_marginTop="8dp"/>
+        <!-- Location Switch -->
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/locationSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Share My Location"
+            android:checked="true"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/usernameInputLayout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Location Switch -->
-    <TextView
-        android:id="@+id/locationLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Share My Location"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/usernameText"
-        android:layout_marginTop="24dp"/>
+        <TextView
+            android:id="@+id/locationInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="When turned off, GPS-based features will be disabled."
+            android:textSize="12sp"
+            android:textColor="@android:color/darker_gray"
+            android:layout_marginTop="4dp"
+            app:layout_constraintTop_toBottomOf="@id/locationSwitch"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-    <Switch
-        android:id="@+id/locationSwitch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/locationLabel"
-        android:thumbTint="@color/switch_thumb_color"
-        android:trackTint="@color/switch_track_color" />
+        <!-- Save Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/editButton"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save Changes"
+            android:layout_marginTop="24dp"
+            app:layout_constraintTop_toBottomOf="@id/locationInfo"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-    <TextView
-        android:id="@+id/locationInfo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="When turned off, all GPS-based features will also be disabled."
-        android:textSize="12sp"
-        android:textColor="@android:color/darker_gray"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/locationLabel"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="24dp"/>
+        <!-- Logout Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/logoutButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Log Out"
+            android:textColor="@android:color/holo_red_dark"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/editButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Edit Button (Green, after shared location) -->
-    <Button
-        android:id="@+id/editButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Edit"
-        android:textColor="@android:color/white"
-        android:backgroundTint="@android:color/holo_green_dark"
-        android:padding="12dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/locationInfo"
-        android:layout_marginTop="24dp"/>
-
-    <!-- Logout Button (Moved to the bottom) -->
-    <Button
-        android:id="@+id/logoutButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Log out"
-        android:textColor="@android:color/white"
-        android:backgroundTint="@android:color/holo_red_dark"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginBottom="24dp"
-        android:padding="12dp"/>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

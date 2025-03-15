@@ -191,7 +191,9 @@ class Model private constructor() {
         if (newProfilePicture != null) {
             // Delete the old image if it exists
             user.profilePictureUrl?.let { oldUrl ->
-                cloudinaryModel.deleteImage(oldUrl) {}
+                cloudinaryModel.deleteImage(oldUrl) {
+                    Log.d(TAG, "editUser: image deleted")
+                }
             }
 
             // Upload the new image
@@ -200,6 +202,7 @@ class Model private constructor() {
                     val updatedUser = user.copy(profilePictureUrl = newUrl)
                     firebaseModel.editUser(updatedUser, callback)
                 } else {
+                    Log.d(TAG, "editUser: error uploading profile picture")
                     callback()
                 }
             }

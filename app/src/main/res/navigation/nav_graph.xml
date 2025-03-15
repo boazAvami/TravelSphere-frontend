@@ -2,7 +2,7 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/navigationGraph"
+    android:id="@+id/nav_graph"
     app:startDestination="@id/allPostsFragment">
 
     <!-- All Posts Fragment -->
@@ -44,7 +44,7 @@
         android:id="@+id/addPostFragment"
         android:name="com.syb.travelsphere.pages.AddPostFragment"
         android:label="New Post"
-        tools:layout="@layout/fragment_new_post">
+        tools:layout="@layout/fragment_add_post">
         <action
             android:id="@+id/action_addPostFragment_to_allPostsFragment"
             app:destination="@id/allPostsFragment"/>
@@ -59,7 +59,7 @@
     <!-- Profile Fragment -->
     <fragment
         android:id="@+id/profileFragment"
-        android:name="com.syb.travelsphere.ProfileFragment"
+        android:name="com.syb.travelsphere.pages.ProfileFragment"
         android:label="Profile"
         tools:layout="@layout/fragment_profile">
         <action

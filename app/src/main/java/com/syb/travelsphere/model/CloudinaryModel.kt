@@ -104,21 +104,28 @@ class CloudinaryModel {
     }
 
     fun getImageByUrl(imageUrl: String, callback: BitmapCallback) {
-        Picasso.get()
-            .load(imageUrl)
-            .config(Bitmap.Config.ARGB_8888) // Ensures high quality
-            .into(object : com.squareup.picasso.Target {
-                override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
-                    callback(bitmap) // Successfully loaded
-                }
+        if (imageUrl.isNullOrEmpty()) {
+            Log.d(TAG, "getImageByUrl: error getting image URL")
+        } else {
+            Picasso.get()
+                .load(imageUrl)
+                .config(Bitmap.Config.ARGB_8888) // Ensures high quality
+                .into(object : com.squareup.picasso.Target {
+                    override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
+                        callback(bitmap) // Successfully loaded
+                    }
 
-                override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
-                    callback(null) // Failed to load
-                }
+                    override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
+                        callback(null) // Failed to load
+                    }
 
-                override fun onPrepareLoad(placeHolderDrawable: Drawable?) {}
-            })
+                    override fun onPrepareLoad(placeHolderDrawable: Drawable?) {}
+                })
+        }
+
     }
 
-
+    companion object {
+        private const val TAG = "CloudinaryModel"
+    }
 }

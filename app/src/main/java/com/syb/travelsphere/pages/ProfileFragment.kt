@@ -1,3 +1,5 @@
+package com.syb.travelsphere.pages
+
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
