@@ -13,17 +13,22 @@ class ImagePickerUtil(
     private val fragment: Fragment,
     private val callback: (Bitmap?) -> Unit
 ) {
+    private var requestedPermission: String? = null // Tracks whether the app is requesting camera or gallery access.
 
-    // Permission Request
+    // Permission Request for Camera and Gallery
     private val permissionLauncher = fragment.registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            cameraLauncher.launch(null) // If permission is granted, open the camera
+            when (requestedPermission) {
+                Manifest.permission.CAMERA -> cameraLauncher.launch(null)
+                Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_EXTERNAL_STORAGE -> openGallery()
+            }
         } else {
-            Toast.makeText(fragment.requireContext(), "Camera permission denied", Toast.LENGTH_SHORT).show()
+            Toast.makeText(fragment.requireContext(), "Permission denied", Toast.LENGTH_SHORT).show()
         }
     }
+
 
     // Open Gallery
     private val galleryLauncher =
@@ -62,16 +67,31 @@ class ImagePickerUtil(
         ) {
             cameraLauncher.launch(null) // Open camera if permission is granted
         } else {
+            requestedPermission = Manifest.permission.CAMERA
             permissionLauncher.launch(Manifest.permission.CAMERA) // Request permission
         }
     }
 
     fun openGallery() {
-        val pickPhotoIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        galleryLauncher.launch(pickPhotoIntent)
+        val permission = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+
+        if (ContextCompat.checkSelfPermission(fragment.requireContext(), permission)
+            == android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            val pickPhotoIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+            galleryLauncher.launch(pickPhotoIntent)
+        } else {
+            requestedPermission = permission
+            permissionLauncher.launch(permission) // Request permission
+        }
     }
 
-     fun convertBitmapToBase64(bitmap: android.graphics.Bitmap): String {
+
+    fun convertBitmapToBase64(bitmap: android.graphics.Bitmap): String {
         val outputStream = java.io.ByteArrayOutputStream()
         bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 100, outputStream)
         val byteArray = outputStream.toByteArray()
