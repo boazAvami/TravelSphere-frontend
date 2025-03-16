@@ -22,10 +22,10 @@ class ImagePickerUtil(
         if (isGranted) {
             when (requestedPermission) {
                 Manifest.permission.CAMERA -> cameraLauncher.launch(null)
-                Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_EXTERNAL_STORAGE -> openGallery()
+                Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_EXTERNAL_STORAGE -> launchGalleryPicker()
             }
         } else {
-            Toast.makeText(fragment.requireContext(), "Permission denied", Toast.LENGTH_SHORT).show()
+            Toast.makeText(fragment.requireContext(), "Permission denied. Cannot access gallery.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -35,9 +35,15 @@ class ImagePickerUtil(
         fragment.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == android.app.Activity.RESULT_OK) {
                 result.data?.data?.let { uri ->
-                    val bitmap = MediaStore.Images.Media.getBitmap(fragment.requireContext().contentResolver, uri)
-                    callback(bitmap)
+                    try {
+                        val bitmap = MediaStore.Images.Media.getBitmap(fragment.requireContext().contentResolver, uri)
+                        callback(bitmap) // Correctly returns only the selected image
+                    } catch (e: Exception) {
+                        Toast.makeText(fragment.requireContext(), "Error loading image", Toast.LENGTH_SHORT).show()
+                    }
                 }
+            } else {
+                Toast.makeText(fragment.requireContext(), "No image selected", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -74,20 +80,38 @@ class ImagePickerUtil(
 
     fun openGallery() {
         val permission = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            Manifest.permission.READ_MEDIA_IMAGES
+            Manifest.permission.READ_MEDIA_IMAGES // Request full media access for Android 13+
         } else {
-            Manifest.permission.READ_EXTERNAL_STORAGE
+            Manifest.permission.READ_EXTERNAL_STORAGE // Request full storage access for older Android versions
         }
 
         if (ContextCompat.checkSelfPermission(fragment.requireContext(), permission)
             == android.content.pm.PackageManager.PERMISSION_GRANTED
         ) {
-            val pickPhotoIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-            galleryLauncher.launch(pickPhotoIntent)
+            launchGalleryPicker() // Open gallery if permission is granted
         } else {
             requestedPermission = permission
-            permissionLauncher.launch(permission) // Request permission
+            permissionLauncher.launch(permission) // Request full access
         }
+    }
+
+    private val photoPickerLauncher =
+        fragment.registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            if (uri != null) {
+                try {
+                    val bitmap = MediaStore.Images.Media.getBitmap(fragment.requireContext().contentResolver, uri)
+                    callback(bitmap) // Returns only the selected image
+                } catch (e: Exception) {
+                    Toast.makeText(fragment.requireContext(), "Error loading image", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(fragment.requireContext(), "No image selected", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+    private fun launchGalleryPicker() {
+        val pickPhotoIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        galleryLauncher.launch(pickPhotoIntent)
     }
 
 
