@@ -32,7 +32,7 @@ class AuthManager {
                     )
 
                     Model.shared.addUser(user, profilePicture) {
-                        Log.d(TAG, "✅ User created & added to Firestore successfully!")
+                        Log.d(TAG, "User created & added to Firestore successfully!")
 
                         // Fetch the user (this ensures it's also inserted into Room)
                         Model.shared.getUserById(it.uid) { fetchedUser ->
@@ -42,29 +42,20 @@ class AuthManager {
                         callback(firebaseUser)
                     }
                 } ?: run {
-                    Log.e(TAG, "⚠️ Firebase user is null after sign-up.")
+                    Log.e(TAG, "Firebase user is null after sign-up.")
                     callback(null)
                 }
             }
             .addOnFailureListener { exception ->
-                handleAuthFailure(exception, "⚠️ Failed to create user")
+                handleAuthFailure(exception, "Failed to create user")
                 callback(null)
             }
     }
 
     fun signInUser(email: String, password: String, callback: AuthCallback) {
         auth.signInWithEmailAndPassword(email, password)
-//            .addOnCompleteListener { task ->
-//                if (task.isSuccessful) {
-//                    Log.d(TAG, "signInWithEmail:success")
-//                    callback(auth.currentUser)
-//                } else {
-//                    Log.w(TAG, "signInWithEmail:failure", task.exception)
-//                    callback(null)
-//                }
-//            }
             .addOnSuccessListener {
-                Log.d(TAG, "✅ User signed in successfully!")
+                Log.d(TAG, "User signed in successfully!")
 
                 auth.currentUser?.let { user ->
                     // Fetch the user (which inserts into Room)
@@ -110,25 +101,7 @@ class AuthManager {
             }
     }
 
-    // updateUserEmail: (Requires Re-Authentication)
-    fun updateUserEmail(newEmail: String, callback: EmptyCallback) {
-        val currentUser = auth.currentUser
-        if (currentUser == null) {
-            Log.e(TAG, "⚠️ No authenticated user found.")
-            return
-        }
-
-        currentUser.verifyBeforeUpdateEmail(newEmail) // Sends an email verification before updating
-            .addOnSuccessListener {
-                Log.d(TAG, "✅ Email update request sent. User must verify.")
-                callback()
-            }
-            .addOnFailureListener { exception ->
-                handleAuthFailure(exception, "⚠️ Failed to request email update")
-            }
-    }
-
-    // 🔹 Centralized Error Handling Function
+    // Centralized Error Handling Function
     private fun handleAuthFailure(exception: Exception, message: String) {
         when (exception) {
             is FirebaseAuthWeakPasswordException -> {

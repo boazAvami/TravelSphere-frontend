@@ -4,11 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContentProviderCompat.requireContext
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.navigation.fragment.NavHostFragment
-import com.syb.travelsphere.R
 import com.syb.travelsphere.databinding.ActivityAuthBinding
 import com.syb.travelsphere.MainActivity
 
@@ -31,20 +26,11 @@ class AuthActivity : AppCompatActivity() {
         // Initialize View Binding
         binding = ActivityAuthBinding.inflate(layoutInflater)
         setContentView(binding?.root)
-
-//        ViewCompat.setOnApplyWindowInsetsListener(binding?.navHostFragment) { v, insets ->
-//            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-//            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-//            insets
-//        }
-
-        val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
-        val navController = navHostFragment.navController
     }
 
     private fun navigateToMainActivity() {
         val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish() // Closes the AuthActivity so it is removed from the back stack
     }
