@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (checkLocationPermissions()) {
-            startObservingLocation()
+            updateUserLocationIfShared()
         } else {
             requestLocationPermissions()
         }
@@ -185,7 +185,7 @@ class MainActivity : AppCompatActivity() {
     private fun checkAndRequestLocationPermissions() {
         if (hasLocationPermissions()) {
             Log.d(TAG, "Location permissions already granted. Starting location updates.")
-            startObservingLocation()
+            updateUserLocationIfShared()
         } else {
             Log.d(TAG, "Requesting location permissions...")
             ActivityCompat.requestPermissions(
@@ -213,7 +213,7 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                 Log.d(TAG, "Location permissions granted. Starting location updates.")
-                startObservingLocation()
+                updateUserLocationIfShared()
             } else {
                 Log.d(TAG, "Location permissions denied.")
             }
@@ -278,13 +278,6 @@ class MainActivity : AppCompatActivity() {
                 ActivityCompat.checkSelfPermission(
                     this, Manifest.permission.ACCESS_COARSE_LOCATION
                 ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun startObservingLocation() {
-        GeoUtils.observeLocationChanges(this) { newLocation ->
-            Log.d(TAG, "startObservingLocation: observing??")
-            updateUserLocationIfShared()
-        }
     }
 
 
