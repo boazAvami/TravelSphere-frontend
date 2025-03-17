@@ -5,6 +5,7 @@ import com.google.android.material.textfield.TextInputLayout
 
 object InputValidator {
     private const val PASSWORD_MIN_LENGTH: Int = 6
+    private const val PHONE_LENGTH: Int = 10
 
     // Validate Email
     fun validateEmail(email: String, inputLayout: TextInputLayout?): Boolean {
@@ -31,7 +32,7 @@ object InputValidator {
                 inputLayout?.error = "⚠️ Please enter your password"
                 false
             }
-            password.length < PASSWORD_MIN_LENGTH -> { // Adjust the length requirement if needed
+            password.length < PASSWORD_MIN_LENGTH -> {
                 inputLayout?.error = "⚠️ Password must be at least 6 characters"
                 false
             }
@@ -65,6 +66,10 @@ object InputValidator {
             }
             !phone.matches(Regex("^[0-9]{9,15}$")) -> {
                 inputLayout?.error = "⚠️ Invalid phone number format"
+                false
+            }
+            phone.length != PHONE_LENGTH -> {
+                inputLayout?.error = "⚠️ Phone Number is Invalid - Must be 10 digits"
                 false
             }
             else -> {

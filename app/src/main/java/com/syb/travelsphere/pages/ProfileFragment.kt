@@ -43,7 +43,7 @@ class ProfileFragment : Fragment() {
             Model.shared.getUserById(currentUser.uid) { user ->
                 if (user != null) {
                     userObject = user
-                    setupRecyclerView(mapOf(currentUser.uid to userObject.id))
+                    setupRecyclerView(mapOf(currentUser.uid to userObject.userName))
                     Log.d(TAG, "onCreateView: ${currentUser.uid} ${userObject.userName}")
                 }
             }
