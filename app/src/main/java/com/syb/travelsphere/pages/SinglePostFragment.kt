@@ -1,18 +1,13 @@
 package com.syb.travelsphere.pages
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.util.Base64
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.syb.travelsphere.auth.SignInFragmentArgs
 import com.syb.travelsphere.databinding.FragmentSinglePostBinding
 import com.syb.travelsphere.model.Model
-import com.syb.travelsphere.model.Post
 import com.syb.travelsphere.utils.TimeUtil.formatTimestamp
 
 class SinglePostFragment : Fragment() {
@@ -62,8 +57,5 @@ class SinglePostFragment : Fragment() {
                 }
             }
         }
-
-        // Hide edit button in read-only mode
-        binding?.editButton?.visibility = View.GONE
     }
 }

@@ -1,17 +1,12 @@
 package com.syb.travelsphere.components
 
 import android.content.Context
-import android.content.Intent
 import android.util.AttributeSet
 import android.widget.Toast
-import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
-import androidx.navigation.NavDirections
-import androidx.navigation.Navigation
 import com.syb.travelsphere.R
 import com.syb.travelsphere.model.Post
 import com.syb.travelsphere.model.User
-import com.syb.travelsphere.pages.AllPostsFragmentDirections
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -95,7 +90,8 @@ class MapComponent @JvmOverloads constructor(
     }
 
     // Method to add markers to the map based on the users
-    fun displayUsers(users: List<User>?) {
+    fun displayUsers(users: List<User>?,
+                     onPostClick: (String) -> Unit) {
         clearMap();
 
         users?.forEach { user ->
@@ -104,14 +100,15 @@ class MapComponent @JvmOverloads constructor(
                 addUserMarker(
                     geoPoint.latitude,
                     geoPoint.longitude,
-                    user
+                    user,
+                    onPostClick
                 )
             }
         }
     }
 
     // Method to add a marker on the map for a user
-    private fun addUserMarker(lat: Double, lon: Double, user: User) {
+    private fun addUserMarker(lat: Double, lon: Double, user: User, onPostClick: (String) -> Unit) {
         val marker = Marker(this)
         marker.icon = resources.getDrawable(R.drawable.location, null) // Placeholder icon
 
@@ -134,6 +131,7 @@ class MapComponent @JvmOverloads constructor(
         // Set up marker click listener
         marker.setOnMarkerClickListener { _, _ ->
             // Show user details in a Toast
+            onPostClick(user.id)
             Toast.makeText(context, "User: ${user.userName}\nProfile: ${user.profilePictureUrl}", Toast.LENGTH_LONG).show()
             true
         }

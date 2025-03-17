@@ -96,8 +96,6 @@
         android:name="postId"
         app:argType="string"/>
     </fragment>
-    <action android:id="@+id/action_global_SinglePostFragment" app:destination="@id/singlePostFragment" />
-    <action android:id="@+id/action_global_EditPostFragment" app:destination="@id/editPostFragment" />
     <fragment
         android:id="@+id/editPostFragment"
         android:name="com.syb.travelsphere.pages.EditPostFragment"
@@ -106,5 +104,17 @@
             android:name="postId"
             app:argType="string"/>
     </fragment>
-    <!--    <action android:id="@+id/action_global_addStudentFragment" app:destination="@id/addStudentFragment" />-->
+    <fragment
+        android:id="@+id/displayUserFragment"
+        android:name="com.syb.travelsphere.pages.DisplayUserFragment"
+        android:label="Interesting User"
+        tools:layout="@layout/fragment_display_user">
+    <argument
+        android:name="userId"
+        app:argType="string"/>
+    </fragment>
+    <action android:id="@+id/action_global_SinglePostFragment" app:destination="@id/singlePostFragment" />
+    <action android:id="@+id/action_global_EditPostFragment" app:destination="@id/editPostFragment" />
+    <action android:id="@+id/action_global_DisplayUserFragment" app:destination="@id/displayUserFragment" />
+    <action android:id="@+id/action_global_ProfileFragment" app:destination="@id/profileFragment" />
 </navigation>
