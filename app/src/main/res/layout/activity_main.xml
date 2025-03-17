@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -9,42 +10,41 @@
 
     <!-- Material Toolbar (Top Bar)-->
     <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
+        android:id="@+id/mainToolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorSurface"
         android:elevation="4dp"
         android:title="@string/app_title"
         android:titleTextColor="@android:color/black"
-        app:layout_constraintEnd_toStartOf="@+id/navHostFragment"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light"
         app:titleCentered="true"
         app:titleTextAppearance="@style/ToolbarTitleBold" />
 
-    <!-- Fragment Container -->
     <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/navHostFragment"
+        android:id="@+id/mainNavHostFragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
         app:defaultNavHost="true"
-        app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
+        app:layout_constraintBottom_toTopOf="@id/mainBottomNavigationBar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
-        app:navGraph="@navigation/navigation_graph" />
+        app:layout_constraintTop_toBottomOf="@id/mainToolbar"
+        app:navGraph="@navigation/nav_graph" />
 
     <!-- Bottom Navigation View (Fixed at Bottom) -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNavigationView"
+        android:id="@+id/mainBottomNavigationBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:menu="@menu/bottom_navigation_menu"
         app:itemIconTint="@color/navigation_bar_icon_selector"
         app:itemTextColor="@color/navigation_bar_icon_selector"
-        app:layout_constraintTop_toBottomOf="@id/navHostFragment"
+        app:layout_constraintTop_toBottomOf="@id/mainNavHostFragment"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

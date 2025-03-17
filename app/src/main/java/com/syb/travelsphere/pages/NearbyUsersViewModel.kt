@@ -1,19 +1,21 @@
 package com.syb.travelsphere.pages
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.google.firebase.firestore.GeoPoint
 import com.syb.travelsphere.model.Model
-import com.syb.travelsphere.model.User
+
 
 class NearbyUsersViewModel : ViewModel() {
-
-//    val nearbyUsers: LiveData<List<User>> = Model.shared.users
-    val nearbyUsers: LiveData<List<User>> = Model.shared.nearbyUsers
+    val nearbyUsers = Model.shared.nearbyUsers
 
     fun refreshNearbyUsers(currentLocation: GeoPoint, radiusInKm: Double) {
-        Model.shared.updateGeoHashBounds(currentLocation, radiusInKm) // ✅ Update geohash bounds
-        Model.shared.refreshNearbyUsers(currentLocation, radiusInKm) // ✅ Updates Room
+        Log.d("NearbyUsersViewModel", "Refreshing users for radius: $radiusInKm KM")
+
+        Model.shared.refreshAllNearbyUsers(currentLocation, radiusInKm) {
+                val users = Model.shared.getNearbyUsers(currentLocation, radiusInKm)
+                Log.d("NearbyUsersViewModel", "Good Updated LiveData with ${users.value?.size ?: 0} users")
+        }
     }
+
 }

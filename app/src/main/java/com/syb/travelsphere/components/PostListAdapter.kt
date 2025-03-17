@@ -1,9 +1,5 @@
 package com.syb.travelsphere.ui
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.util.Base64
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,8 +11,10 @@ import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.Post
 import com.syb.travelsphere.utils.TimeUtil.formatTimestamp
 
-class PostListAdapter(private var posts: List<Post>?, private val onPostClick: (Post) -> Unit) :
-    RecyclerView.Adapter<PostListAdapter.PostViewHolder>()
+class PostListAdapter(private var posts: List<Post>?,
+                      private var postOwnerUsers: Map<String, String>?, // Stores userId -> username
+                      private val onPostClick: (Post) -> Unit)
+    : RecyclerView.Adapter<PostListAdapter.PostViewHolder>()
 {
 
     companion object {
@@ -37,8 +35,10 @@ class PostListAdapter(private var posts: List<Post>?, private val onPostClick: (
 
     override fun getItemCount() = posts?.size ?: 0
 
-    fun update(posts: List<Post>?) {
+    fun update(posts: List<Post>?, postOwnerUsers: Map<String, String>) {
         this.posts = posts
+        this.postOwnerUsers = postOwnerUsers
+        notifyDataSetChanged()
     }
 
     inner class PostViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -49,6 +49,13 @@ class PostListAdapter(private var posts: List<Post>?, private val onPostClick: (
         private val postCreatedTime: TextView = itemView.findViewById(R.id.postTimestamp)
 
         fun bind(post: Post) {
+            postUserName.text = postOwnerUsers?.get(post.ownerId) ?: "Unknown" // Use pre-fetched usernames map
+
+            // Truncate location name if too long
+            val maxLocationLength = 20
+            postLocation.text = if (post.locationName.length > maxLocationLength)
+                post.locationName.take(maxLocationLength) + "..." else post.locationName
+
             // Check if the base64 string is not null or empty
             val firstImageUrl = post.photos.getOrNull(0)
             if (!firstImageUrl.isNullOrEmpty()) {
@@ -65,13 +72,8 @@ class PostListAdapter(private var posts: List<Post>?, private val onPostClick: (
                 postPhoto.setImageResource(R.drawable.default_post)  // Set a default image if there's no base64 string
             }
 
-            Model.shared.getUserById(post.ownerId) { user ->
-                Log.d(TAG, "bind: user: $user")
-                postUserName.text = user?.userName ?: "Unknown"
-            }
-
-            // Set the location, description
-            postLocation.text = post.locationName
+            // Set the location, description and creationTime
+//            postLocation.text = post.locationName
             postDescription.text = post.description
             postCreatedTime.text = formatTimestamp(post.creationTime)
 

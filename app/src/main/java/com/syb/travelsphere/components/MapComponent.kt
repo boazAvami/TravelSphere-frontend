@@ -1,11 +1,9 @@
 package com.syb.travelsphere.components
 
 import android.content.Context
-import android.content.Intent
 import android.util.AttributeSet
 import android.widget.Toast
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.LiveData
+import androidx.navigation.NavController
 import com.syb.travelsphere.R
 import com.syb.travelsphere.model.Post
 import com.syb.travelsphere.model.User
@@ -18,6 +16,12 @@ class MapComponent @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : MapView(context, attrs) {
 
+    private var navController: NavController? = null
+
+    fun setNavController(navController: NavController) {
+        this.navController = navController
+    }
+
     init {
         Configuration.getInstance().load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
         controller.setZoom(15.0)
@@ -25,15 +29,21 @@ class MapComponent @JvmOverloads constructor(
     }
 
     // Method to add markers to the map based on the posts
-    fun displayPosts(
-        posts: List<Post>?,
-        fragment: Fragment, destinationFragmentClass: Class<out Fragment>
+    fun displayPosts(posts: List<Post>?,
+                     onPostClick: (String) -> Unit
     ) {
-        clearMap();
+        clearMap()
 
         posts?.forEach { post ->
             val geotag = post.location
-            addPostMarker(geotag.latitude, geotag.longitude, post.locationName, post.id, post.description)
+            addPostMarker(
+                geotag.latitude,
+                geotag.longitude,
+                post.locationName,
+                post.id,
+                post.description,
+                onPostClick
+            )
         }
 
         posts?.forEach { post ->
@@ -45,8 +55,7 @@ class MapComponent @JvmOverloads constructor(
                     post.locationName,
                     post.id,
                     post.description,
-                    fragment,
-                    destinationFragmentClass
+                    onPostClick
                 )
             }
         }
@@ -54,8 +63,12 @@ class MapComponent @JvmOverloads constructor(
 
     // Method to add a marker on the map
     private fun addPostMarker(
-        lat: Double, lon: Double, title: String, postId: String, description: String,
-        fragment: Fragment, destinationFragmentClass: Class<out Fragment>
+        lat: Double,
+        lon: Double,
+        title: String,
+        postId: String,
+        description: String,
+        onPostClick: (String) -> Unit
     ) {
         val marker = Marker(this)
         marker.icon = resources.getDrawable(R.drawable.location, null)
@@ -65,10 +78,9 @@ class MapComponent @JvmOverloads constructor(
         marker.title = title
 
         // Set up marker click listener
+
         marker.setOnMarkerClickListener { _, _ ->
-            val intent = Intent(fragment.requireContext(), destinationFragmentClass)
-            intent.putExtra("postId", postId)
-            fragment.requireContext().startActivity(intent)
+            onPostClick(postId) // Call the navigation function passed from the fragment
             true
         }
 
@@ -77,25 +89,26 @@ class MapComponent @JvmOverloads constructor(
         invalidate()  // Refresh the map to show markers
     }
 
-
     // Method to add markers to the map based on the users
-    fun displayUsers(users: List<User>?) {
+    fun displayUsers(users: List<User>?,
+                     onPostClick: (String) -> Unit) {
         clearMap();
 
         users?.forEach { user ->
-            val geoPoint = user.location
-            if (geoPoint != null) {
+            val geoPoint  = user.location
+            if (geoPoint  != null) {
                 addUserMarker(
                     geoPoint.latitude,
                     geoPoint.longitude,
-                    user
+                    user,
+                    onPostClick
                 )
             }
         }
     }
 
     // Method to add a marker on the map for a user
-    private fun addUserMarker(lat: Double, lon: Double, user: User) {
+    private fun addUserMarker(lat: Double, lon: Double, user: User, onPostClick: (String) -> Unit) {
         val marker = Marker(this)
         marker.icon = resources.getDrawable(R.drawable.location, null) // Placeholder icon
 
@@ -118,11 +131,8 @@ class MapComponent @JvmOverloads constructor(
         // Set up marker click listener
         marker.setOnMarkerClickListener { _, _ ->
             // Show user details in a Toast
-            Toast.makeText(
-                context,
-                "User: ${user.userName}\nProfile: ${user.profilePictureUrl}",
-                Toast.LENGTH_LONG
-            ).show()
+            onPostClick(user.id)
+            Toast.makeText(context, "User: ${user.userName}\nProfile: ${user.profilePictureUrl}", Toast.LENGTH_LONG).show()
             true
         }
 

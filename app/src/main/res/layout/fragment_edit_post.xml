@@ -8,8 +8,18 @@
     android:padding="16dp"
     tools:context=".MainActivity">
 
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Post Image inside a CardView -->
+    <!-- Post Image -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/photoViewPagerMaterialCardView"
         android:layout_width="120dp"
@@ -35,6 +45,9 @@
             android:scaleType="fitCenter"
             android:contentDescription="Post Image"/>
     </com.google.android.material.card.MaterialCardView>
+
+
+
 
     <!-- Profile Section -->
     <com.google.android.material.card.MaterialCardView
@@ -80,16 +93,21 @@
         app:layout_constraintStart_toStartOf="parent"
         android:layout_marginTop="12dp"/>
 
-    <TextView
-        android:id="@+id/locationNameText"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/locationNameTextTextInputLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Location Name"
-        android:textSize="16sp"
-        android:textColor="@color/black"
         app:layout_constraintTop_toBottomOf="@id/userProfilePictureMaterialCard"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="30dp"/>
+        android:layout_marginTop="30dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/locationNameText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter location"
+            android:textSize="16sp"/>
+    </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Description -->
     <TextView
@@ -98,20 +116,25 @@
         android:text="Description:"
         android:textSize="14sp"
         android:textColor="@color/black"
-        app:layout_constraintTop_toBottomOf="@id/locationNameText"
+        app:layout_constraintTop_toBottomOf="@id/locationNameTextTextInputLayout"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_marginTop="12dp"/>
 
-    <TextView
-        android:id="@+id/descriptionText"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/descriptionTextTextInputLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Post Description"
-        android:textSize="16sp"
-        android:textColor="@color/black"
-        app:layout_constraintTop_toBottomOf="@id/locationNameText"
+        app:layout_constraintTop_toBottomOf="@id/locationNameTextTextInputLayout"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="30dp"/>
+        android:layout_marginTop="30dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/descriptionText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter description"
+            android:textSize="16sp"/>
+    </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Timestamp -->
     <TextView
@@ -121,8 +144,36 @@
         android:text="Created at: "
         android:textSize="14sp"
         android:textColor="#666666"
-        app:layout_constraintTop_toBottomOf="@id/descriptionText"
+        app:layout_constraintTop_toBottomOf="@id/descriptionTextTextInputLayout"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_marginTop="12dp"/>
 
+    <!-- Edit Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/editButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Edit Post"
+        app:cornerRadius="16dp"
+        style="@style/CustomButtonStyle"
+        app:iconGravity="textStart"
+        app:layout_constraintTop_toBottomOf="@id/timestampText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="20dp"/>
+
+    <!-- Delete Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/deleteButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Delete Post"
+        android:textColor="@android:color/holo_red_dark"
+        android:backgroundTint="@android:color/transparent"
+        app:cornerRadius="16dp"
+        app:iconGravity="textStart"
+        app:layout_constraintTop_toBottomOf="@id/editButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="12dp"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -51,7 +51,7 @@
                 app:cardCornerRadius="8dp"
                 app:cardElevation="6dp">
 
-                <org.osmdroid.views.MapView
+                <com.syb.travelsphere.components.MapComponent
                     android:id="@+id/mapView"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"/>

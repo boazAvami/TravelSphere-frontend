@@ -2,9 +2,11 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="8dp">
+    android:padding="8dp"
+    tools:context=".pages.DisplayUserFragment">
 
     <ProgressBar
         android:id="@+id/progressBar"
@@ -51,6 +53,7 @@
                     android:orientation="horizontal">
 
                     <!-- User Profile Picture -->
+                    <!-- User Profile Picture -->
                     <ImageView
                         android:id="@+id/userProfilePicture"
                         android:layout_width="50dp"
@@ -62,7 +65,7 @@
                         android:clipToOutline="true"
                         android:outlineProvider="background"
                         android:background="@drawable/circle_shape"/>
-                    <!-- User Info (Name, Phone, Email) -->
+                    <!-- User Info (Name, Phone) -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -83,13 +86,6 @@
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="2dp"
                             android:text="Phone Number"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/userEmail"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Email Address"
                             android:textSize="14sp" />
                     </LinearLayout>
                 </LinearLayout>

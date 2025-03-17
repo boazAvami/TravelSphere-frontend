@@ -1,8 +1,6 @@
 package com.syb.travelsphere.model
 
 import android.util.Log
-import com.firebase.geofire.GeoFireUtils
-import com.firebase.geofire.GeoLocation
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.GeoPoint
@@ -30,6 +28,28 @@ class FirebaseModel {
         }
         database.firestoreSettings = settings
     }
+
+    fun getUsersByIds(userIds: List<String>, callback: UsersCallback) {
+        if (userIds.isEmpty()) {
+            callback(emptyList()) // If no users to fetch, return empty list
+            return
+        }
+
+        database.collection(Constants.COLLECTIONS.USERS)
+            .whereIn("id", userIds) // Fetch multiple users in one query
+            .get()
+            .addOnSuccessListener { documents ->
+                val users = documents.mapNotNull { doc ->
+                    User.fromJSON(doc.data) // Convert Firestore document to User object
+                }
+                callback(users)
+            }
+            .addOnFailureListener { exception ->
+                Log.e(TAG, "Error fetching users: ${exception.message}")
+                callback(emptyList()) // Return empty list if failed
+            }
+    }
+
 
     fun getAllUsers(sinceLastUpdated: Long, callback: UsersCallback) {
         database.collection(Constants.COLLECTIONS.USERS)
@@ -70,11 +90,7 @@ class FirebaseModel {
             }
     }
 
-    private var lastQueriedLocation: GeoPoint? = null
-    private var lastQueriedRadius: Double = -1.0
-
     fun getNearbyUsers(
-        sinceLastUpdated: Long,
         currentLocation: GeoPoint,
         radiusInKm: Double,
         callback: UsersCallback
@@ -82,41 +98,33 @@ class FirebaseModel {
         val (minGeoHash, maxGeoHash) = GeoUtils.getGeoHashRange(currentLocation, radiusInKm)
         val usersList = mutableListOf<User>()
 
-        // 🔹 Detect if radius or location changed
-        val locationChanged = lastQueriedLocation == null || lastQueriedLocation != currentLocation
-        val radiusChanged = lastQueriedRadius == -1.0 || lastQueriedRadius != radiusInKm
-
-        // 🔹 If radius or location changed, do a full refresh (ignore `sinceLastUpdated`)
-        val query = database.collection(Constants.COLLECTIONS.USERS)
-            .whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, Timestamp(Date(sinceLastUpdated)))
+        database.collection(Constants.COLLECTIONS.USERS)
             .whereGreaterThanOrEqualTo(User.GEOHASH_KEY, minGeoHash)
             .whereLessThanOrEqualTo(User.GEOHASH_KEY, maxGeoHash)
-
-//        if (!locationChanged && !radiusChanged) {
-//            query.whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, Timestamp(Date(sinceLastUpdated)))
-//        }
-
-        query.get()
+            .get()
             .addOnSuccessListener { documents ->
+                usersList.clear() // Ensure no old users persist
+
                 documents.documents.forEach { doc ->
                     val user = User.fromJSON(doc.data ?: emptyMap())
 
-                    user.location?.let {
-                        if (GeoUtils.isWithinRadius(currentLocation, it, radiusInKm)) {
+                    user.location?.let { userLocation ->
+                        val distance = GeoUtils.calculateDistance(currentLocation, userLocation)
+                        Log.d(TAG, "User ${user.userName} -> Distance: $distance KM (Radius: $radiusInKm KM)")
+
+                        if (distance <= radiusInKm) {  // Convert km to meters
                             usersList.add(user)
                         }
                     }
                 }
-
-                // ✅ Update last queried values
-                lastQueriedLocation = currentLocation
-                lastQueriedRadius = radiusInKm
-
+                Log.d(TAG, "Filtered users: ${usersList.size}")
                 callback(usersList)
             }
-            .addOnFailureListener { callback(emptyList()) }
+            .addOnFailureListener { exception ->
+                Log.e("FirestoreModel", "Error fetching users: ${exception.message}")
+                callback(emptyList()) // Return empty list on failure
+            }
     }
-
 
 
     fun addUser(user: User, callback: EmptyCallback) {
@@ -130,13 +138,15 @@ class FirebaseModel {
     }
 
     fun editUser(user: User, callback: EmptyCallback) {
+        val updatedUser = user.copy(lastUpdated = System.currentTimeMillis()) // Convert to Long
+
         database.collection(Constants.COLLECTIONS.USERS)
-            .document(user.id)
-            .set(user.json, SetOptions.merge()) // overwrite the document
+            .document(updatedUser.id)
+            .set(updatedUser.json, SetOptions.merge()) // overwrite the document
             .addOnCompleteListener { task ->
                 when (task.isSuccessful) {
                     true -> {
-                        Log.d(TAG, "User ${user.id} updated successfully.")
+                        Log.d(TAG, "User ${updatedUser.id} updated successfully.")
                         callback() // Operation succeeded
                     }
                     false -> {
@@ -150,7 +160,7 @@ class FirebaseModel {
 
     fun getAllPosts(sinceLastUpdated: Long, callback: PostsCallback) {
         database.collection(Constants.COLLECTIONS.POSTS)
-            .whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, sinceLastUpdated.toFirebaseTimestamp)
+            .whereGreaterThanOrEqualTo(Post.LAST_UPDATED_KEY, sinceLastUpdated.toFirebaseTimestamp)
             .get()
             .addOnCompleteListener {
                 when (it.isSuccessful) {
@@ -220,16 +230,6 @@ class FirebaseModel {
             .addOnFailureListener { error -> Log.w(TAG, "Error writing document", error) }
     }
 
-//    fun addPost(post: Post, callback: EmptyCallback) {
-//        database.collection(Constants.COLLECTIONS.POSTS)
-//            .document(post.id)
-//            .set(post.json)
-//            .addOnCompleteListener {
-//                callback() // Operation succeeded, execute the callback
-//            }
-//            .addOnFailureListener { error -> Log.w(TAG, "Error writing document", error) }
-//    }
-
     fun deletePost(postId: String, callback: EmptyCallback) {
         database.collection(Constants.COLLECTIONS.POSTS)
             .document(postId)
@@ -249,9 +249,11 @@ class FirebaseModel {
     }
 
     fun editPost(post: Post, callback: EmptyCallback) {
+        val updatedPost = post.copy(lastUpdated = System.currentTimeMillis()) // Convert to Long
+
         database.collection(Constants.COLLECTIONS.POSTS)
-            .document(post.id.toString())
-            .set(post.json) // overwrite the entire document
+            .document(updatedPost.id.toString())
+            .set(updatedPost.json) // overwrite the entire document
             .addOnCompleteListener { task ->
                 when (task.isSuccessful) {
                     true -> {
@@ -267,7 +269,7 @@ class FirebaseModel {
     }
 
     fun generatePostReference(): DocumentReference {
-        return database.collection(Constants.COLLECTIONS.POSTS).document() // ✅ Generate Firestore ID
+        return database.collection(Constants.COLLECTIONS.POSTS).document() // Generate Firestore ID
     }
 
     companion object {

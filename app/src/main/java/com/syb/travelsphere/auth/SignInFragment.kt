@@ -7,11 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
 import com.syb.travelsphere.MainActivity
-import com.syb.travelsphere.R
 import com.syb.travelsphere.databinding.FragmentSignInBinding
 import com.syb.travelsphere.utils.InputValidator
 
@@ -79,13 +76,16 @@ class SignInFragment : Fragment() {
 
 
     private fun signIn(email: String, password: String) {
+        binding?.progressBar?.visibility = View.VISIBLE
         authManager.signInUser(email, password) { user ->
             if (user != null) {
-                Toast.makeText(requireContext(), "✅ Login successful!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Login successful!", Toast.LENGTH_SHORT).show()
                 navigateToMainActivity()
             } else {
-                Toast.makeText(requireContext(), "⚠️ Authentication failed. Please check your credentials.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Authentication failed. Please check your credentials.", Toast.LENGTH_SHORT).show()
             }
+
+            binding?.progressBar?.visibility = View.GONE
         }
     }
 

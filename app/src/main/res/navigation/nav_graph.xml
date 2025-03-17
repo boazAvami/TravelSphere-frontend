@@ -44,7 +44,7 @@
         android:id="@+id/addPostFragment"
         android:name="com.syb.travelsphere.pages.AddPostFragment"
         android:label="New Post"
-        tools:layout="@layout/fragment_new_post">
+        tools:layout="@layout/fragment_add_post">
         <action
             android:id="@+id/action_addPostFragment_to_allPostsFragment"
             app:destination="@id/allPostsFragment"/>
@@ -59,7 +59,7 @@
     <!-- Profile Fragment -->
     <fragment
         android:id="@+id/profileFragment"
-        android:name="com.syb.travelsphere.ProfileFragment"
+        android:name="com.syb.travelsphere.pages.ProfileFragment"
         android:label="Profile"
         tools:layout="@layout/fragment_profile">
         <action
@@ -83,8 +83,38 @@
         android:name="com.syb.travelsphere.pages.SettingsFragment"
         android:label="Settings"
         tools:layout="@layout/fragment_settings">
-    <action
-        android:id="@+id/action_settingsFragment_to_profileFragment"
-        app:destination="@+id/profileFragment"/>
+        <action
+            android:id="@+id/action_settingsFragment_to_profileFragment"
+            app:destination="@+id/profileFragment"/>
     </fragment>
+    <fragment
+        android:id="@+id/singlePostFragment"
+        android:name="com.syb.travelsphere.pages.SinglePostFragment"
+        android:label="Interesting Post.."
+        tools:layout="@layout/fragment_single_post">
+    <argument
+        android:name="postId"
+        app:argType="string"/>
+    </fragment>
+    <fragment
+        android:id="@+id/editPostFragment"
+        android:name="com.syb.travelsphere.pages.EditPostFragment"
+        android:label="Edit Your Post">
+        <argument
+            android:name="postId"
+            app:argType="string"/>
+    </fragment>
+    <fragment
+        android:id="@+id/displayUserFragment"
+        android:name="com.syb.travelsphere.pages.DisplayUserFragment"
+        android:label="Interesting User"
+        tools:layout="@layout/fragment_display_user">
+    <argument
+        android:name="userId"
+        app:argType="string"/>
+    </fragment>
+    <action android:id="@+id/action_global_SinglePostFragment" app:destination="@id/singlePostFragment" />
+    <action android:id="@+id/action_global_EditPostFragment" app:destination="@id/editPostFragment" />
+    <action android:id="@+id/action_global_DisplayUserFragment" app:destination="@id/displayUserFragment" />
+    <action android:id="@+id/action_global_ProfileFragment" app:destination="@id/profileFragment" />
 </navigation>

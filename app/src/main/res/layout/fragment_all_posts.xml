@@ -6,24 +6,6 @@
     android:layout_height="match_parent"
     android:padding="8dp">
 
-<!--    <com.syb.travelsphere.components.MapComponent-->
-<!--        android:id="@+id/mapComponent"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="300dp" />-->
-
-    <!-- Progress Indicator centered in the root layout -->
-<!--    <com.google.android.material.progressindicator.CircularProgressIndicator-->
-<!--        android:id="@+id/circularProgressBar"-->
-<!--        android:layout_width="48dp"-->
-<!--        android:layout_height="48dp"-->
-<!--        android:visibility="visible"-->
-<!--        app:trackThickness="4dp"-->
-<!--        app:indicatorColor="@color/black"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent" />-->
-
     <ProgressBar
         android:id="@+id/progressBar"
         style="?android:attr/progressBarStyle"
@@ -71,8 +53,6 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="6dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -89,16 +69,5 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-
-<!--    <androidx.recyclerview.widget.RecyclerView-->
-<!--        android:id="@+id/postListRecyclerView"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="0dp"-->
-<!--        android:layout_below="@id/mapComponent"-->
-<!--        android:layout_alignParentBottom="true"-->
-<!--        android:layout_marginTop="8dp"-->
-<!--        android:padding="8dp"-->
-<!--        android:scrollbars="vertical" />-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

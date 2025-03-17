@@ -1,36 +1,48 @@
 package com.syb.travelsphere
 
+import android.Manifest
 import android.content.Intent
-import android.os.Bundle
+import android.content.pm.PackageManager
 import android.util.Log
+import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.NavController
+import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.firestore.GeoPoint
-import com.syb.travelsphere.databinding.ActivityMainBinding
 import com.syb.travelsphere.auth.AuthActivity
 import com.syb.travelsphere.auth.AuthManager
-import com.syb.travelsphere.utils.GeoUtils.generateGeoHash
-
+import com.syb.travelsphere.databinding.ActivityMainBinding
+import com.syb.travelsphere.model.Model
+import com.syb.travelsphere.utils.GeoUtils
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private var navController: NavController? = null
+    var navController: NavController? = null
     private lateinit var authManager: AuthManager
+
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1001
+        private const val SIGNIFICANT_DISTANCE_THRESHOLD_KM = 0.5
+        private const val TAG = "MainActivity"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         authManager = AuthManager()
-//        authManager.signOut {  }
 
         if (!authManager.isUserLoggedIn()) {
             // Redirect to AuthActivity
@@ -38,39 +50,90 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        // Initialize View Binding
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        // Set up the Toolbar (ActionBar)
-        setSupportActionBar(binding.toolbar) // This sets the toolbar as the ActionBar
-
-        // ✅ Enable the Up button in ActionBar (important!)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
-        // Set up NavController with BottomNavigationView
-        val navHostFragment: NavHostFragment? =
-            supportFragmentManager.findFragmentById(R.id.navHostFragment) as? NavHostFragment
-        navController = navHostFragment?.navController
-
-        navController?.let {
-            NavigationUI.setupActionBarWithNavController(this, it)
-            NavigationUI.setupWithNavController(binding.bottomNavigationView, it)
+        if (checkLocationPermissions()) {
+            startObservingLocation()
+        } else {
+            requestLocationPermissions()
         }
 
-        // ✅ Dynamically show/hide settings menu based on current fragment
+        // Initialize View Binding
+//        binding = ActivityMainBinding.inflate(layoutInflater)
+//        setContentView(binding.root)
+
+        setContentView(R.layout.activity_main)
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
+        // Set up the Toolbar (ActionBar)
+        val toolBar: Toolbar = findViewById(R.id.mainToolbar)
+        setSupportActionBar(toolBar)
+
+
+        val navHostController: NavHostFragment? = supportFragmentManager.findFragmentById(R.id.mainNavHostFragment) as? NavHostFragment
+        if(navHostController != null) {
+            Log.d(TAG, "onCreate: test")
+            navController = navHostController?.navController
+            navController?.let {
+                NavigationUI.setupActionBarWithNavController(
+                    activity = this,
+                    navController = it
+                )
+            }
+        } else {
+            Log.e(TAG, "NavHostFragment not found! Check if R.id.mainNavHostFragment is correct.")
+
+        }
+
+
+        val bottomNavigationView: BottomNavigationView = findViewById(R.id.mainBottomNavigationBar)
+        navController?.let { NavigationUI.setupWithNavController(bottomNavigationView, it) }
+
+        // Dynamically show/hide settings menu based on current fragment
         navController?.addOnDestinationChangedListener { _, destination, _ ->
             invalidateOptionsMenu() // Refresh the menu when navigation changes
+            Log.d(TAG, "Navigated to: ${destination.label}")
+            logFragmentBackStack()
         }
 
-        binding.bottomNavigationView.setOnItemSelectedListener { item ->
-            val currentDestination = navController?.currentDestination?.id
+        checkAndRequestLocationPermissions()
+    }
 
-            if (currentDestination != item.itemId) {
-                navController?.navigate(item.itemId)
+    override fun onSupportNavigateUp(): Boolean {
+        val result = navController?.navigateUp() == true || super.onSupportNavigateUp()
+        return result
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        Log.d(TAG, "onOptionsItemSelected: ${logFragmentBackStack()}")
+
+        return when (item.itemId) {
+            android.R.id.home -> {
+                Log.d(TAG, "onOptionsItemSelected: ${logFragmentBackStack()}")
+                navController?.popBackStack()
+                true
             }
-            true
+            else -> {
+//                return super.onOptionsItemSelected(item)
+                navController?.popBackStack()
+                Log.d(TAG, "onOptionsItemSelected: ${logFragmentBackStack()}")
+                navController?.let { NavigationUI.onNavDestinationSelected(item, it) }
+
+                true
+            }
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        Log.d(TAG, "onBackPressed: the state go to ${logFragmentBackStack()}")
     }
 
     private fun navigateToAuthActivity() {
@@ -79,59 +142,180 @@ class MainActivity : AppCompatActivity() {
         finish() // Closes the AuthActivity so it is removed from the back stack
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        return if (navController?.navigateUp() == true) {
-            true
+    private fun logFragmentBackStack() {
+        val fragmentManager = supportFragmentManager
+        val count = fragmentManager.backStackEntryCount
+        Log.d(TAG, "BackStack - Fragment Back Stack Count: $count")
+
+        for (i in 0 until count) {
+            val entry = fragmentManager.getBackStackEntryAt(i)
+            Log.d(TAG, "BackStack - Fragment $i: ${entry.name}")
+        }
+    }
+
+//        override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+//        menuInflater.inflate(R.menu.menu, menu)
+//
+//        // Show the Settings only in the profile page
+//        val isProfileFragment = navController?.currentDestination?.id == R.id.profileFragment
+//        menu?.findItem(R.id.settingsFragment)?.isVisible = isProfileFragment // Hide if not in Profile Fragment
+////
+//        // Show the Up button only in the Settings page
+//        val isSettingsFragment = navController?.currentDestination?.id == R.id.settingsFragment
+//        supportActionBar?.setDisplayHomeAsUpEnabled(isSettingsFragment)
+//
+//        return super.onCreateOptionsMenu(menu)
+//    }
+
+    private fun checkLocationPermissionsAndUpdate() {
+        if (hasLocationPermissions()) {
+            updateUserLocationIfShared()
         } else {
-            super.onBackPressedDispatcher.onBackPressed() // Fallback if navigation fails
-            false
+            requestLocationPermissions()
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.menu, menu)
-
-        // Show the Settings only in the profile page
-        val isProfileFragment = navController?.currentDestination?.id == R.id.profileFragment
-        menu?.findItem(R.id.settingsFragment)?.isVisible = isProfileFragment // Hide if not in Profile Fragment
-
-        // Show the Up button only in the Settings page
-        val isSettingsFragment = navController?.currentDestination?.id == R.id.settingsFragment
-        supportActionBar?.setDisplayHomeAsUpEnabled(isSettingsFragment)
-
-        return super.onCreateOptionsMenu(menu)
+    private fun hasLocationPermissions(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            android.R.id.home -> {
-                navController?.popBackStack()
-                true
-            }
-            else -> {
-                navController?.let { NavigationUI.onNavDestinationSelected(item, it) }
-                true
+    // Request permissions if not granted
+    private fun checkAndRequestLocationPermissions() {
+        if (hasLocationPermissions()) {
+            Log.d(TAG, "Location permissions already granted. Starting location updates.")
+            startObservingLocation()
+        } else {
+            Log.d(TAG, "Requesting location permissions...")
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
+                LOCATION_PERMISSION_REQUEST_CODE
+            )
+        }
+    }
+
+    private fun requestLocationPermissions() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ),
+            LOCATION_PERMISSION_REQUEST_CODE
+        )
+    }
+
+    // Handle permission result
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                Log.d(TAG, "Location permissions granted. Starting location updates.")
+                startObservingLocation()
+            } else {
+                Log.d(TAG, "Location permissions denied.")
             }
         }
     }
+
+    private fun updateUserLocationIfShared() {
+        val authUser = authManager.getCurrentUser()
+        authUser?.let {
+            Model.shared.getUserById(authUser.uid) { user ->
+                if (user?.isLocationShared == true) { // Only update if location sharing is enabled
+//                    GeoUtils.getCurrentLocation(this) { geoPoint ->
+//                        if (geoPoint != null) {
+//                            val updatedUser = user.copy(
+//                                location = geoPoint,
+//                                geoHash = GeoUtils.generateGeoHash(geoPoint)
+//                            )
+                            Model.shared.editUser(
+                                user,
+                                context = this,
+                                newProfilePicture = null
+                            ) {
+                                Log.d(TAG, "User location updated in DB")
+                            }
+//                        } else {
+//                            Log.e("MainActivity", "Failed to get location for update")
+//                        }
+//                    }
+                }
+            }
+        }
+    }
+
+    private fun updateUserLocation(newLocation: GeoPoint) {
+            val authUser = authManager.getCurrentUser() // Fetch logged-in user
+            if (authUser != null) {
+                Model.shared.getUserById(authUser.uid) { user ->
+                    if (user != null && user.isLocationShared == true) {
+                        val newGeoHash = GeoUtils.generateGeoHash(newLocation)
+
+                        val updatedUser = user.copy(
+                            location = newLocation,
+                            geoHash = newGeoHash
+                        )
+
+                        Model.shared.editUser(
+                            updatedUser,
+                            newProfilePicture = null,
+                            context = this,
+                        ) {
+                            Log.d(TAG, "User location updated in Firestore: $newLocation")
+                        }
+                    }
+                }
+            }
+    }
+
+    private fun checkLocationPermissions(): Boolean {
+        return ActivityCompat.checkSelfPermission(
+            this, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(
+                    this, Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun startObservingLocation() {
+        GeoUtils.observeLocationChanges(this) { newLocation ->
+            Log.d(TAG, "startObservingLocation: observing??")
+            updateUserLocationIfShared()
+        }
+    }
+
+
+
+
+
+
+
+
+
+
 }
 
 /*TODO:
 *  - me:
-   2. add all the functions for posts that needed  - added just check that maybe there will be a change with a geohash and add callbacks
-   3. update to work with geo hash
-   4. model view to my fragments
-   5. add using is location shared from db
-   *
-   2. make image util  ✅
-   3. make input validation an util  ✅
-   4. make signUp profile picture appear ✅
-   5. make the arrow back work ✅
-   6. add onFailure to everything and error handling ✅
-   7. add input validation ✅
-   8. migrate users collections and authentication work together ✅
-   9. add storage (for images) - and work with the posts ✅
-   =====================================================================================================================
-*   - With boaz and shirin:
-   8. GPS To get localization of the phone using the app - in the add new posts and in the main activity (for the nearby)
-   * 9. add loading circle*/
+*  1. make permissions ask before camera, gallery photo and gps ✅ - fix the limited access to gallery.
+*  2. using islocation with others shared from db - add to the query. ✅
+   4. add updating current location in db ✅
+   8. make input validation an util - in settings page and edit post ✅
+   6. add view other user page ✅
+   7. add delete post button ✅
+   14. fix nearby users bug with the distance radius ✅
+   * add onFailure to everything and error handling ✅
+   * add loading circle ✅
+   5. navigation: make the arrow back work ??
+   16. retrofit placement - place the secrets network API in another place (like with the cloudinary) - with boaz -
+   ==============================================
+   14. fix the add map centering - after navigating out and then returning it stop working ??
+   13. make the project pretty *
+   9.
+   12. a
+
+
+*/

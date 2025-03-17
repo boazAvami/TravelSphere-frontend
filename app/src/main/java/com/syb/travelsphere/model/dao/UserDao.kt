@@ -14,14 +14,19 @@ import com.syb.travelsphere.model.User
 @Dao
 interface UserDao {
 
+    @Query("DELETE FROM users")
+    fun clearAllUsers()
+
+    @Query("DELETE FROM users WHERE id NOT IN (:userIds)")
+    fun deleteUsersNotInList(userIds: List<String>)
+
+
     @Query("SELECT * FROM users")
     fun getAllUsers(): LiveData<List<User>>
 
-    @Query("""
-    SELECT * FROM users 
-    WHERE geoHash BETWEEN :minGeoHash AND :maxGeoHash
-    """)
-    fun getNearbyUsers(minGeoHash: String, maxGeoHash: String): LiveData<List<User>>
+    @Query("SELECT * FROM users WHERE geoHash BETWEEN :minGeoHash AND :maxGeoHash AND isLocationShared = 1")
+    fun getUsersInGeoHashRange(minGeoHash: String, maxGeoHash: String): LiveData<List<User>>
+
 
     @Query("SELECT * FROM users WHERE id = :id")
     fun getUserById(id: String): User
@@ -32,6 +37,6 @@ interface UserDao {
     @Update
     fun updateUser(user: User)
 
-    @Delete
-    fun deleteUser(user: User)
+    @Query("DELETE FROM users WHERE id = :userId")
+    fun deleteUserById(userId: String)
 }

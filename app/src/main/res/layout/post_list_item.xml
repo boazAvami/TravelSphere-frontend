@@ -37,7 +37,9 @@
             android:layout_height="wrap_content"
             android:text="Description"
             android:textSize="16sp"
-            android:paddingTop="5dp" />
+            android:paddingTop="5dp"
+            android:maxLines="2"
+            android:ellipsize="end"/>
 
         <TextView
             android:id="@+id/postTimestamp"
@@ -45,7 +47,10 @@
             android:layout_height="wrap_content"
             android:text="CreatedAt: "
             android:textSize="14sp"
-            android:layout_marginTop="10dp" />
+            android:layout_marginTop="10dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:singleLine="true"/>
     </LinearLayout>
 
     <LinearLayout
@@ -72,7 +77,10 @@
                 android:layout_height="wrap_content"
                 android:text="Location"
                 android:textSize="14sp"
-                android:layout_marginStart="5dp" />
+                android:layout_marginStart="5dp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                />
         </LinearLayout>
 
     </LinearLayout>
