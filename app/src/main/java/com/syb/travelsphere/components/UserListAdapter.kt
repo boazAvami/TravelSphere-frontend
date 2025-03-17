@@ -1,11 +1,11 @@
 package com.syb.travelsphere.components
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.RecyclerView
 import com.syb.travelsphere.R
 import com.syb.travelsphere.model.Model
@@ -20,6 +20,7 @@ class UserListAdapter(private var users: List<User>?, private val onUserClick: (
 
     override fun onBindViewHolder(holder: UserViewHolder, position: Int) {
         val user = users?.get(position)
+        Log.d("UserListAdapter", "Binding user at position $position: ${user?.userName}")
         if (user != null) {
             holder.bind(user)
         }
@@ -28,7 +29,15 @@ class UserListAdapter(private var users: List<User>?, private val onUserClick: (
     override fun getItemCount() = users?.size ?: 0
 
     fun update(users: List<User>?) {
-        this.users = users
+        if (this.users == users) return // Prevent unnecessary UI updates
+
+        Log.d("UserListAdapter", "Updating users: Old size = ${this.users?.size}, New size = ${users?.size}")
+
+        this.users = users ?: emptyList()
+        notifyDataSetChanged()
+
+        this.users = users ?: emptyList()
+        notifyDataSetChanged() // Update UI
     }
 
     inner class UserViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

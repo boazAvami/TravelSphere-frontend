@@ -14,6 +14,7 @@ import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -44,7 +45,7 @@ class NearbyUsersFragment : Fragment() {
     private lateinit var usersListAdapter: UserListAdapter
 
 
-    private var currentRadius = 30000.0 // Default radius 30km
+    private var currentRadius = 30.0 // Default radius 30km
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -55,24 +56,33 @@ class NearbyUsersFragment : Fragment() {
 
         binding?.userListRecyclerView?.layoutManager = LinearLayoutManager(requireContext())
 
-        setupRecyclerView()
         refreshNearbyUsers()
+        setupRecyclerView()
 
         // Set up radius buttons
         binding?.radius30kButton?.setOnClickListener {
-            setRadius(30000.0)
+            setRadius(30.0)
         }
         binding?.radius10kButton?.setOnClickListener {
-            setRadius(10000.0) }
+            setRadius(10.0) }
         binding?.radius5kButton?.setOnClickListener {
-            setRadius(500.0) }
+            setRadius(5.0) }
 
 
         viewModel.nearbyUsers.observe(viewLifecycleOwner) { users ->
-            Log.d(TAG, "UI updated: Received ${users?.size ?: 0} users")
+            Log.d(TAG, "UI updated: Received ${users?.size ?: 0} users for radius $currentRadius KM")
 
-            usersListAdapter.update(users)
-            binding?.mapComponent?.displayUsers(users)
+//            usersListAdapter.update(users)
+            binding?.userListRecyclerView?.post {
+                usersListAdapter.update(users) // Ensure UI updates on main thread
+                forceRecyclerViewUpdate() // Ensure UI updates properly
+            }
+
+            binding?.mapComponent?.displayUsers(users) { userId ->
+                val action = NearbyUsersFragmentDirections.actionGlobalDisplayUserFragment(userId)
+                findNavController().navigate(action)
+
+            }
             usersListAdapter?.notifyDataSetChanged()
         }
 
@@ -87,8 +97,39 @@ class NearbyUsersFragment : Fragment() {
         return binding?.root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setupRecyclerView()
+
+        // Get current location immediately
+        GeoUtils.getCurrentLocation(requireContext()) { userLocation ->
+            if (userLocation != null) {
+                Log.d(TAG, "Initial Location: Lat=${userLocation.latitude}, Lon=${userLocation.longitude}")
+                binding?.mapComponent?.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
+                viewModel.refreshNearbyUsers(userLocation, currentRadius)
+            }
+        }
+
+        // Start observing location changes
+        GeoUtils.observeLocationChanges(requireContext()) { userLocation ->
+            Log.d(TAG, "New Location: Lat=${userLocation.latitude}, Lon=${userLocation.longitude}")
+            binding?.mapComponent?.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
+            viewModel.refreshNearbyUsers(userLocation, currentRadius)
+        }
+    }
+
     override fun onResume() {
         super.onResume()
+        // Get current location immediately
+        refreshNearbyUsers() // Only refresh without re-observing location updates
+
+        // Start observing location changes
+        GeoUtils.observeLocationChanges(requireContext()) { userLocation ->
+            Log.d(TAG, "New Location: Lat=${userLocation.latitude}, Lon=${userLocation.longitude}")
+            binding?.mapComponent?.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
+            viewModel.refreshNearbyUsers(userLocation, currentRadius)
+        }
+
         refreshNearbyUsers()
     }
 
@@ -99,7 +140,7 @@ class NearbyUsersFragment : Fragment() {
 
         binding?.userListRecyclerView?.setHasFixedSize(true)
         binding?.userListRecyclerView?.layoutManager = LinearLayoutManager(context)
-        usersListAdapter = UserListAdapter(viewModel.nearbyUsers.value) { user ->
+        usersListAdapter = UserListAdapter(emptyList()) { user ->
             user.phoneNumber?.let { showUserPhonePopup(it) }
             user.location?.latitude?.let { lat ->
                 user.location.longitude.let { lon ->
@@ -111,9 +152,24 @@ class NearbyUsersFragment : Fragment() {
     }
 
     private fun setRadius(radius: Double) {
+        if (currentRadius == radius) return // Prevent redundant updates
+
         currentRadius = radius
+        usersListAdapter.update(emptyList()) // Clear UI before fetching new users
+
+        Log.d(TAG, "Updating radius: $radius KM at location")
         refreshNearbyUsers()
     }
+
+    private fun forceRecyclerViewUpdate() {
+        binding?.userListRecyclerView?.apply {
+            adapter = null  // Remove adapter first
+            layoutManager = null // Reset layout manager
+            layoutManager = LinearLayoutManager(context) // Reapply layout manager
+            adapter = usersListAdapter // Reattach adapter
+        }
+    }
+
 
     // Function to show the user's phone number in a popup
     private fun showUserPhonePopup(phone: String) {
@@ -128,46 +184,20 @@ class NearbyUsersFragment : Fragment() {
         alertDialog.show()
     }
 
-    private fun getCurrentUserLocation(callback: (GeoPoint) -> Unit) {
-        if (ActivityCompat.checkSelfPermission(
-                requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(
-                requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // Request permissions if not granted
-            ActivityCompat.requestPermissions(
-                requireActivity(),
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
-                1
-            )
-            callback(GeoPoint(31.771959, 34.651401)) // Return default location if no permission
-            return
-        }
-
-        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-            if (location != null) {
-                val userLocation = GeoPoint(location.latitude, location.longitude)
-                Log.d("UserLocation", "Latitude: ${location.latitude}, Longitude: ${location.longitude}")
-                callback(userLocation) // Return actual location via callback
-            } else {
-                Log.d("UserLocation", "Location is null, using default")
-                callback(GeoPoint(31.771959, 34.651401)) // Return default location if null
-            }
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         binding = null
     }
 
     private fun refreshNearbyUsers() {
-        getCurrentUserLocation { userLocation ->
-            binding?.mapComponent?.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
-            viewModel.updateLocationAndRadius(userLocation, currentRadius)
-            viewModel.refreshNearbyUsers(userLocation, currentRadius)
+        GeoUtils.getCurrentLocation(requireContext()) { userLocation ->
+            if (userLocation != null) {
+                Log.d(TAG, "location: ${userLocation.latitude}, ${userLocation.longitude}")
+
+                binding?.mapComponent?.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
+                viewModel.refreshNearbyUsers(userLocation, currentRadius)
+            }
+
         }
     }
 

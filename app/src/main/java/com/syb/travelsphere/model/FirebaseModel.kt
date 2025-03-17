@@ -1,11 +1,8 @@
 package com.syb.travelsphere.model
 
 import android.util.Log
-import com.firebase.geofire.GeoFireUtils
-import com.firebase.geofire.GeoLocation
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.firestoreSettings
@@ -94,7 +91,6 @@ class FirebaseModel {
     }
 
     fun getNearbyUsers(
-        sinceLastUpdated: Long,
         currentLocation: GeoPoint,
         radiusInKm: Double,
         callback: UsersCallback
@@ -103,24 +99,25 @@ class FirebaseModel {
         val usersList = mutableListOf<User>()
 
         database.collection(Constants.COLLECTIONS.USERS)
-//            .whereGreaterThanOrEqualTo(User.LAST_UPDATED_KEY, sinceLastUpdated.toFirebaseTimestamp)
             .whereGreaterThanOrEqualTo(User.GEOHASH_KEY, minGeoHash)
             .whereLessThanOrEqualTo(User.GEOHASH_KEY, maxGeoHash)
             .get()
             .addOnSuccessListener { documents ->
+                usersList.clear() // Ensure no old users persist
+
                 documents.documents.forEach { doc ->
                     val user = User.fromJSON(doc.data ?: emptyMap())
 
                     user.location?.let { userLocation ->
                         val distance = GeoUtils.calculateDistance(currentLocation, userLocation)
-                        Log.d("FirestoreModel", "User ${user.userName} is $distance meters away")
+                        Log.d(TAG, "User ${user.userName} -> Distance: $distance KM (Radius: $radiusInKm KM)")
 
-                        if (distance <= radiusInKm * 1000) {  // Convert km to meters
+                        if (distance <= radiusInKm) {  // Convert km to meters
                             usersList.add(user)
                         }
                     }
                 }
-                Log.d("FirestoreModel", "Filtered users: ${usersList.size}")
+                Log.d(TAG, "Filtered users: ${usersList.size}")
                 callback(usersList)
             }
             .addOnFailureListener { exception ->

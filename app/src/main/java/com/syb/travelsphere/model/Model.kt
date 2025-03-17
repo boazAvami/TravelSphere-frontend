@@ -1,5 +1,6 @@
 package com.syb.travelsphere.model
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.os.Looper
 import android.util.Log
@@ -32,6 +33,8 @@ class Model private constructor() {
 
     val users: LiveData<List<User>> = database.userDao().getAllUsers()
     val posts: LiveData<List<Post>> = database.postDao().getAllPosts()
+    private var _nearbyUsers = MutableLiveData<List<User>>()
+    val nearbyUsers: LiveData<List<User>> = _nearbyUsers
 
     val loadingState: MutableLiveData<LoadingState> = MutableLiveData<LoadingState>()
     private val firebaseModel = FirebaseModel()
@@ -63,15 +66,19 @@ class Model private constructor() {
             }
 
             // Fetch missing users from Firestore
-            firebaseModel.getUsersByIds(remainingUsers.toList()) { fetchedUsers ->
-                fetchedUsers.forEach { user ->
-                    userMap[user.id] = user
-                    executor.execute {
-                        database.userDao().insertUser(user) // Cache in Room
+            try {
+                firebaseModel.getUsersByIds(remainingUsers.toList()) { fetchedUsers ->
+                    fetchedUsers.forEach { user ->
+                        userMap[user.id] = user
+                        executor.execute {
+                            database.userDao().insertUser(user) // Cache in Room
+                        }
                     }
-                }
 
-                mainHandler.post { callback(userMap.values.toList()) }
+                    mainHandler.post { callback(userMap.values.toList()) }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error fetching users: ${e.message}")
             }
         }
     }
@@ -85,46 +92,9 @@ class Model private constructor() {
                 loadingState.postValue(LoadingState.LOADED)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error fetching users: ${e.message}")
+            Log.e(TAG, "Error getting post: ${e.message}")
         }
     }
-
-//    fun refreshNearbyUsers(currentLocation: GeoPoint, radiusInKm: Double) {
-//        loadingState.postValue(LoadingState.LOADING)
-//
-//        // Generate GeoHash Range
-//        val (minGeoHash, maxGeoHash) = GeoUtils.getGeoHashRange(currentLocation, radiusInKm)
-//
-//        // Get Cached Users from Room
-//        executor.execute {
-//            val cachedUsers = database.userDao().getUsersInGeoHashRange(minGeoHash, maxGeoHash).value
-//
-//            if (!cachedUsers.isNullOrEmpty()) {
-//                Log.d("Model", "Loaded ${cachedUsers.size} users from cache")
-//                _nearbyUsers.postValue(cachedUsers)
-//                loadingState.postValue(LoadingState.LOADED)
-//            }
-//
-//            // Fetch Updated Users from Firestore
-//            firebaseModel.getNearbyUsers(currentLocation, radiusInKm) { fetchedUsers ->
-//                executor.execute {
-//                    if (fetchedUsers.isNotEmpty()) {
-//                        Log.d("Model", "Fetched ${fetchedUsers.size} users from Firestore, updating cache")
-//
-//                        for (user in fetchedUsers) {
-//                            database.userDao().insertUser(user)
-//                        }
-//
-//                        // Update LiveData with new users
-//                        _nearbyUsers.postValue(fetchedUsers)
-//                    } else {
-//                        Log.d("Model", "No users found in Firestore for the given range.")
-//                    }
-//                    loadingState.postValue(LoadingState.LOADED)
-//                }
-//            }
-//        }
-//    }
 
     fun getAllUsers() {
         loadingState.postValue(LoadingState.LOADING)
@@ -173,6 +143,7 @@ class Model private constructor() {
     }
 
     fun addUser(user: User, image: Bitmap?, callback: EmptyCallback) {
+        try {
         firebaseModel.addUser(user) {
             image?.let {
                 uploadImage(image) { uri ->
@@ -185,29 +156,77 @@ class Model private constructor() {
                 }
             } ?: callback()
         }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error adding user: ${e.message}")
+        }
     }
 
-    fun editUser(user: User, newProfilePicture: Bitmap?, callback: EmptyCallback) {
-        if (newProfilePicture != null) {
-            // Delete the old image if it exists
-            user.profilePictureUrl?.let { oldUrl ->
-                cloudinaryModel.deleteImage(oldUrl) {
-                    Log.d(TAG, "editUser: image deleted")
-                }
-            }
+    fun editUser(user: User, newProfilePicture: Bitmap?, context: Context, callback: EmptyCallback) {
+        try {
 
-            // Upload the new image
-            uploadImage(newProfilePicture) { newUrl ->
-                if (!newUrl.isNullOrBlank()) {
-                    val updatedUser = user.copy(profilePictureUrl = newUrl)
-                    firebaseModel.editUser(updatedUser, callback)
-                } else {
-                    Log.d(TAG, "editUser: error uploading profile picture")
-                    callback()
+            if (newProfilePicture != null) {
+                // Delete the old image if it exists
+                user.profilePictureUrl?.let { oldUrl ->
+                    cloudinaryModel.deleteImage(oldUrl) {
+                        Log.d(TAG, "editUser: image deleted")
+                    }
                 }
+
+                // Upload the new image
+                uploadImage(newProfilePicture) { newUrl ->
+                    if (!newUrl.isNullOrBlank()) {
+                        val updatedUser = user.copy(profilePictureUrl = newUrl)
+
+                        if (user.isLocationShared == true) {
+                            updatedUserWithLocation(
+                                updatedUser,
+                                context
+                            ) { userWithUpdatedLocation ->
+                                if (userWithUpdatedLocation != null) {
+                                    Log.d(TAG, "editUser: $userWithUpdatedLocation")
+                                    firebaseModel.editUser(userWithUpdatedLocation, callback)
+                                }
+                            }
+                        } else {
+                            firebaseModel.editUser(updatedUser) {
+                                Log.d(TAG, "editUser: User updated without location change")
+                                callback()
+                            }
+                        }
+                    } else {
+                        Log.d(TAG, "editUser: error uploading profile picture")
+                        callback()
+                    }
+                }
+            } else {
+                if (user.isLocationShared == true) {
+                    updatedUserWithLocation(user, context) { userWithUpdatedLocation ->
+                        if (userWithUpdatedLocation != null) {
+                            Log.d(TAG, "editUser: $userWithUpdatedLocation")
+                            firebaseModel.editUser(userWithUpdatedLocation, callback)
+                        }
+                    }
+                } else {
+                    firebaseModel.editUser(user) {
+                        Log.d(TAG, "editUser: User updated without location change")
+                        callback()
+                    }
+                }
+
             }
-        } else {
-            firebaseModel.editUser(user, callback)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error editing users: ${e.message}")
+        }
+    }
+
+    // Helper function to update user location and GeoHash
+    private fun updatedUserWithLocation(user: User, context: Context, callback: UserCallback) {
+        GeoUtils.getCurrentLocation(context) { geoPoint ->
+            val newGeoHash = geoPoint?.let { GeoUtils.generateGeoHash(it) }
+            Log.d(TAG, "Updating user with new GeoHash: $newGeoHash")
+
+            val updatedUser = newGeoHash?.let { user.copy(location = geoPoint, geoHash = it) }
+            callback(updatedUser)
         }
     }
 
@@ -320,95 +339,121 @@ class Model private constructor() {
     }
 
     fun addPost(post: Post, images: List<Bitmap>?, callback: EmptyCallback) {
-        val postRef = firebaseModel.generatePostReference() // ✅ Get Firestore-generated ID
-        val postId = postRef.id // Retrieve the generated ID
+        try {
+            val postRef = firebaseModel.generatePostReference() // Get Firestore-generated ID
+            val postId = postRef.id // Retrieve the generated ID
 
-        val newPost = post.copy(id = postId) // Assign Firestore ID to the post
+            val newPost = post.copy(id = postId) // Assign Firestore ID to the post
 
-        if (!images.isNullOrEmpty()) {
-            val uploadedUrls = mutableListOf<String>()
+            if (!images.isNullOrEmpty()) {
+                val uploadedUrls = mutableListOf<String>()
 
-            images.forEach { image ->
-                uploadImage(image) { imageUrl ->
-                    if (!imageUrl.isNullOrBlank()) {
-                        uploadedUrls.add(imageUrl)
-                    }
+                images.forEach { image ->
+                    uploadImage(image) { imageUrl ->
+                        if (!imageUrl.isNullOrBlank()) {
+                            uploadedUrls.add(imageUrl)
+                        }
 
-                    if (uploadedUrls.size == images.size) {
-                        val updatedPost = post.copy(photos = uploadedUrls)
-                        firebaseModel.addPost(updatedPost, postRef, callback)
+                        if (uploadedUrls.size == images.size) {
+                            val updatedPost = post.copy(photos = uploadedUrls)
+                            firebaseModel.addPost(updatedPost, postRef, callback)
+                        }
                     }
                 }
+            } else {
+                firebaseModel.addPost(newPost, postRef, callback)
             }
-        } else {
-            firebaseModel.addPost(newPost, postRef, callback)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error adding post: ${e.message}")
         }
     }
 
     fun editPost(post: Post, callback: EmptyCallback) {
-        firebaseModel.editPost(post, callback)
+        try {
+            firebaseModel.editPost(post, callback)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error editing post : ${e.message}")
+        }
     }
 
     fun deletePost(post: Post, callback: EmptyCallback) {
         var deletedImagesCount = 0
 
-        if (post.photos.isEmpty()) {
-            firebaseModel.deletePost(post.id, callback) // No images, delete post immediately
-            return
-        }
+        try {
+            if (post.photos.isEmpty()) {
+                firebaseModel.deletePost(post.id, callback) // No images, delete post immediately
+                return
+            }
 
-        post.photos.forEach { imageUrl ->
-            cloudinaryModel.deleteImage(imageUrl) { success ->
-                if (!success) {
-                    Log.e(TAG, "Failed to delete post image: $imageUrl")
-                }
-                deletedImagesCount++
+            post.photos.forEach { imageUrl ->
+                cloudinaryModel.deleteImage(imageUrl) { success ->
+                    if (!success) {
+                        Log.e(TAG, "Failed to delete post image: $imageUrl")
+                    }
+                    deletedImagesCount++
 
-                // Delete the post only after all images are processed
-                if (deletedImagesCount == post.photos.size) {
-                    firebaseModel.deletePost(post.id) {
-                        executor.execute {
-                            database.postDao().deletePostById(post.id)
+                    // Delete the post only after all images are processed
+                    if (deletedImagesCount == post.photos.size) {
+                        firebaseModel.deletePost(post.id) {
+                            executor.execute {
+                                database.postDao().deletePostById(post.id)
+                            }
                         }
                     }
                 }
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error deleting post: ${e.message}")
         }
     }
 
     private fun uploadImage(image: Bitmap, callback: ImageCallback) {
-        cloudinaryModel.uploadImage(image, callback)
+        try {
+            cloudinaryModel.uploadImage(image, callback)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error uploading Image: ${e.message}")
+        }
     }
 
     fun getImageByUrl(imageUrl: String, callback: BitmapCallback) {
-        cloudinaryModel.getImageByUrl(imageUrl, callback)
+        try {
+            cloudinaryModel.getImageByUrl(imageUrl, callback)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting image: ${e.message}")
+        }
     }
 
-    fun refreshAllNearbyUsers(location: GeoPoint, radius: Double) {
+    private val GEO_HASH_ACCURACY = 1.2
+    fun refreshAllNearbyUsers(location: GeoPoint, radius: Double, callback: EmptyCallback) {
         loadingState.postValue(LoadingState.LOADING)
-        val lastUpdated: Long = User.lastUpdated
-        firebaseModel.getNearbyUsers(
-            lastUpdated,
-            currentLocation = location,
-            radiusInKm = radius
-        ) { usersList ->
-            executor.execute {
-                var currentTime = lastUpdated
-
-                for (user in usersList) {
-//                    val existingUser = database.userDao().getUserById(user.id)
-                    database.userDao().insertUser(user)
-
-                    user.lastUpdated?.let {
-                        if (currentTime < it) {
-                            currentTime = it
+        try {
+            firebaseModel.getNearbyUsers(
+                currentLocation = location,
+                radiusInKm = radius * GEO_HASH_ACCURACY
+            ) { usersList ->
+                executor.execute {
+                    database.runInTransaction {
+                        database.userDao().clearAllUsers()
+                        for (user in usersList) {
+                            database.userDao().insertUser(user)
+                            Log.d("InsertedUserCheck", "Inserted User: ${user.userName}, Geohash: ${user.geoHash}")
                         }
                     }
-                }
 
-                User.lastUpdated = currentTime
-                loadingState.postValue(LoadingState.LOADED)
+                    mainHandler.post {
+                        val (minGeoHash, maxGeoHash) = GeoUtils.getGeoHashRange(location, radius)
+                        // Observe Room
+                        val updatedUsers = database.userDao().getUsersInGeoHashRange(minGeoHash, maxGeoHash)
+                        updatedUsers.observeForever { users ->
+                            _nearbyUsers.postValue(users)  // Ensure LiveData update
+                            Log.d(TAG, "Users in Room DB after update: ${users.map { it.userName }}")
+                        }
+                    }
+                    loadingState.postValue(LoadingState.LOADED)
+                }
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching nearby users: ${e.message}")
         }
     }
 
@@ -419,7 +464,6 @@ class Model private constructor() {
 
     private fun calculateGeohashRange(location: GeoPoint, radius: Double): Pair<String, String> {
         val (minGeoHash, maxGeoHash) = GeoUtils.getGeoHashRange(location, radius)
-
         return Pair(minGeoHash, maxGeoHash)
     }
 

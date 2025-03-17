@@ -64,7 +64,7 @@ class CloudinaryModel {
                 }
                 override fun onReschedule(requestId: String?, error: ErrorInfo?) {
                     callback(error?.description ?: "Unknown error")
-                    Log.e("CloudinaryModel", "Upload rescheduled for request: $requestId due to ${error?.description}")
+                    Log.e(TAG, "Upload rescheduled for request: $requestId due to ${error?.description}")
                 }
             })
             .dispatch()
@@ -105,7 +105,6 @@ class CloudinaryModel {
 
     fun getImageByUrl(imageUrl: String, callback: BitmapCallback) {
         if (imageUrl.isNullOrEmpty()) {
-            Log.d(TAG, "getImageByUrl: error getting image URL")
         } else {
             Picasso.get()
                 .load(imageUrl)
