@@ -32,6 +32,7 @@ import com.syb.travelsphere.auth.AuthManager
 import com.syb.travelsphere.databinding.FragmentAddPostBinding
 import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.Post
+import com.syb.travelsphere.pages.NearbyUsersFragment.Companion
 import com.syb.travelsphere.utils.GeoUtils
 import com.syb.travelsphere.utils.ImagePickerUtil
 import com.syb.travelsphere.utils.InputValidator
@@ -56,6 +57,8 @@ class AddPostFragment : Fragment() {
     ): View? {
         binding = FragmentAddPostBinding.inflate(layoutInflater, container, false)
 
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
+
         return binding?.root
     }
 
@@ -64,11 +67,24 @@ class AddPostFragment : Fragment() {
 
         authManager = AuthManager()
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
         setupMap()
         setupImagePicker()
         setupPhotoRecyclerView()
         setupListeners()
+
+        // Get current location immediately
+        GeoUtils.getCurrentLocation(requireContext()) { userLocation ->
+            if (userLocation != null) {
+                Log.d(TAG, "Initial Location: Lat=${userLocation.latitude}, Lon=${userLocation.longitude}")
+                binding?.mapView?.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
+            }
+        }
+
+        // Start observing location changes
+        GeoUtils.observeLocationChanges(requireContext()) { userLocation ->
+            Log.d(TAG, "New Location: Lat=${userLocation.latitude}, Lon=${userLocation.longitude}")
+            binding?.mapView?.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
+        }
 
         val searchLocation = binding?.searchLocationTextView
         val locationEditText = binding?.selectedLocationTextView
@@ -109,6 +125,19 @@ class AddPostFragment : Fragment() {
         binding?.photosGridRecyclerView?.adapter = photosGridAdapter
     }
 
+    override fun onResume() {
+        super.onResume()
+        setupMap()
+
+        // Start continuous location updates
+        GeoUtils.observeLocationChanges(requireContext()) { userLocation ->
+            Log.d(TAG, "Updated Location: Lat=${userLocation.latitude}, Lon=${userLocation.longitude}")
+            binding?.mapView?.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
+            currentGeoPoint = userLocation
+
+        }
+    }
+
 
     private fun fetchAddressSuggestions(query: String) {
         val client = OkHttpClient()
@@ -127,7 +156,7 @@ class AddPostFragment : Fragment() {
             override fun onResponse(call: Call, response: Response) {
                 response.body?.let { responseBody ->
                     val json = responseBody.string()
-                    Log.d(TAG, "API_RESPONSE: Response: $json") // 🔍 Log the full response
+                    Log.d(TAG, "API_RESPONSE: Response: $json") // Log the full response
 
                     try {
                         val jsonArray = JsonParser.parseString(json).asJsonArray
@@ -177,7 +206,7 @@ class AddPostFragment : Fragment() {
 
                         activity?.runOnUiThread {
                             val firebaseGeoPoint  = GeoPoint(lat, lon)
-                            val osmdroidGeoPoint = org.osmdroid.util.GeoPoint(lat, lon) // ✅ Convert to osmdroid GeoPoint
+                            val osmdroidGeoPoint = org.osmdroid.util.GeoPoint(lat, lon) // Convert to osmdroid GeoPoint
 
                             binding?.mapView?.controller?.setCenter(osmdroidGeoPoint)
                             binding?.mapView?.controller?.setZoom(15.0)
@@ -200,8 +229,10 @@ class AddPostFragment : Fragment() {
         binding?.mapView?.setMultiTouchControls(true)
 
         // Get user location if available
-        getCurrentUserLocation { userGeoPoint ->
-            centerMapOnUser(userGeoPoint)
+        GeoUtils.getCurrentLocation(requireContext()) { userGeoPoint ->
+            val osGeoPoint = userGeoPoint?.let { OSGeoPoint(it.latitude, it.longitude) }
+            binding?.mapView?.controller?.setCenter(osGeoPoint)
+            binding?.mapView?.controller?.setZoom(15.0)
         }
 
         // Add an overlay to capture map clicks
@@ -262,36 +293,6 @@ class AddPostFragment : Fragment() {
 
                 val action = AddPostFragmentDirections.actionAddPostFragmentToAllPostsFragment()
                 findNavController().navigate(action)
-            }
-        }
-    }
-
-    private fun getCurrentUserLocation(callback: (GeoPoint) -> Unit) {
-        if (ActivityCompat.checkSelfPermission(
-                requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(
-                requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // Request permissions if not granted
-            ActivityCompat.requestPermissions(
-                requireActivity(),
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
-                1
-            )
-            callback(GeoPoint(31.771959, 34.651401)) // Return default location if no permission
-            return
-        }
-
-        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-            if (location != null) {
-                val userLocation = GeoPoint(location.latitude, location.longitude)
-                Log.d("UserLocation", "Latitude: ${location.latitude}, Longitude: ${location.longitude}")
-                callback(userLocation) // Return actual location via callback
-            } else {
-                Log.d("UserLocation", "Location is null, using default")
-                callback(GeoPoint(31.771959, 34.651401)) // Return default location if null
             }
         }
     }

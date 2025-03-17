@@ -8,6 +8,17 @@
     android:padding="16dp"
     tools:context=".MainActivity">
 
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <!-- Post Image -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/photoViewPagerMaterialCardView"
@@ -29,6 +40,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:maxHeight="180dp"
+            android:src="@drawable/default_post"
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"
             android:contentDescription="Post Image"/>
@@ -142,11 +154,26 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Edit Post"
-        android:visibility="gone"
         app:cornerRadius="16dp"
+        style="@style/CustomButtonStyle"
         app:iconGravity="textStart"
         app:layout_constraintTop_toBottomOf="@id/timestampText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_marginTop="20dp"/>
+
+    <!-- Delete Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/deleteButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Delete Post"
+        android:textColor="@android:color/holo_red_dark"
+        android:backgroundTint="@android:color/transparent"
+        app:cornerRadius="16dp"
+        app:iconGravity="textStart"
+        app:layout_constraintTop_toBottomOf="@id/editButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="12dp"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

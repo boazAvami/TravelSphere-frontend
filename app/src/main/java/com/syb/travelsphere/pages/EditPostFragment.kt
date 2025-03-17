@@ -8,9 +8,9 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import com.syb.travelsphere.databinding.FragmentEditPostBinding
-import com.syb.travelsphere.databinding.FragmentSinglePostBinding
 import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.Post
+import com.syb.travelsphere.utils.InputValidator
 import com.syb.travelsphere.utils.TimeUtil.formatTimestamp
 
 class EditPostFragment : Fragment() {
@@ -22,9 +22,6 @@ class EditPostFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
         binding = FragmentEditPostBinding.inflate(inflater, container, false)
-
-        // Show edit button in edit mode
-        binding?.editButton?.visibility = View.VISIBLE
 
         postId = arguments?.let {
             SinglePostFragmentArgs.fromBundle(it).postId
@@ -45,7 +42,12 @@ class EditPostFragment : Fragment() {
 
         // Handle Edit Button Click
         binding?.editButton?.setOnClickListener {
+            if (!validateInputs()) return@setOnClickListener  // Stop execution if validation fails
             editPost()
+            Navigation.findNavController(view).popBackStack()
+        }
+        binding?.deleteButton?.setOnClickListener {
+            deletePost()
             Navigation.findNavController(view).popBackStack()
         }
     }
@@ -60,7 +62,14 @@ class EditPostFragment : Fragment() {
         )
         //todo: is that correct??
         Log.d("TAG", "onViewCreated: $newDescription $newLocationName ")
-        Model.shared.editPost(newPost) {}
+        Model.shared.editPost(newPost) {
+        }
+    }
+
+    private fun deletePost() {
+        Model.shared.deletePost(post) {
+
+        }
     }
 
     private fun getPost() {
@@ -104,6 +113,23 @@ class EditPostFragment : Fragment() {
             }
         }
     }
+
+    fun validateInputs(): Boolean {
+        val description = binding?.descriptionText?.text.toString().trim()
+        val phone = binding?.locationNameText?.text.toString().trim()
+
+        var isValid = true
+
+        if (!InputValidator.validateDescription(description, binding?.descriptionTextTextInputLayout)) {
+            isValid = false
+        }
+        if (!InputValidator.validateRequiredTextField(phone, binding?.locationNameTextTextInputLayout)) {
+            isValid = false
+        }
+
+        return isValid
+    }
+
 
     override fun onDestroyView() {
         super.onDestroyView()

@@ -26,12 +26,78 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/radiusContainer"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintVertical_bias="0.0">
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
+            <!-- Title -->
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/titleTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nearby Travellers"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- Subtitle -->
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/subtitleTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Find travellers traveling near you!"
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/titleTextView"
+                android:layout_marginTop="8dp"/>
+
+            <!-- Radius Bar with Spaced Buttons -->
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/radiusContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:singleSelection="true"
+                app:layout_constraintTop_toBottomOf="@id/subtitleTextView"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/materialCardView"
+                android:layout_marginTop="16dp">
+
+                <!-- 30k Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/radius30kButton"
+                    style="@style/CustomButtonStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="30k"
+                    android:layout_marginEnd="8dp"
+                    tools:ignore="MissingConstraints" />
+
+                <!-- 10k Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/radius10kButton"
+                    style="@style/CustomButtonStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="10k"
+                    android:layout_marginHorizontal="8dp"/>
+
+                <!-- 5k Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/radius5kButton"
+                    style="@style/CustomButtonStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="5k"
+                    android:layout_marginStart="8dp"
+                    tools:ignore="MissingConstraints" />
+            </com.google.android.material.button.MaterialButtonToggleGroup>
 
         <!-- MaterialCardView for Map -->
         <com.google.android.material.card.MaterialCardView
@@ -44,7 +110,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintBottom_toTopOf="@+id/userListRecyclerView"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toBottomOf="@id/radiusContainer">
 
             <com.syb.travelsphere.components.MapComponent
                 android:id="@+id/mapComponent"
@@ -64,72 +130,5 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-    <!-- Title -->
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/titleTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Nearby Travellers"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <!-- Subtitle -->
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/subtitleTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Find travellers traveling near you!"
-        android:textSize="16sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/titleTextView"
-        android:layout_marginTop="8dp"/>
-
-    <!-- Radius Bar with Spaced Buttons -->
-    <com.google.android.material.button.MaterialButtonToggleGroup
-        android:id="@+id/radiusContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:singleSelection="true"
-        app:layout_constraintTop_toBottomOf="@id/subtitleTextView"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/swipeToRefresh"
-        android:layout_marginTop="16dp">
-
-        <!-- 30k Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/radius30kButton"
-            style="@style/CustomButtonStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="30k"
-            android:layout_marginEnd="8dp"
-            tools:ignore="MissingConstraints" />
-
-        <!-- 10k Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/radius10kButton"
-            style="@style/CustomButtonStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="10k"
-            android:layout_marginHorizontal="8dp"/>
-
-        <!-- 5k Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/radius5kButton"
-            style="@style/CustomButtonStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="5k"
-            android:layout_marginStart="8dp"
-            tools:ignore="MissingConstraints" />
-    </com.google.android.material.button.MaterialButtonToggleGroup>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

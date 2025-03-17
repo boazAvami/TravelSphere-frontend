@@ -10,13 +10,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.navigation.Navigation
+import androidx.navigation.fragment.findNavController
 import com.syb.travelsphere.auth.AuthActivity
 import com.syb.travelsphere.auth.AuthManager
 import com.syb.travelsphere.databinding.FragmentSettingsBinding
 import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.User
 import com.syb.travelsphere.utils.ImagePickerUtil
+import com.syb.travelsphere.utils.InputValidator
 
 class SettingsFragment : Fragment() {
     private var binding: FragmentSettingsBinding? = null
@@ -75,6 +76,8 @@ class SettingsFragment : Fragment() {
 
         // Handle Edit Button Click
         binding?.editButton?.setOnClickListener() {
+            if (!validateInputs()) return@setOnClickListener  // Stop execution if validation fails
+
             val updatedUser = currentUserObject?.copy(
                 phoneNumber = binding?.phoneText?.text.toString().trim(),
                 userName =  binding?.usernameText?.text.toString().trim(),
@@ -99,13 +102,20 @@ class SettingsFragment : Fragment() {
     }
 
     private fun editUser(user: User, image: Bitmap?) {
-        Model.shared.editUser(user, image,) {
-            Toast.makeText(
-                requireContext(),
-                "Profile updated successfully!",
-                Toast.LENGTH_SHORT
-            ).show()
-            navigateToUserProfile()
+        binding?.progressBar?.visibility = View.VISIBLE
+        context?.let {
+            Model.shared.editUser(
+                user, image,
+                context = it,
+            ) {
+                binding?.progressBar?.visibility = View.GONE
+                Toast.makeText(
+                    requireContext(),
+                    "Profile updated successfully!",
+                    Toast.LENGTH_SHORT
+                ).show()
+                navigateToUserProfile()
+            }
         }
     }
 
@@ -128,11 +138,26 @@ class SettingsFragment : Fragment() {
     }
 
     private fun navigateToUserProfile() {
-        val action = SettingsFragmentDirections.actionSettingsFragmentToProfileFragment()
-        binding?.root?.let {
-            Navigation.findNavController(it).navigate(action)
-        }
+        val action = SettingsFragmentDirections.actionGlobalProfileFragment()
+        findNavController().navigate(action)
     }
+
+    fun validateInputs(): Boolean {
+        val username = binding?.usernameText?.text.toString().trim()
+        val phone = binding?.phoneText?.text.toString().trim()
+
+        var isValid = true
+
+        if (!InputValidator.validateUsername(username, binding?.usernameInputLayout)) {
+            isValid = false
+        }
+        if (!InputValidator.validatePhoneNumber(phone, binding?.phoneInputLayout)) {
+            isValid = false
+        }
+
+        return isValid
+    }
+
 
     override fun onDestroyView() {
         super.onDestroyView()
