@@ -2,93 +2,69 @@ package com.syb.travelsphere.services
 
 import android.util.Log
 import com.google.firebase.firestore.GeoPoint
-import okhttp3.*
-import com.google.gson.JsonParser
-import com.google.gson.JsonSyntaxException
-import com.syb.travelsphere.BuildConfig
-import java.io.IOException
+import com.google.gson.JsonArray
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class LocationsService {
 
-    private val client = OkHttpClient()
-
-    private fun createRequest(url: String): Request {
-        return Request.Builder()
-            .url(url)
-            .header("User-Agent", "YourAppName") // Required by Nominatim
-            .build()
-    }
+    private val apiService = RetrofitClient.instance
 
     private fun <T> makeRequest(
-        url: String,
-        parseResponse: (String) -> T?,
-        onSuccess: (T) -> Unit,
+        call: Call<T>,
+        parseResponse: (T?) -> Any?,
+        onSuccess: (Any?) -> Unit,
         onFailure: () -> Unit
     ) {
-        val request = createRequest(url)
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                e.printStackTrace()
-                onFailure()
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                response.body?.let { responseBody ->
-                    val json = responseBody.string()
-                    try {
-                        val result = parseResponse(json)
-                        if (result != null) {
-                            onSuccess(result)
-                        } else {
-                            onFailure()
-                        }
-                    } catch (e: JsonSyntaxException) {
-                        Log.e(TAG, "API_ERROR JSON parsing error: ${e.message}")
+        call.enqueue(object : Callback<T> {
+            override fun onResponse(call: Call<T>, response: Response<T>) {
+                if (response.isSuccessful) {
+                    val parsedData = parseResponse(response.body())
+                    if (parsedData != null) {
+                        onSuccess(parsedData)
+                    } else {
                         onFailure()
                     }
+                } else {
+                    onFailure()
                 }
+            }
+
+            override fun onFailure(call: Call<T>, t: Throwable) {
+                Log.e(TAG, "API_ERROR: ${t.message}")
+                onFailure()
             }
         })
     }
 
     // Fetch address suggestions
     fun fetchAddressSuggestions(query: String, callback: (List<String>?) -> Unit) {
-        val url = BuildConfig.OPENSTREAM_MAP_URL + query
         makeRequest(
-            url,
-            parseResponse = { json ->
-                val jsonArray = JsonParser.parseString(json).asJsonArray
-                val suggestions = mutableListOf<String>()
-                jsonArray.forEach {
-                    val obj = it.asJsonObject
-                    val displayName = obj.get("display_name").asString
-                    suggestions.add(displayName)
+            call = apiService.fetchAddressSuggestions(query),
+            parseResponse = { jsonArray ->
+                (jsonArray as? JsonArray)?.takeIf { it.size() > 0 }?.mapNotNull {
+                    it.asJsonObject.get("display_name")?.asString
                 }
-                suggestions.takeIf { it.isNotEmpty() }
             },
-            onSuccess = { result -> callback(result) },
+            onSuccess = { result -> callback(result as? List<String>) },
             onFailure = { callback(null) }
         )
     }
 
     // Fetch geo location for an address
     fun fetchGeoLocation(address: String, callback: (GeoPoint?) -> Unit) {
-        val url = BuildConfig.OPENSTREAM_MAP_URL + address + "&limit=1"
         makeRequest(
-            url,
-            parseResponse = { json ->
-                val jsonArray = JsonParser.parseString(json).asJsonArray
-                if (jsonArray.size() > 0) {
-                    val obj = jsonArray[0].asJsonObject
+            call = apiService.fetchGeoLocation(address),
+            parseResponse = { jsonArray ->
+                (jsonArray as? JsonArray)?.takeIf { it.size() > 0 }?.let {
+                    val obj = it[0].asJsonObject
                     val lat = obj.get("lat").asString.toDouble()
                     val lon = obj.get("lon").asString.toDouble()
                     GeoPoint(lat, lon)
-                } else {
-                    null
                 }
             },
-            onSuccess = { result -> callback(result) },
+            onSuccess = { result -> callback(result as? GeoPoint) },
             onFailure = { callback(null) }
         )
     }
