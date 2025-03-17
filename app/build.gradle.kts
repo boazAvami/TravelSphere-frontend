@@ -22,6 +22,7 @@ android {
         buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"${project.properties["CLOUDINARY_CLOUD_NAME"] ?: ""}\"")
         buildConfigField("String", "CLOUDINARY_API_KEY", "\"${project.properties["CLOUDINARY_API_KEY"] ?: ""}\"")
         buildConfigField("String", "CLOUDINARY_API_SECRET", "\"${project.properties["CLOUDINARY_API_SECRET"] ?: ""}\"")
+        buildConfigField("String", "OPENSTREAM_MAP_URL", "\"${project.properties["OPENSTREAM_MAP_URL"] ?: ""}\"")
     }
 
     buildTypes {

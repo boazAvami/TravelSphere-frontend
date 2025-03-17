@@ -21,8 +21,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.syb.travelsphere.R
 import com.syb.travelsphere.components.MapComponent
 import com.syb.travelsphere.components.UserListAdapter
-import com.syb.travelsphere.services.TravelService
-import com.syb.travelsphere.services.User
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.firestore.GeoPoint

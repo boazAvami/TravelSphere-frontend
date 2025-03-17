@@ -1,8 +1,6 @@
 package com.syb.travelsphere.pages
 
-import android.Manifest
 import android.R
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.text.Editable
@@ -14,25 +12,20 @@ import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import android.widget.ArrayAdapter
-import com.google.gson.JsonParser
-import okhttp3.*
-import java.io.IOException
 import com.syb.travelsphere.components.PhotosGridAdapter
 import org.osmdroid.config.Configuration
 import android.util.Log
-import androidx.core.app.ActivityCompat
 import androidx.navigation.fragment.findNavController
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.Timestamp
 import org.osmdroid.util.GeoPoint as OSGeoPoint
 import com.google.firebase.firestore.GeoPoint
-import com.google.gson.JsonSyntaxException
 import com.syb.travelsphere.auth.AuthManager
 import com.syb.travelsphere.databinding.FragmentAddPostBinding
 import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.Post
-import com.syb.travelsphere.pages.NearbyUsersFragment.Companion
+import com.syb.travelsphere.services.LocationsService
 import com.syb.travelsphere.utils.GeoUtils
 import com.syb.travelsphere.utils.ImagePickerUtil
 import com.syb.travelsphere.utils.InputValidator
@@ -47,7 +40,7 @@ class AddPostFragment : Fragment() {
     private lateinit var imagePicker: ImagePickerUtil
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val selectedImages = mutableListOf<Bitmap>()
-
+    private lateinit var locationService: LocationsService
     private lateinit var photosGridAdapter: PhotosGridAdapter
     private var currentGeoPoint: GeoPoint? = null // To store current location's coordinates
 
@@ -56,7 +49,7 @@ class AddPostFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         binding = FragmentAddPostBinding.inflate(layoutInflater, container, false)
-
+        locationService = LocationsService()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
 
         return binding?.root
@@ -140,82 +133,29 @@ class AddPostFragment : Fragment() {
 
 
     private fun fetchAddressSuggestions(query: String) {
-        val client = OkHttpClient()
-        val url = "https://nominatim.openstreetmap.org/search?format=json&q=$query"
-
-        val request = Request.Builder()
-            .url(url)
-            .header("User-Agent", "YourAppName") // Required by Nominatim
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                e.printStackTrace()
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                response.body?.let { responseBody ->
-                    val json = responseBody.string()
-                    Log.d(TAG, "API_RESPONSE: Response: $json") // Log the full response
-
-                    try {
-                        val jsonArray = JsonParser.parseString(json).asJsonArray
-                        val suggestions = mutableListOf<String>()
-
-                        for (element in jsonArray) {
-                            val obj = element.asJsonObject
-                            val displayName = obj.get("display_name").asString
-                            suggestions.add(displayName)
-                        }
-
-                        activity?.runOnUiThread {
-                            val adapter = ArrayAdapter(requireContext(), R.layout.simple_dropdown_item_1line, suggestions)
-                            binding?.searchLocationTextView?.setAdapter(adapter)
-                            adapter.notifyDataSetChanged()
-                        }
-                    } catch (e: JsonSyntaxException) {
-                        Log.e(TAG, "API_ERROR JSON parsing error: ${e.message}")
-                    }
+        locationService.fetchAddressSuggestions(query) { suggestions ->
+            activity?.runOnUiThread {
+                suggestions?.let {
+                    val adapter = ArrayAdapter(requireContext(), R.layout.simple_dropdown_item_1line, it)
+                    binding?.searchLocationTextView?.setAdapter(adapter)
+                    adapter.notifyDataSetChanged()
                 }
             }
-        })
+        }
     }
+
     private fun fetchGeoLocation(address: String) {
-        val client = OkHttpClient()
-        val url = "https://nominatim.openstreetmap.org/search?format=json&q=$address&limit=1"
-
-        val request = Request.Builder()
-            .url(url)
-            .header("User-Agent", "YourAppName") // Required by Nominatim
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                e.printStackTrace()
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                response.body?.let { responseBody ->
-                    val json = responseBody.string()
-                    val jsonArray = JsonParser.parseString(json).asJsonArray
-
-                    if (jsonArray.size() > 0) {
-                        val obj = jsonArray[0].asJsonObject
-                        val lat = obj.get("lat").asString.toDouble()
-                        val lon = obj.get("lon").asString.toDouble()
-
-                        activity?.runOnUiThread {
-                            val firebaseGeoPoint  = GeoPoint(lat, lon)
-                            val osmdroidGeoPoint = org.osmdroid.util.GeoPoint(lat, lon) // Convert to osmdroid GeoPoint
-
-                            binding?.mapView?.controller?.setCenter(osmdroidGeoPoint)
-                            binding?.mapView?.controller?.setZoom(15.0)
-                            currentGeoPoint = firebaseGeoPoint
-                        }
-                    }
+        locationService.fetchGeoLocation(address) { geoPoint ->
+            geoPoint?.let {
+                // Make sure this runs on the main thread
+                activity?.runOnUiThread {
+                    val osmdroidGeoPoint = org.osmdroid.util.GeoPoint(it.latitude, it.longitude) // Convert to osmdroid GeoPoint
+                    binding?.mapView?.controller?.setCenter(osmdroidGeoPoint)
+                    binding?.mapView?.controller?.setZoom(15.0)
+                    currentGeoPoint = it
                 }
             }
-        })
+        }
     }
 
     private fun centerMapOnUser(point: GeoPoint) {
