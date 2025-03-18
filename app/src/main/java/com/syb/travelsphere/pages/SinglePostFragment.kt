@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import com.syb.travelsphere.R
 import com.syb.travelsphere.databinding.FragmentSinglePostBinding
 import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.utils.TimeUtil.formatTimestamp
@@ -37,10 +38,19 @@ class SinglePostFragment : Fragment() {
                     Model.shared.getUserById(it) { user ->
                         Log.d("TAG", "onViewCreated: $user")
                         binding?.userNameText?.text = user?.userName
-                        user?.profilePictureUrl?.let { profilePictureUrl ->
-                            Model.shared.getImageByUrl(profilePictureUrl) { image ->
-                                binding?.userProfilePicture?.setImageBitmap(image)
+                        try {
+                            val userProfilePictureUrl = user?.profilePictureUrl
+                            if (!userProfilePictureUrl.isNullOrEmpty()) {
+                                Model.shared.getImageByUrl(userProfilePictureUrl) { bitmap ->
+                                    binding?.userProfilePicture?.setImageBitmap(bitmap)
+                                }
+                            } else {
+                                // If decoding fails, set a default image
+                                binding?.userProfilePicture?.setImageResource(R.drawable.profile_icon)
                             }
+                        } catch (e: Exception) {
+                            // If decoding fails, set a default image
+                            binding?.userProfilePicture?.setImageResource(R.drawable.profile_icon)
                         }
                     }
                 }

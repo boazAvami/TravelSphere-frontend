@@ -7,9 +7,11 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.Navigation
+import com.syb.travelsphere.R
 import com.syb.travelsphere.databinding.FragmentEditPostBinding
 import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.Post
@@ -72,6 +74,7 @@ class EditPostFragment : Fragment() {
                 viewModel.notifyPostModified()
                 binding?.progressBar?.visibility = View.GONE
                 view?.let { Navigation.findNavController(it).popBackStack() }
+                Toast.makeText(requireContext(), "Post edited successfully!", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -86,6 +89,7 @@ class EditPostFragment : Fragment() {
                 viewModel.notifyPostModified()
                 binding?.progressBar?.visibility = View.GONE
                 view?.let { Navigation.findNavController(it).popBackStack() }
+                Toast.makeText(requireContext(), "Post delete successfully!", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -107,11 +111,20 @@ class EditPostFragment : Fragment() {
             post?.ownerId?.let {
                 Model.shared.getUserById(it) { user ->
                     binding?.userNameText?.text = user?.userName
-                    user?.profilePictureUrl?.let { url ->
-                        Model.shared.getImageByUrl(url) { image ->
-                            run {
-                                binding?.userProfilePicture?.setImageBitmap(image)
+                    if (!user?.profilePictureUrl.isNullOrEmpty()) {
+                        try {
+                            val userProfilePictureUrl = user?.profilePictureUrl
+                            if (userProfilePictureUrl != null) {
+                                Model.shared.getImageByUrl(userProfilePictureUrl) { bitmap ->
+                                    binding?.userProfilePicture?.setImageBitmap(bitmap)
+                                }
+                            } else {
+                                // If decoding fails, set a default image
+                                binding?.userProfilePicture?.setImageResource(R.drawable.profile_icon)
                             }
+                        } catch (e: Exception) {
+                            // If decoding fails, set a default image
+                            binding?.userProfilePicture?.setImageResource(R.drawable.profile_icon)
                         }
                     }
                 }

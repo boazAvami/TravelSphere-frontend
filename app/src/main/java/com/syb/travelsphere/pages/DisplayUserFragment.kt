@@ -111,11 +111,11 @@ class DisplayUserFragment : Fragment() {
                     }
                 } else {
                     // If decoding fails, set a default image
-                    binding?.userProfilePicture?.setImageResource(R.drawable.default_user)
+                    binding?.userProfilePicture?.setImageResource(R.drawable.profile_icon)
                 }
             } catch (e: Exception) {
                 // If decoding fails, set a default image
-                binding?.userProfilePicture?.setImageResource(R.drawable.default_user)
+                binding?.userProfilePicture?.setImageResource(R.drawable.profile_icon)
             }
         }
     }
