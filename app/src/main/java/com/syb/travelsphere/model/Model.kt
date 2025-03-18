@@ -8,6 +8,7 @@ import androidx.core.os.HandlerCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.firebase.firestore.GeoPoint
+import com.google.gson.JsonArray
 import com.syb.travelsphere.base.BitmapCallback
 import com.syb.travelsphere.base.EmptyCallback
 import com.syb.travelsphere.base.ImageCallback
@@ -17,6 +18,7 @@ import com.syb.travelsphere.base.UserCallback
 import com.syb.travelsphere.base.UsersCallback
 import com.syb.travelsphere.model.dao.AppLocalDb
 import com.syb.travelsphere.model.dao.AppLocalDbRepository
+import com.syb.travelsphere.networking.LocationsClient
 import com.syb.travelsphere.utils.GeoUtils
 import java.util.concurrent.Executors
 
@@ -35,6 +37,12 @@ class Model private constructor() {
     val posts: LiveData<List<Post>> = database.postDao().getAllPosts()
     private var _nearbyUsers = MutableLiveData<List<User>>()
     val nearbyUsers: LiveData<List<User>> = _nearbyUsers
+
+    private val locationsApi = LocationsClient.locationsApiClient
+
+    val addressSuggestions = MutableLiveData<List<String>?>()
+    val geoLocation = MutableLiveData<GeoPoint?>()
+
 
     val loadingState: MutableLiveData<LoadingState> = MutableLiveData<LoadingState>()
     private val firebaseModel = FirebaseModel()
@@ -492,6 +500,61 @@ class Model private constructor() {
     private fun calculateGeohashRange(location: GeoPoint, radius: Double): Pair<String, String> {
         val (minGeoHash, maxGeoHash) = GeoUtils.getGeoHashRange(location, radius)
         return Pair(minGeoHash, maxGeoHash)
+    }
+
+    // Fetch address suggestions
+    fun fetchAddressSuggestions(query: String) {
+        executor.execute {
+            try {
+                val request = locationsApi.fetchAddressSuggestions(query)
+                val response = request.execute()
+
+                if (response.isSuccessful) {
+                    val jsonArray = response.body()
+                    val suggestions = (jsonArray as? JsonArray)?.takeIf { it.size() > 0 }
+                        ?.mapNotNull { it.asJsonObject.get("display_name")?.asString }
+
+                    Log.e(TAG, "Fetched address suggestions with count: ${suggestions?.size ?: 0}")
+                    addressSuggestions.postValue(suggestions)
+                } else {
+                    Log.e(TAG, "Failed to fetch address suggestions!")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to fetch address suggestions with exception: ${e.message}")
+            }
+        }
+    }
+
+    // Fetch geo location for an address
+    fun fetchGeoLocation(address: String) {
+        executor.execute {
+            try {
+                val request = locationsApi.fetchGeoLocation(address)
+                val response = request.execute()
+
+                if (response.isSuccessful) {
+                    val jsonArray = response.body()
+                    val point = (jsonArray as? JsonArray)?.takeIf { it.size() > 0 }?.let {
+                        val obj = it[0].asJsonObject
+                        val lat = obj.get("lat").asString.toDouble()
+                        val lon = obj.get("lon").asString.toDouble()
+                        GeoPoint(lat, lon)
+                    }
+
+                    if (point != null) {
+                        Log.e(TAG, "Fetched geo location: lat=${point.latitude}, lon=${point.longitude}")
+                        geoLocation.postValue(point)
+                    } else {
+                        Log.e(TAG, "Failed to parse geo location!")
+                    }
+                } else {
+                    Log.e(TAG, "Failed to fetch geo location!")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to fetch geo location with exception: ${e.message}")
+            }
+        }
+
     }
 
 }

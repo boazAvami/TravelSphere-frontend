@@ -14,9 +14,7 @@ import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import android.widget.ArrayAdapter
-import com.google.gson.JsonParser
-import okhttp3.*
-import java.io.IOException
+import androidx.fragment.app.viewModels
 import com.syb.travelsphere.components.PhotosGridAdapter
 import org.osmdroid.config.Configuration
 import android.util.Log
@@ -27,12 +25,10 @@ import com.google.android.gms.location.LocationServices
 import com.google.firebase.Timestamp
 import org.osmdroid.util.GeoPoint as OSGeoPoint
 import com.google.firebase.firestore.GeoPoint
-import com.google.gson.JsonSyntaxException
 import com.syb.travelsphere.auth.AuthManager
 import com.syb.travelsphere.databinding.FragmentAddPostBinding
 import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.Post
-import com.syb.travelsphere.pages.NearbyUsersFragment.Companion
 import com.syb.travelsphere.utils.GeoUtils
 import com.syb.travelsphere.utils.ImagePickerUtil
 import com.syb.travelsphere.utils.InputValidator
@@ -42,23 +38,19 @@ import org.osmdroid.views.overlay.MapEventsOverlay
 class AddPostFragment : Fragment() {
 
     private var binding: FragmentAddPostBinding? = null
+    private val viewModel: AddPostViewModel by viewModels()
     private lateinit var authManager: AuthManager
 
     private lateinit var imagePicker: ImagePickerUtil
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private val selectedImages = mutableListOf<Bitmap>()
-
     private lateinit var photosGridAdapter: PhotosGridAdapter
-    private var currentGeoPoint: GeoPoint? = null // To store current location's coordinates
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         binding = FragmentAddPostBinding.inflate(layoutInflater, container, false)
-
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
-
         return binding?.root
     }
 
@@ -67,6 +59,7 @@ class AddPostFragment : Fragment() {
 
         authManager = AuthManager()
 
+        setupObservers()
         setupMap()
         setupImagePicker()
         setupPhotoRecyclerView()
@@ -85,42 +78,34 @@ class AddPostFragment : Fragment() {
             Log.d(TAG, "New Location: Lat=${userLocation.latitude}, Lon=${userLocation.longitude}")
             binding?.mapView?.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
         }
+    }
 
-        val searchLocation = binding?.searchLocationTextView
-        val locationEditText = binding?.selectedLocationTextView
-
-        searchLocation?.setAdapter(ArrayAdapter(requireContext(), R.layout.simple_dropdown_item_1line, mutableListOf<String>()))
-        searchLocation?.threshold = 2 // Start search after 2 characters
-
-        searchLocation?.setOnItemClickListener { _, _, position, _ ->
-            val selectedAddress = searchLocation.adapter.getItem(position) as String
-            searchLocation.setText(selectedAddress)
-            locationEditText?.text = selectedAddress
-            fetchGeoLocation(selectedAddress)
+    private fun setupObservers() {
+        // Observe location-related LiveData from the ViewModel
+        viewModel.locationSuggestions.observe(viewLifecycleOwner) { suggestions ->
+            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, suggestions ?: emptyList())
+            binding?.searchLocationTextView?.setAdapter(adapter)
+            adapter.notifyDataSetChanged()
         }
 
-        searchLocation?.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {}
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (s != null && s.length > 2) {
-                    fetchAddressSuggestions(s.toString())
-                }
+        viewModel.currentGeoPoint.observe(viewLifecycleOwner) { geoPoint ->
+            geoPoint?.let {
+                binding?.mapView?.controller?.setCenter(OSGeoPoint(it.latitude, it.longitude))
+                binding?.mapView?.controller?.setZoom(15.0)
+                binding?.selectedLocationTextView?.text = "Selected Location: (${it.latitude}, ${it.longitude})"
             }
-        })
+        }
     }
 
     private fun setupPhotoRecyclerView() {
         val layoutManager = GridLayoutManager(requireContext(), 4) // 4 columns in the grid
         binding?.photosGridRecyclerView?.layoutManager = layoutManager
 
-        // initialize adapter with the actual selectedImages list
-        photosGridAdapter = PhotosGridAdapter(selectedImages, onDeletePhoto = { position ->
-            selectedImages.removeAt(position) // Now removes from the correct list
-            photosGridAdapter.notifyItemRemoved(position) // Efficient update instead of full refresh
-        })
+        // initialize adapter with the viewModel's selectedImages list
+        photosGridAdapter = PhotosGridAdapter(viewModel.selectedImages) { position ->
+            viewModel.removeImage(position)
+            photosGridAdapter.notifyDataSetChanged()
+        }
 
         binding?.photosGridRecyclerView?.adapter = photosGridAdapter
     }
@@ -133,89 +118,7 @@ class AddPostFragment : Fragment() {
         GeoUtils.observeLocationChanges(requireContext()) { userLocation ->
             Log.d(TAG, "Updated Location: Lat=${userLocation.latitude}, Lon=${userLocation.longitude}")
             binding?.mapView?.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
-            currentGeoPoint = userLocation
-
         }
-    }
-
-
-    private fun fetchAddressSuggestions(query: String) {
-        val client = OkHttpClient()
-        val url = "https://nominatim.openstreetmap.org/search?format=json&q=$query"
-
-        val request = Request.Builder()
-            .url(url)
-            .header("User-Agent", "YourAppName") // Required by Nominatim
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                e.printStackTrace()
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                response.body?.let { responseBody ->
-                    val json = responseBody.string()
-                    Log.d(TAG, "API_RESPONSE: Response: $json") // Log the full response
-
-                    try {
-                        val jsonArray = JsonParser.parseString(json).asJsonArray
-                        val suggestions = mutableListOf<String>()
-
-                        for (element in jsonArray) {
-                            val obj = element.asJsonObject
-                            val displayName = obj.get("display_name").asString
-                            suggestions.add(displayName)
-                        }
-
-                        activity?.runOnUiThread {
-                            val adapter = ArrayAdapter(requireContext(), R.layout.simple_dropdown_item_1line, suggestions)
-                            binding?.searchLocationTextView?.setAdapter(adapter)
-                            adapter.notifyDataSetChanged()
-                        }
-                    } catch (e: JsonSyntaxException) {
-                        Log.e(TAG, "API_ERROR JSON parsing error: ${e.message}")
-                    }
-                }
-            }
-        })
-    }
-    private fun fetchGeoLocation(address: String) {
-        val client = OkHttpClient()
-        val url = "https://nominatim.openstreetmap.org/search?format=json&q=$address&limit=1"
-
-        val request = Request.Builder()
-            .url(url)
-            .header("User-Agent", "YourAppName") // Required by Nominatim
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                e.printStackTrace()
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                response.body?.let { responseBody ->
-                    val json = responseBody.string()
-                    val jsonArray = JsonParser.parseString(json).asJsonArray
-
-                    if (jsonArray.size() > 0) {
-                        val obj = jsonArray[0].asJsonObject
-                        val lat = obj.get("lat").asString.toDouble()
-                        val lon = obj.get("lon").asString.toDouble()
-
-                        activity?.runOnUiThread {
-                            val firebaseGeoPoint  = GeoPoint(lat, lon)
-                            val osmdroidGeoPoint = org.osmdroid.util.GeoPoint(lat, lon) // Convert to osmdroid GeoPoint
-
-                            binding?.mapView?.controller?.setCenter(osmdroidGeoPoint)
-                            binding?.mapView?.controller?.setZoom(15.0)
-                            currentGeoPoint = firebaseGeoPoint
-                        }
-                    }
-                }
-            }
-        })
     }
 
     private fun centerMapOnUser(point: GeoPoint) {
@@ -238,7 +141,7 @@ class AddPostFragment : Fragment() {
         // Add an overlay to capture map clicks
         val mapEventsOverlay = MapEventsOverlay(object : MapEventsReceiver {
             override fun singleTapConfirmedHelper(p: OSGeoPoint): Boolean {
-                currentGeoPoint = GeoPoint(p.latitude, p.longitude)
+                val geoPoint = GeoPoint(p.latitude, p.longitude)
                 binding?.selectedLocationTextView?.text = "Selected Location: (${p.latitude}, ${p.longitude})"
                 return true
             }
@@ -251,10 +154,8 @@ class AddPostFragment : Fragment() {
     private fun setupImagePicker() {
         imagePicker = ImagePickerUtil(this) { bitmap ->
             bitmap?.let {
-                if (!selectedImages.contains(it)) { // Prevent duplicates
-                    selectedImages.add(it)
-                    photosGridAdapter.notifyItemInserted(selectedImages.size - 1) // Notify adapter
-                }
+                viewModel.addImage(it)
+                photosGridAdapter.notifyDataSetChanged()
             }
         }
     }
@@ -262,45 +163,41 @@ class AddPostFragment : Fragment() {
     private fun setupListeners() {
         binding?.addPhotosButton?.setOnClickListener {
             // Open gallery to add photos
-            imagePicker.showImagePickerDialog() // Opens image picker
+            imagePicker.showImagePickerDialog()
         }
 
         binding?.sharePostButton?.setOnClickListener {
-            if (!validateInputs()) return@setOnClickListener  // Stop execution if validation fails
-            createPost()
-        }
-    }
+            val description = binding?.descriptionEditText?.text.toString().trim()
+            val locationName = binding?.locationNameEditText?.text.toString().trim()
 
-    private fun createPost() {
-        val description = binding?.descriptionEditText?.text.toString().trim()
-        val locationName = binding?.locationNameEditText?.text.toString().trim()
-        val timestamp = Timestamp.now()
-
-        authManager.getCurrentUser()?.let {
-            val post = Post(
-                id = "", // Auto-generated by Firestore
-                locationName = locationName,
-                description = description,
-                photos = listOf(), // Handled in Model
-                location = currentGeoPoint ?: GeoPoint(0.0, 0.0),
-                creationTime = timestamp,
-                ownerId = it.uid
-            )
-
-            Model.shared.addPost(post, selectedImages) {
-                Log.d(TAG, "createPost: added photos: ${selectedImages.size}")
-                val action = AddPostFragmentDirections.actionAddPostFragmentToAllPostsFragment()
-                findNavController().navigate(action)
-                Toast.makeText(requireContext(), "Post shared successfully!", Toast.LENGTH_SHORT).show()
+            if (validateInputs(description, locationName)) {
+                viewModel.createPost(description, locationName) {
+                    // This will be called when post is created successfully
+                    Toast.makeText(requireContext(), "Post shared successfully!", Toast.LENGTH_SHORT).show()
+                    findNavController().navigate(AddPostFragmentDirections.actionAddPostFragmentToAllPostsFragment())
+                }
             }
         }
+
+        binding?.searchLocationTextView?.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {}
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (!s.isNullOrBlank() && s.length > 2) {
+                    viewModel.fetchAddressSuggestions(s.toString())
+                }
+            }
+        })
+
+        binding?.searchLocationTextView?.setOnItemClickListener { _, _, position, _ ->
+            val selectedAddress = binding?.searchLocationTextView?.adapter?.getItem(position) as String
+            binding?.searchLocationTextView?.setText(selectedAddress)
+            binding?.selectedLocationTextView?.text = selectedAddress
+            viewModel.fetchGeoLocation(selectedAddress)
+        }
     }
 
-
-    private fun validateInputs(): Boolean {
-        val description = binding?.descriptionEditText?.text.toString().trim()
-        val locationName = binding?.locationNameEditText?.text.toString().trim()
-
+    private fun validateInputs(description: String, locationName: String): Boolean {
         var isValid = true
 
         if (!InputValidator.validateRequiredTextField(locationName, binding?.locationInputLayout)) {
@@ -309,7 +206,7 @@ class AddPostFragment : Fragment() {
         if (!InputValidator.validateRequiredTextField(description, binding?.descriptionInputLayout)) {
             isValid = false
         }
-        if (selectedImages.isEmpty()) {
+        if (viewModel.selectedImages.isEmpty()) {
             Toast.makeText(requireContext(), "Please add at least one photo", Toast.LENGTH_SHORT).show()
             isValid = false
         }
