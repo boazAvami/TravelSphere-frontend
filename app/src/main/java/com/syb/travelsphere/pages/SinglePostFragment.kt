@@ -37,8 +37,8 @@ class SinglePostFragment : Fragment() {
                     Model.shared.getUserById(it) { user ->
                         Log.d("TAG", "onViewCreated: $user")
                         binding?.userNameText?.text = user?.userName
-                        user?.profilePictureUrl?.let { it1 ->
-                            Model.shared.getImageByUrl(it1) { image ->
+                        user?.profilePictureUrl?.let { profilePictureUrl ->
+                            Model.shared.getImageByUrl(profilePictureUrl) { image ->
                                 binding?.userProfilePicture?.setImageBitmap(image)
                             }
                         }
@@ -48,8 +48,8 @@ class SinglePostFragment : Fragment() {
                 binding?.locationNameText?.text = "Took place in: ${post?.locationName}"
                 binding?.descriptionText?.text = "Description: ${post?.description}"
                 binding?.timestampText?.text = "Created at: ${formatTimestamp(post!!.creationTime)}"
-                post.photos[0].let { it1 ->
-                    Model.shared.getImageByUrl(it1) { image ->
+                post.photos[0].let { url ->
+                    Model.shared.getImageByUrl(url) { image ->
                         run {
                             binding?.photoViewPager?.setImageBitmap(image)
                         }
@@ -57,5 +57,10 @@ class SinglePostFragment : Fragment() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        binding = null
     }
 }

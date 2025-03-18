@@ -10,7 +10,7 @@ import com.syb.travelsphere.model.Post
 
 @Dao
 interface PostDao {
-    @Query("SELECT * FROM posts")
+    @Query("SELECT * FROM posts ORDER BY creationTime DESC")
     fun getAllPosts(): LiveData<List<Post>>
 
     @Query("SELECT * FROM posts WHERE id = :id")

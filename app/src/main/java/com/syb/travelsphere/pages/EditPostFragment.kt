@@ -60,7 +60,7 @@ class EditPostFragment : Fragment() {
             description = newDescription,
             locationName = newLocationName
         )
-        //todo: is that correct??
+
         Log.d("TAG", "onViewCreated: $newDescription $newLocationName ")
         Model.shared.editPost(newPost) {
         }
@@ -89,8 +89,8 @@ class EditPostFragment : Fragment() {
             post?.ownerId?.let {
                 Model.shared.getUserById(it) { user ->
                     binding?.userNameText?.text = user?.userName
-                    user?.profilePictureUrl?.let { it1 ->
-                        Model.shared.getImageByUrl(it1) { image ->
+                    user?.profilePictureUrl?.let { url ->
+                        Model.shared.getImageByUrl(url) { image ->
                             run {
                                 binding?.userProfilePicture?.setImageBitmap(image)
                             }
@@ -131,8 +131,8 @@ class EditPostFragment : Fragment() {
     }
 
 
-    override fun onDestroyView() {
-        super.onDestroyView()
+    override fun onDestroy() {
+        super.onDestroy()
         binding = null
     }
 

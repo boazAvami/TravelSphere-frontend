@@ -434,7 +434,7 @@ class Model private constructor() {
                 executor.execute {
                     database.runInTransaction {
                         // TODO: delete only not included users
-//                        database.userDao().clearAllUsers()
+                        database.userDao().clearAllUsers()
                         for (user in usersList) {
                             database.userDao().insertUser(user)
                             Log.d("InsertedUserCheck", "Inserted User: ${user.userName}, Geohash: ${user.geoHash}")

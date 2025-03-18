@@ -100,7 +100,6 @@ class ProfileFragment : Fragment() {
                         if (userProfilePictureUrl != null) {
                             Model.shared.getImageByUrl(userProfilePictureUrl) { bitmap ->
                                 binding?.userProfilePicture?.setImageBitmap(bitmap)
-                                Log.d(TAG, "fetchUserData: bitmap $bitmap")
                             }
                         } else {
                             // If decoding fails, set a default image
