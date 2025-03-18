@@ -34,8 +34,10 @@ class AllPostsFragment : Fragment() {
         viewModel.posts.observe(viewLifecycleOwner) { posts ->
             Log.d(TAG, "UI updated: Received ${posts.size} posts")
 
+            // ??Show loading state while fetching users
+            binding?.swipeToRefresh?.isRefreshing = true
+
             viewModel.fetchPostOwnerUsers(posts) { usersMap ->
-                Log.d(TAG, "UI Updated: Showing ${posts.size} posts and ${usersMap.size} usernames")
 
                 postListAdapter.update(posts, usersMap) // Update adapter with posts & usernames
                 binding?.mapComponent?.displayPosts(posts) { postId ->
