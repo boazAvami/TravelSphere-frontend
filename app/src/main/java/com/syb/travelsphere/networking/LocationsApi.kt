@@ -1,11 +1,11 @@
-package com.syb.travelsphere.services
+package com.syb.travelsphere.networking
 
 import com.google.gson.JsonArray
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-interface LocationApiService {
+interface LocationApi {
 
     @GET("search")
     fun fetchAddressSuggestions(

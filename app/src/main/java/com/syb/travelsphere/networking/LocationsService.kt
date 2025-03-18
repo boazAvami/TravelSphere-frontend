@@ -1,4 +1,4 @@
-package com.syb.travelsphere.services
+package com.syb.travelsphere.networking
 
 import android.util.Log
 import com.google.firebase.firestore.GeoPoint
@@ -9,7 +9,7 @@ import retrofit2.Response
 
 class LocationsService {
 
-    private val apiService = RetrofitClient.instance
+    private val locationsApi = RetrofitClient.locationsApiClient
 
     private fun <T> makeRequest(
         call: Call<T>,
@@ -41,7 +41,7 @@ class LocationsService {
     // Fetch address suggestions
     fun fetchAddressSuggestions(query: String, callback: (List<String>?) -> Unit) {
         makeRequest(
-            call = apiService.fetchAddressSuggestions(query),
+            call = locationsApi.fetchAddressSuggestions(query),
             parseResponse = { jsonArray ->
                 (jsonArray as? JsonArray)?.takeIf { it.size() > 0 }?.mapNotNull {
                     it.asJsonObject.get("display_name")?.asString
@@ -55,7 +55,7 @@ class LocationsService {
     // Fetch geo location for an address
     fun fetchGeoLocation(address: String, callback: (GeoPoint?) -> Unit) {
         makeRequest(
-            call = apiService.fetchGeoLocation(address),
+            call = locationsApi.fetchGeoLocation(address),
             parseResponse = { jsonArray ->
                 (jsonArray as? JsonArray)?.takeIf { it.size() > 0 }?.let {
                     val obj = it[0].asJsonObject
