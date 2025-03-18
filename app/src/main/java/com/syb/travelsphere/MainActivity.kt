@@ -235,7 +235,5 @@ class MainActivity : AppCompatActivity() {
    * 18. order posts in desc ✅
    ==============================================
    14. fix the add map centering - after navigating out and then returning it stop working  ✅
-   13. make the project pretty *
-   9.
-   12. a
+   13. make the project pretty
 */
