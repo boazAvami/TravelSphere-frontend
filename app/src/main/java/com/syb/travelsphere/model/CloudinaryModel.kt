@@ -104,7 +104,7 @@ class CloudinaryModel {
     }
 
     fun getImageByUrl(imageUrl: String, callback: BitmapCallback) {
-        if (imageUrl.isNullOrEmpty()) {
+        if (imageUrl.isNullOrEmpty()) { //TODO: counter and retry inside runnable
         } else {
             Picasso.get()
                 .load(imageUrl)

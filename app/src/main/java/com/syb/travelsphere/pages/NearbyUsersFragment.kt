@@ -46,6 +46,7 @@ class NearbyUsersFragment : Fragment() {
 
 
     private var currentRadius = 30.0 // Default radius 30km
+    private lateinit var loc: GeoPoint
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -69,13 +70,22 @@ class NearbyUsersFragment : Fragment() {
             setRadius(5.0) }
 
 
+        GeoUtils.getCurrentLocation(requireContext()) { userLocation ->
+            if (userLocation != null) {
+                this.loc = userLocation
+            }
+        }
+
         viewModel.nearbyUsers.observe(viewLifecycleOwner) { users ->
             Log.d(TAG, "UI updated: Received ${users?.size ?: 0} users for radius $currentRadius KM")
 
 //            usersListAdapter.update(users)
+            // TODO: add function for vakidation data
             binding?.userListRecyclerView?.post {
-                usersListAdapter.update(users) // Ensure UI updates on main thread
-                forceRecyclerViewUpdate() // Ensure UI updates properly
+                val  users = loc?.let { Model.shared.getNearbyUsers(it, currentRadius).value }
+                Log.d(TAG, "onCreateView: users : ${users?.size}")
+                usersListAdapter.update(loc?.let { Model.shared.getNearbyUsers(it, currentRadius).value }) // Ensure UI updates on main thread // TODO:
+                forceRecyclerViewUpdate() // Ensure UI updates properly TODO: ??
             }
 
             binding?.mapComponent?.displayUsers(users) { userId ->
