@@ -72,7 +72,7 @@ data class User(
         }
     }
 
-    val json: HashMap<String, Any?> //TODO: Why need ANY? and not just Any without the '?'
+    val json: HashMap<String, Any?>
         get() {
             return hashMapOf(
                 ID_KEY to id,

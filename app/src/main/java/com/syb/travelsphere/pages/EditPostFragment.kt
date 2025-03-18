@@ -1,12 +1,17 @@
 package com.syb.travelsphere.pages
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.Navigation
+import com.syb.travelsphere.R
 import com.syb.travelsphere.databinding.FragmentEditPostBinding
 import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.Post
@@ -17,6 +22,7 @@ class EditPostFragment : Fragment() {
     private var binding: FragmentEditPostBinding? = null
     private lateinit var post: Post
     private var postId: String? = null // Store postId
+    private val viewModel: ProfileViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -44,11 +50,9 @@ class EditPostFragment : Fragment() {
         binding?.editButton?.setOnClickListener {
             if (!validateInputs()) return@setOnClickListener  // Stop execution if validation fails
             editPost()
-            Navigation.findNavController(view).popBackStack()
         }
         binding?.deleteButton?.setOnClickListener {
             deletePost()
-            Navigation.findNavController(view).popBackStack()
         }
     }
 
@@ -60,22 +64,40 @@ class EditPostFragment : Fragment() {
             description = newDescription,
             locationName = newLocationName
         )
-        //todo: is that correct??
-        Log.d("TAG", "onViewCreated: $newDescription $newLocationName ")
+
         Model.shared.editPost(newPost) {
+            binding?.progressBar?.visibility = View.VISIBLE
+            binding?.deleteButton?.isEnabled = false
+            binding?.deleteButton?.isEnabled = false
+
+            Handler(Looper.getMainLooper()).post {
+                viewModel.notifyPostModified()
+                binding?.progressBar?.visibility = View.GONE
+                view?.let { Navigation.findNavController(it).popBackStack() }
+                Toast.makeText(requireContext(), "Post edited successfully!", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
     private fun deletePost() {
-        Model.shared.deletePost(post) {
+        binding?.progressBar?.visibility = View.VISIBLE
+        binding?.deleteButton?.isEnabled = false
+        binding?.editButton?.isEnabled = false
 
+        Model.shared.deletePost(post) {
+            Handler(Looper.getMainLooper()).post {
+                viewModel.notifyPostModified()
+                binding?.progressBar?.visibility = View.GONE
+                view?.let { Navigation.findNavController(it).popBackStack() }
+                Toast.makeText(requireContext(), "Post delete successfully!", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
     private fun getPost() {
         Log.d(TAG, "getPost: test")
-        postId?.let {
-            Model.shared.getPostById(it) {
+        postId?.let { id ->
+            Model.shared.getPostById(id) {
                 Log.d(TAG, "getPost: $it")
                 if (it != null) {
                     this.post = it
@@ -89,11 +111,20 @@ class EditPostFragment : Fragment() {
             post?.ownerId?.let {
                 Model.shared.getUserById(it) { user ->
                     binding?.userNameText?.text = user?.userName
-                    user?.profilePictureUrl?.let { it1 ->
-                        Model.shared.getImageByUrl(it1) { image ->
-                            run {
-                                binding?.userProfilePicture?.setImageBitmap(image)
+                    if (!user?.profilePictureUrl.isNullOrEmpty()) {
+                        try {
+                            val userProfilePictureUrl = user?.profilePictureUrl
+                            if (userProfilePictureUrl != null) {
+                                Model.shared.getImageByUrl(userProfilePictureUrl) { bitmap ->
+                                    binding?.userProfilePicture?.setImageBitmap(bitmap)
+                                }
+                            } else {
+                                // If decoding fails, set a default image
+                                binding?.userProfilePicture?.setImageResource(R.drawable.profile_icon)
                             }
+                        } catch (e: Exception) {
+                            // If decoding fails, set a default image
+                            binding?.userProfilePicture?.setImageResource(R.drawable.profile_icon)
                         }
                     }
                 }
@@ -131,8 +162,8 @@ class EditPostFragment : Fragment() {
     }
 
 
-    override fun onDestroyView() {
-        super.onDestroyView()
+    override fun onDestroy() {
+        super.onDestroy()
         binding = null
     }
 

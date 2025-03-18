@@ -100,6 +100,7 @@ class FirebaseModel {
 
         database.collection(Constants.COLLECTIONS.USERS)
             .whereGreaterThanOrEqualTo(User.GEOHASH_KEY, minGeoHash)
+
             .whereLessThanOrEqualTo(User.GEOHASH_KEY, maxGeoHash)
             .get()
             .addOnSuccessListener { documents ->
@@ -112,7 +113,7 @@ class FirebaseModel {
                         val distance = GeoUtils.calculateDistance(currentLocation, userLocation)
                         Log.d(TAG, "User ${user.userName} -> Distance: $distance KM (Radius: $radiusInKm KM)")
 
-                        if (distance <= radiusInKm) {  // Convert km to meters
+                        if (distance <= radiusInKm) {
                             usersList.add(user)
                         }
                     }

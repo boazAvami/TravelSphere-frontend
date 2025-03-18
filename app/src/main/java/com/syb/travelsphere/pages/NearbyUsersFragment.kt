@@ -7,34 +7,19 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.syb.travelsphere.R
-import com.syb.travelsphere.components.MapComponent
 import com.syb.travelsphere.components.UserListAdapter
-import com.syb.travelsphere.services.TravelService
-import com.syb.travelsphere.services.User
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.firestore.GeoPoint
 import com.syb.travelsphere.databinding.FragmentNearbyUsersBinding
-import com.syb.travelsphere.model.FirebaseModel
 import com.syb.travelsphere.model.Model
-import com.syb.travelsphere.pages.AllPostsFragment.Companion
-import com.syb.travelsphere.ui.PostListAdapter
 import com.syb.travelsphere.utils.GeoUtils
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class NearbyUsersFragment : Fragment() {
 
@@ -46,6 +31,7 @@ class NearbyUsersFragment : Fragment() {
 
 
     private var currentRadius = 30.0 // Default radius 30km
+    private lateinit var loc: GeoPoint
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -69,17 +55,22 @@ class NearbyUsersFragment : Fragment() {
             setRadius(5.0) }
 
 
+        GeoUtils.getCurrentLocation(requireContext()) { userLocation ->
+            if (userLocation != null) {
+                this.loc = userLocation
+            }
+        }
+
         viewModel.nearbyUsers.observe(viewLifecycleOwner) { users ->
             Log.d(TAG, "UI updated: Received ${users?.size ?: 0} users for radius $currentRadius KM")
 
-//            usersListAdapter.update(users)
             binding?.userListRecyclerView?.post {
+                Log.d(TAG, "onCreateView: users : ${users?.size}")
                 usersListAdapter.update(users) // Ensure UI updates on main thread
-                forceRecyclerViewUpdate() // Ensure UI updates properly
             }
 
-            binding?.mapComponent?.displayUsers(users) { userId ->
-                val action = NearbyUsersFragmentDirections.actionGlobalDisplayUserFragment(userId)
+            binding?.mapComponent?.displayUsers(users) { userId, username ->
+                val action = NearbyUsersFragmentDirections.actionGlobalDisplayUserFragment( userId,  username )
                 findNavController().navigate(action)
 
             }
@@ -160,16 +151,6 @@ class NearbyUsersFragment : Fragment() {
         Log.d(TAG, "Updating radius: $radius KM at location")
         refreshNearbyUsers()
     }
-
-    private fun forceRecyclerViewUpdate() {
-        binding?.userListRecyclerView?.apply {
-            adapter = null  // Remove adapter first
-            layoutManager = null // Reset layout manager
-            layoutManager = LinearLayoutManager(context) // Reapply layout manager
-            adapter = usersListAdapter // Reattach adapter
-        }
-    }
-
 
     // Function to show the user's phone number in a popup
     private fun showUserPhonePopup(phone: String) {
