@@ -46,18 +46,16 @@
 <!--            android:scaleType="centerCrop"/>-->
 
         <!-- User Profile Picture -->
-        <ImageView
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/profileImage"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
             android:layout_marginEnd="16dp"
             android:src="@drawable/profile_icon"
             android:scaleType="centerCrop"
             android:layout_gravity="center"
-            android:clipToOutline="true"
             android:layout_marginTop="24dp"
-            android:outlineProvider="background"
-            android:background="@drawable/circle_shape"
+            app:shapeAppearanceOverlay="@style/circleImageView"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"/>
