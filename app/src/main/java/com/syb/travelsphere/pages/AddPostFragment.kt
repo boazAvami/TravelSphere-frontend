@@ -289,10 +289,9 @@ class AddPostFragment : Fragment() {
 
             Model.shared.addPost(post, selectedImages) {
                 Log.d(TAG, "createPost: added photos: ${selectedImages.size}")
-                Toast.makeText(requireContext(), "Post shared successfully!", Toast.LENGTH_SHORT).show()
-
                 val action = AddPostFragmentDirections.actionAddPostFragmentToAllPostsFragment()
                 findNavController().navigate(action)
+                Toast.makeText(requireContext(), "Post shared successfully!", Toast.LENGTH_SHORT).show()
             }
         }
     }

@@ -100,15 +100,14 @@ class ProfileFragment : Fragment() {
                         if (userProfilePictureUrl != null) {
                             Model.shared.getImageByUrl(userProfilePictureUrl) { bitmap ->
                                 binding?.userProfilePicture?.setImageBitmap(bitmap)
-                                Log.d(TAG, "fetchUserData: bitmap $bitmap")
                             }
                         } else {
                             // If decoding fails, set a default image
-                            binding?.userProfilePicture?.setImageResource(R.drawable.default_user)
+                            binding?.userProfilePicture?.setImageResource(R.drawable.profile_icon)
                         }
                     } catch (e: Exception) {
                         // If decoding fails, set a default image
-                        binding?.userProfilePicture?.setImageResource(R.drawable.default_user)
+                        binding?.userProfilePicture?.setImageResource(R.drawable.profile_icon)
                     }
                 }
             }

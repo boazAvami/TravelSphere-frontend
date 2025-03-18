@@ -37,6 +37,7 @@
         <action
             android:id="@+id/action_nearbyUsersFragment_to_addPostFragment"
             app:destination="@id/addPostFragment"/>
+
     </fragment>
 
     <!-- New Post Fragment -->
@@ -115,11 +116,14 @@
     <fragment
         android:id="@+id/displayUserFragment"
         android:name="com.syb.travelsphere.pages.DisplayUserFragment"
-        android:label="Interesting User"
+        android:label="{username}"
         tools:layout="@layout/fragment_display_user">
     <argument
         android:name="userId"
         app:argType="string"/>
+        <argument
+            android:name="username"
+            app:argType="string"/>
     </fragment>
     <action android:id="@+id/action_global_SinglePostFragment" app:destination="@id/singlePostFragment" />
     <action android:id="@+id/action_global_EditPostFragment" app:destination="@id/editPostFragment" />

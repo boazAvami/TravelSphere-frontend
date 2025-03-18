@@ -17,11 +17,9 @@ import com.squareup.picasso.Picasso
 import com.syb.travelsphere.BuildConfig
 import com.syb.travelsphere.base.BitmapCallback
 import com.syb.travelsphere.base.BooleanCallback
-import com.syb.travelsphere.base.EmptyCallback
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.lang.Error
 
 class CloudinaryModel {
     init {
@@ -103,25 +101,48 @@ class CloudinaryModel {
         return file
     }
 
-    fun getImageByUrl(imageUrl: String, callback: BitmapCallback) {
-        if (imageUrl.isNullOrEmpty()) {
-        } else {
-            Picasso.get()
-                .load(imageUrl)
-                .config(Bitmap.Config.ARGB_8888) // Ensures high quality
-                .into(object : com.squareup.picasso.Target {
-                    override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
-                        callback(bitmap) // Successfully loaded
-                    }
-
-                    override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
-                        callback(null) // Failed to load
-                    }
-
-                    override fun onPrepareLoad(placeHolderDrawable: Drawable?) {}
-                })
+    fun getImageByUrl(imageUrl: String, callback: (Bitmap?) -> Unit) {
+        // String.isNullOrEmpty() won't work on a non-nullable parameter
+        if (imageUrl.isEmpty()) {
+            callback(null)
+            return
         }
 
+        val target = object : com.squareup.picasso.Target {
+            override fun onBitmapLoaded(bitmap: Bitmap, from: Picasso.LoadedFrom) {
+                callback(bitmap) // Successfully loaded
+            }
+
+            override fun onBitmapFailed(e: Exception, errorDrawable: Drawable?) {
+                // Log the error for debugging
+                Log.e(TAG, "ImageLoading: Failed to load image: $imageUrl", e)
+                callback(null) // Failed to load
+            }
+
+            override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
+            }
+        }
+
+        // Keeps a strong reference to the target to prevent garbage collection
+        TargetManager.addTarget(target)
+
+        Picasso.get()
+            .load(imageUrl)
+            .config(Bitmap.Config.ARGB_8888)
+            .into(target)
+    }
+
+    // Singleton to keep strong references to targets
+    object TargetManager {
+        private val targets = mutableSetOf<com.squareup.picasso.Target>()
+
+        fun addTarget(target: com.squareup.picasso.Target) {
+            targets.add(target)
+        }
+
+        fun removeTarget(target: com.squareup.picasso.Target) {
+            targets.remove(target)
+        }
     }
 
     companion object {

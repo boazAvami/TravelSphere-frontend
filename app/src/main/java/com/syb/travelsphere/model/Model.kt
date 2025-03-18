@@ -389,6 +389,7 @@ class Model private constructor() {
                 cloudinaryModel.deleteImage(imageUrl) { success ->
                     if (!success) {
                         Log.e(TAG, "Failed to delete post image: $imageUrl")
+                        callback()
                     }
                     deletedImagesCount++
 
@@ -404,6 +405,7 @@ class Model private constructor() {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error deleting post: ${e.message}")
+            callback()
         }
     }
 
@@ -426,34 +428,59 @@ class Model private constructor() {
     private val GEO_HASH_ACCURACY = 1.2
     fun refreshAllNearbyUsers(location: GeoPoint, radius: Double, callback: EmptyCallback) {
         loadingState.postValue(LoadingState.LOADING)
+        val lastUpdated: Long = User.lastUpdated
+
         try {
+            // Get all nearby users regardless of update time
             firebaseModel.getNearbyUsers(
                 currentLocation = location,
                 radiusInKm = radius * GEO_HASH_ACCURACY
-            ) { usersList ->
-                executor.execute {
-                    database.runInTransaction {
-                        database.userDao().clearAllUsers()
-                        for (user in usersList) {
-                            database.userDao().insertUser(user)
-                            Log.d("InsertedUserCheck", "Inserted User: ${user.userName}, Geohash: ${user.geoHash}")
-                        }
-                    }
+            ) { allNearbyUsers ->
+                // Get only recently updated users
+                firebaseModel.getAllUsers(lastUpdated) { recentlyUpdatedUsers ->
+                    executor.execute {
+                        var currentTime = lastUpdated
 
-                    mainHandler.post {
-                        val (minGeoHash, maxGeoHash) = GeoUtils.getGeoHashRange(location, radius)
-                        // Observe Room
-                        val updatedUsers = database.userDao().getUsersInGeoHashRange(minGeoHash, maxGeoHash)
-                        updatedUsers.observeForever { users ->
-                            _nearbyUsers.postValue(users)  // Ensure LiveData update
-                            Log.d(TAG, "Users in Room DB after update: ${users.map { it.userName }}")
+                        // Create a map for quick lookup of recently updated users
+                        val updatedUsersMap = recentlyUpdatedUsers.associateBy { it.id }
+
+                        for (user in allNearbyUsers) {
+                            // Check if this user was recently updated
+                            val updatedUser = updatedUsersMap[user.id]
+
+                            // If user was updated, use the newer version, otherwise use existing
+                            val finalUser = updatedUser ?: user
+
+                            database.userDao().insertUser(finalUser)
+
+                            finalUser.lastUpdated?.let {
+                                if (currentTime < it) {
+                                    currentTime = it
+                                }
+                            }
                         }
+
+                        User.lastUpdated = currentTime
+
+                        val filteredUsers = allNearbyUsers.filter { user ->
+                            user.location?.let { userLoc ->
+                                GeoUtils.calculateDistance(location, userLoc) <= radius
+                            } ?: false
+                        }
+
+                        mainHandler.post {
+                            _nearbyUsers.postValue(filteredUsers)
+                        }
+
+                        loadingState.postValue(LoadingState.LOADED)
+                        callback()
                     }
-                    loadingState.postValue(LoadingState.LOADED)
                 }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error fetching nearby users: ${e.message}")
+            loadingState.postValue(LoadingState.LOADED)
+            callback()
         }
     }
 

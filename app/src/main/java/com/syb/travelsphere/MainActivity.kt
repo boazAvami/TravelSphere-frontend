@@ -191,23 +191,13 @@ class MainActivity : AppCompatActivity() {
         authUser?.let {
             Model.shared.getUserById(authUser.uid) { user ->
                 if (user?.isLocationShared == true) { // Only update if location sharing is enabled
-//                    GeoUtils.getCurrentLocation(this) { geoPoint ->
-//                        if (geoPoint != null) {
-//                            val updatedUser = user.copy(
-//                                location = geoPoint,
-//                                geoHash = GeoUtils.generateGeoHash(geoPoint)
-//                            )
-                            Model.shared.editUser(
-                                user,
-                                context = this,
-                                newProfilePicture = null
-                            ) {
-                                Log.d(TAG, "User location updated in DB")
-                            }
-//                        } else {
-//                            Log.e("MainActivity", "Failed to get location for update")
-//                        }
-//                    }
+                    Model.shared.editUser(
+                        user,
+                        context = this,
+                        newProfilePicture = null
+                    ) {
+                        Log.d(TAG, "User location updated in DB")
+                    }
                 }
             }
         }
@@ -222,15 +212,6 @@ class MainActivity : AppCompatActivity() {
                 ) == PackageManager.PERMISSION_GRANTED
     }
 
-
-
-
-
-
-
-
-
-
 }
 
 /*TODO:
@@ -244,14 +225,15 @@ class MainActivity : AppCompatActivity() {
    14. fix nearby users bug with the distance radius ✅
    * add onFailure to everything and error handling ✅
    * add loading circle ✅
-   5. navigation: make the arrow back work ??
-   * split adapter and view holder
-   16. retrofit placement - place the secrets network API in another place (like with the cloudinary) - with boaz -
+   * 5. navigation: make the arrow back work  ✅
+   * split adapter and view holder ✅
+   * get image inside a runnable? ✅
+   * in the nearby add a function validation ✅
+   * pass in the title the users name in the display user fragment ✅
+   16. retrofit placement - place the secrets network API in another place (like with the cloudinary) - SHIRIN
+   *17. order posts from the new to the old ✅
+   * 18. order posts in desc ✅
    ==============================================
-   14. fix the add map centering - after navigating out and then returning it stop working ??
-   13. make the project pretty *
-   9.
-   12. a
-
-
+   14. fix the add map centering - after navigating out and then returning it stop working  ✅
+   13. make the project pretty
 */
