@@ -389,6 +389,7 @@ class Model private constructor() {
                 cloudinaryModel.deleteImage(imageUrl) { success ->
                     if (!success) {
                         Log.e(TAG, "Failed to delete post image: $imageUrl")
+                        callback()
                     }
                     deletedImagesCount++
 
@@ -404,6 +405,7 @@ class Model private constructor() {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error deleting post: ${e.message}")
+            callback()
         }
     }
 

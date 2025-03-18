@@ -1,11 +1,14 @@
 package com.syb.travelsphere.pages
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.Navigation
 import com.syb.travelsphere.databinding.FragmentEditPostBinding
 import com.syb.travelsphere.model.Model
@@ -17,6 +20,7 @@ class EditPostFragment : Fragment() {
     private var binding: FragmentEditPostBinding? = null
     private lateinit var post: Post
     private var postId: String? = null // Store postId
+    private val viewModel: ProfileViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -44,11 +48,9 @@ class EditPostFragment : Fragment() {
         binding?.editButton?.setOnClickListener {
             if (!validateInputs()) return@setOnClickListener  // Stop execution if validation fails
             editPost()
-            Navigation.findNavController(view).popBackStack()
         }
         binding?.deleteButton?.setOnClickListener {
             deletePost()
-            Navigation.findNavController(view).popBackStack()
         }
     }
 
@@ -61,21 +63,37 @@ class EditPostFragment : Fragment() {
             locationName = newLocationName
         )
 
-        Log.d("TAG", "onViewCreated: $newDescription $newLocationName ")
         Model.shared.editPost(newPost) {
+            binding?.progressBar?.visibility = View.VISIBLE
+            binding?.deleteButton?.isEnabled = false
+            binding?.deleteButton?.isEnabled = false
+
+            Handler(Looper.getMainLooper()).post {
+                viewModel.notifyPostModified()
+                binding?.progressBar?.visibility = View.GONE
+                view?.let { Navigation.findNavController(it).popBackStack() }
+            }
         }
     }
 
     private fun deletePost() {
-        Model.shared.deletePost(post) {
+        binding?.progressBar?.visibility = View.VISIBLE
+        binding?.deleteButton?.isEnabled = false
+        binding?.editButton?.isEnabled = false
 
+        Model.shared.deletePost(post) {
+            Handler(Looper.getMainLooper()).post {
+                viewModel.notifyPostModified()
+                binding?.progressBar?.visibility = View.GONE
+                view?.let { Navigation.findNavController(it).popBackStack() }
+            }
         }
     }
 
     private fun getPost() {
         Log.d(TAG, "getPost: test")
-        postId?.let {
-            Model.shared.getPostById(it) {
+        postId?.let { id ->
+            Model.shared.getPostById(id) {
                 Log.d(TAG, "getPost: $it")
                 if (it != null) {
                     this.post = it
