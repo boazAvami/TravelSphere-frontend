@@ -79,8 +79,6 @@ dependencies {
     implementation(libs.androidx.room.ktx)
 
     // Navigation
-//    implementation(libs.navigation.fragment.ktx)
-//    implementation(libs.androidx.navigation.ui )
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui )
 
@@ -102,10 +100,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.play.services.location)
+    implementation(libs.play.services.places)
 
-//    implementation(libs.androidx.navigation.fragment.ktx)
-//    implementation(libs.androidx.navigation.ui.ktx)
-//    implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.recyclerview)
 
     testImplementation(libs.junit)
