@@ -10,8 +10,8 @@ import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import android.widget.ArrayAdapter
+import androidx.fragment.app.viewModels
 import com.syb.travelsphere.components.PhotosGridAdapter
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import org.osmdroid.util.GeoPoint as OSGeoPoint
 import com.syb.travelsphere.databinding.FragmentAddPostBinding
@@ -21,13 +21,12 @@ import com.syb.travelsphere.utils.InputValidator
 class AddPostFragment : Fragment() {
 
     private var binding: FragmentAddPostBinding? = null
-    private lateinit var viewModel: AddPostViewModel
+    private val viewModel: AddPostViewModel by viewModels()
     private lateinit var imagePicker: ImagePickerUtil
     private lateinit var photosGridAdapter: PhotosGridAdapter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentAddPostBinding.inflate(inflater, container, false)
-        viewModel = ViewModelProvider(this)[AddPostViewModel::class.java]
         return binding?.root
     }
 
@@ -39,12 +38,9 @@ class AddPostFragment : Fragment() {
     }
 
     private fun setupObservers() {
-        viewModel.selectedImages.observe(viewLifecycleOwner) { images ->
-            photosGridAdapter.notifyDataSetChanged()
-        }
-
+        // We now only need to observe location-related LiveData
         viewModel.locationSuggestions.observe(viewLifecycleOwner) { suggestions ->
-            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, suggestions)
+            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, suggestions ?: emptyList())
             binding?.searchLocationTextView?.setAdapter(adapter)
             adapter.notifyDataSetChanged()
         }
@@ -53,13 +49,6 @@ class AddPostFragment : Fragment() {
             geoPoint?.let {
                 binding?.mapView?.controller?.setCenter(OSGeoPoint(it.latitude, it.longitude))
                 binding?.mapView?.controller?.setZoom(15.0)
-            }
-        }
-
-        viewModel.postCreated.observe(viewLifecycleOwner) { isCreated ->
-            if (isCreated) {
-                Toast.makeText(requireContext(), "Post shared successfully!", Toast.LENGTH_SHORT).show()
-                findNavController().navigate(AddPostFragmentDirections.actionAddPostFragmentToAllPostsFragment())
             }
         }
     }
@@ -72,13 +61,17 @@ class AddPostFragment : Fragment() {
 
     private fun setupImagePicker() {
         imagePicker = ImagePickerUtil(this) { bitmap ->
-            bitmap?.let { viewModel.addImage(it) }
+            bitmap?.let {
+                viewModel.addImage(it)
+                photosGridAdapter.notifyDataSetChanged()
+            }
         }
     }
 
     private fun setupPhotoRecyclerView() {
-        photosGridAdapter = PhotosGridAdapter(viewModel.selectedImages.value ?: mutableListOf()) { position ->
+        photosGridAdapter = PhotosGridAdapter(viewModel.selectedImages) { position ->
             viewModel.removeImage(position)
+            photosGridAdapter.notifyDataSetChanged()
         }
         binding?.photosGridRecyclerView?.apply {
             layoutManager = GridLayoutManager(requireContext(), 4)
@@ -94,7 +87,11 @@ class AddPostFragment : Fragment() {
             val locationName = binding?.locationNameEditText?.text.toString().trim()
 
             if (validateInputs(description, locationName)) {
-                viewModel.createPost(description, locationName)
+                viewModel.createPost(description, locationName) {
+                    // This will be called when post is created successfully
+                    Toast.makeText(requireContext(), "Post shared successfully!", Toast.LENGTH_SHORT).show()
+                    findNavController().navigate(AddPostFragmentDirections.actionAddPostFragmentToAllPostsFragment())
+                }
             }
         }
 
@@ -124,7 +121,7 @@ class AddPostFragment : Fragment() {
         if (!InputValidator.validateRequiredTextField(description, binding?.descriptionInputLayout)) {
             isValid = false
         }
-        if (viewModel.selectedImages.value.isNullOrEmpty()) {
+        if (viewModel.selectedImages.isEmpty()) {
             Toast.makeText(requireContext(), "Please add at least one photo", Toast.LENGTH_SHORT).show()
             isValid = false
         }

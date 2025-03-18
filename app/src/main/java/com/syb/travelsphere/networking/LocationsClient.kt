@@ -5,7 +5,7 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-object RetrofitClient {
+object LocationsClient {
     private const val BASE_URL = BuildConfig.OPENSTREAM_MAP_URL
 
     private val okHttpClient: OkHttpClient by lazy {

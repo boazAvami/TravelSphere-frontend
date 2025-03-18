@@ -18,7 +18,7 @@ class AllPostsFragment : Fragment() {
 
     private var binding: FragmentAllPostsBinding? = null
     private lateinit var postListAdapter: PostListAdapter
-    private val viewModel: AllPostsViewModel by viewModels() // ViewModel instance
+    private val viewModel: AllPostsViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?

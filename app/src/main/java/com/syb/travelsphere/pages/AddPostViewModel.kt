@@ -3,61 +3,45 @@ package com.syb.travelsphere.pages
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.GeoPoint
 import com.syb.travelsphere.auth.AuthManager
 import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.Post
-import com.syb.travelsphere.networking.LocationsService
 
 class AddPostViewModel : ViewModel() {
 
     private val authManager = AuthManager()
-    private val locationService = LocationsService()
 
-    private val _selectedImages = MutableLiveData<MutableList<Bitmap>>(mutableListOf())
-    val selectedImages: LiveData<MutableList<Bitmap>> = _selectedImages
+    val selectedImages = mutableListOf<Bitmap>()
 
-    private val _currentGeoPoint = MutableLiveData<GeoPoint?>()
-    val currentGeoPoint: LiveData<GeoPoint?> = _currentGeoPoint
-
-    private val _locationSuggestions = MutableLiveData<List<String>>()
-    val locationSuggestions: LiveData<List<String>> = _locationSuggestions
-
-    private val _postCreated = MutableLiveData<Boolean>()
-    val postCreated: LiveData<Boolean> = _postCreated
+    val locationSuggestions = Model.shared.addressSuggestions
+    val currentGeoPoint = Model.shared.geoLocation
 
     fun addImage(bitmap: Bitmap) {
-        _selectedImages.value?.let {
-            if (!it.contains(bitmap)) {
-                it.add(bitmap)
-                _selectedImages.postValue(it)
-            }
+        if (!selectedImages.contains(bitmap)) {
+            selectedImages.add(bitmap)
+            // Return true if this function needs to indicate success
         }
     }
 
     fun removeImage(position: Int) {
-        _selectedImages.value?.let {
-            it.removeAt(position)
-            _selectedImages.postValue(it)
+        if (position >= 0 && position < selectedImages.size) {
+            selectedImages.removeAt(position)
+            // Return true if this function needs to indicate success
         }
     }
 
     fun fetchAddressSuggestions(query: String) {
-        locationService.fetchAddressSuggestions(query) { suggestions ->
-            _locationSuggestions.postValue(suggestions ?: emptyList())
-        }
+        Model.shared.fetchAddressSuggestions(query)
     }
 
     fun fetchGeoLocation(address: String) {
-        locationService.fetchGeoLocation(address) { geoPoint ->
-            _currentGeoPoint.postValue(geoPoint)
-        }
+        Model.shared.fetchGeoLocation(address)
     }
 
-    fun createPost(description: String, locationName: String) {
+    fun createPost(description: String, locationName: String, onPostCreated: () -> Unit) {
         authManager.getCurrentUser()?.let { user ->
             val timestamp = Timestamp.now()
             val post = Post(
@@ -65,14 +49,14 @@ class AddPostViewModel : ViewModel() {
                 locationName = locationName,
                 description = description,
                 photos = listOf(),
-                location = _currentGeoPoint.value ?: GeoPoint(0.0, 0.0),
+                location = currentGeoPoint.value ?: GeoPoint(0.0, 0.0),
                 creationTime = timestamp,
                 ownerId = user.uid
             )
 
-            Model.shared.addPost(post, _selectedImages.value ?: emptyList()) {
-                Log.d(TAG, "Post created with ${_selectedImages.value?.size} photos")
-                _postCreated.postValue(true)
+            Model.shared.addPost(post, selectedImages) {
+                Log.d(TAG, "Post created with ${selectedImages.size} photos")
+                onPostCreated()
             }
         }
     }
