@@ -1,10 +1,18 @@
 package com.syb.travelsphere.components
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapShader
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Shader
+import android.graphics.drawable.BitmapDrawable
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.widget.Toast
 import androidx.navigation.NavController
 import com.syb.travelsphere.R
+import com.syb.travelsphere.model.Model
 import com.syb.travelsphere.model.Post
 import com.syb.travelsphere.model.User
 import org.osmdroid.config.Configuration
@@ -91,7 +99,7 @@ class MapComponent @JvmOverloads constructor(
 
     // Method to add markers to the map based on the users
     fun displayUsers(users: List<User>?,
-                     onPostClick: (String) -> Unit) {
+                     onPostClick: (String, String) -> Unit) {
         clearMap();
 
         users?.forEach { user ->
@@ -108,7 +116,7 @@ class MapComponent @JvmOverloads constructor(
     }
 
     // Method to add a marker on the map for a user
-    private fun addUserMarker(lat: Double, lon: Double, user: User, onPostClick: (String) -> Unit) {
+    private fun addUserMarker(lat: Double, lon: Double, user: User, onPostClick: (String, String) -> Unit) {
         val marker = Marker(this)
         marker.icon = resources.getDrawable(R.drawable.location, null) // Placeholder icon
 
@@ -123,15 +131,28 @@ class MapComponent @JvmOverloads constructor(
 //                Model.shared.getImageByUrl(
 //                    imageUrl = it
 //                ) { bitmap ->
-//                    marker.icon = bitmap
+//                    // Convert 100dp to pixels dynamically based on screen density
+//                    val sizeInPx = TypedValue.applyDimension(
+//                        TypedValue.COMPLEX_UNIT_DIP, 30f, resources.displayMetrics
+//                    ).toInt()
+//
+//                    // Resize the bitmap to 100dp x 100dp
+//                    val resizedBitmap = bitmap?.let { it1 -> Bitmap.createScaledBitmap(it1, sizeInPx, sizeInPx, false) }
+//
+//                    // Make the bitmap round
+//                    val roundedBitmap = resizedBitmap?.let { it1 -> getCircularBitmap(it1) }
+//
+//                    // Convert resized Bitmap to Drawable
+//                    val drawable = BitmapDrawable(resources, roundedBitmap)
+//
+//                    marker.icon = drawable
 //                }
-            //marker.icon = TODO: set icon to image profile picture
         }
 
         // Set up marker click listener
         marker.setOnMarkerClickListener { _, _ ->
             // Show user details in a Toast
-            onPostClick(user.id)
+            onPostClick(user.id, user.userName)
             Toast.makeText(context, "User: ${user.userName}\nProfile: ${user.profilePictureUrl}", Toast.LENGTH_LONG).show()
             true
         }
@@ -139,6 +160,24 @@ class MapComponent @JvmOverloads constructor(
         // Add the marker to the map
         overlays.add(marker)
         invalidate()  // Refresh the map to show markers
+    }
+
+    /**
+     * Converts a square Bitmap into a circular one.
+     */
+    private fun getCircularBitmap(bitmap: Bitmap): Bitmap {
+        val output = Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(output)
+
+        val paint = Paint().apply {
+            isAntiAlias = true
+            shader = BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+        }
+
+        val radius = bitmap.width / 2f
+        canvas.drawCircle(radius, radius, radius, paint)
+
+        return output
     }
 
     // Method to center the map on a specific location

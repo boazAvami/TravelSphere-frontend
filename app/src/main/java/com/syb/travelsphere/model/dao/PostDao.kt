@@ -25,6 +25,6 @@ interface PostDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertPost(vararg post: Post)
 
-    @Query("SELECT * FROM posts WHERE ownerId = :ownerId")
+    @Query("SELECT * FROM posts WHERE ownerId = :ownerId ORDER BY creationTime DESC")
     fun getPostsByUser(ownerId: String): List<Post>
 }
