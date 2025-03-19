@@ -59,7 +59,7 @@ class ProfileFragment : Fragment() {
 
                         postListAdapter.update(posts, mapOf(currentUser.uid to user.userName))
 
-                        binding?.mapComponent?.displayPosts(posts) { postId ->
+                        binding?.mapComponent?.displayPosts(posts) { postId, _ ->
                             val action = ProfileFragmentDirections.actionGlobalEditPostFragment(postId)
                             findNavController().navigate(action)
                         }

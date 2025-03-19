@@ -69,8 +69,10 @@ class DisplayUserFragment : Fragment() {
                             userObject = user
                             postListAdapter.update(posts, mapOf(user.id to user.userName))
 
-                            binding?.mapComponent?.displayPosts(posts) { postId ->
-                                val action = DisplayUserFragmentDirections.actionGlobalSinglePostFragment(postId)
+                            binding?.mapComponent?.displayPosts(posts) { postId, ownerId ->
+                                val action = DisplayUserFragmentDirections.actionGlobalSinglePostFragment(postId).apply {
+                                    this.ownerName = user.userName
+                                }
                                 findNavController().navigate(action)
                             }
 

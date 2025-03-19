@@ -237,27 +237,3 @@ class MainActivity : AppCompatActivity() {
     }
 
 }
-
-/*TODO:
-*  - me:
-*  1. make permissions ask before camera, gallery photo and gps ✅ - fix the limited access to gallery.
-*  2. using islocation with others shared from db - add to the query. ✅
-   4. add updating current location in db ✅
-   8. make input validation an util - in settings page and edit post ✅
-   6. add view other user page ✅
-   7. add delete post button ✅
-   14. fix nearby users bug with the distance radius ✅
-   * add onFailure to everything and error handling ✅
-   * add loading circle ✅
-   * 5. navigation: make the arrow back work  ✅
-   * split adapter and view holder ✅
-   * get image inside a runnable? ✅
-   * in the nearby add a function validation ✅
-   * pass in the title the users name in the display user fragment ✅
-   16. retrofit placement - place the secrets network API in another place (like with the cloudinary) - SHIRIN
-   *17. order posts from the new to the old ✅
-   * 18. order posts in desc ✅
-   ==============================================
-   14. fix the add map centering - after navigating out and then returning it stop working  ✅
-   13. make the project pretty
-*/

@@ -39,7 +39,7 @@ class MapComponent @JvmOverloads constructor(
 
     // Method to add markers to the map based on the posts
     fun displayPosts(posts: List<Post>?,
-                     onPostClick: (String) -> Unit
+                     onPostClick: (String, String) -> Unit
     ) {
         clearMap()
 
@@ -51,6 +51,7 @@ class MapComponent @JvmOverloads constructor(
                 post.locationName,
                 post.id,
                 post.description,
+                post.ownerId,
                 onPostClick
             )
         }
@@ -64,6 +65,7 @@ class MapComponent @JvmOverloads constructor(
                     post.locationName,
                     post.id,
                     post.description,
+                    post.ownerId,
                     onPostClick
                 )
             }
@@ -77,7 +79,8 @@ class MapComponent @JvmOverloads constructor(
         title: String,
         postId: String,
         description: String,
-        onPostClick: (String) -> Unit
+        ownerId: String,
+    onPostClick: (String, String) -> Unit
     ) {
         val marker = Marker(this)
         marker.icon = resources.getDrawable(R.drawable.location, null)
@@ -89,7 +92,7 @@ class MapComponent @JvmOverloads constructor(
         // Set up marker click listener
 
         marker.setOnMarkerClickListener { _, _ ->
-            onPostClick(postId) // Call the navigation function passed from the fragment
+            onPostClick(postId, ownerId ) // Call the navigation function passed from the fragment
             true
         }
 

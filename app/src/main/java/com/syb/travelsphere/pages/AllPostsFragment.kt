@@ -89,8 +89,10 @@ class AllPostsFragment : Fragment() {
 
     private fun updateUI(posts: List<Post>, usersMap: Map<String, String>) {
         postListAdapter.update(posts, usersMap)
-        binding?.mapComponent?.displayPosts(posts) { postId ->
-            val action = AllPostsFragmentDirections.actionGlobalSinglePostFragment(postId)
+        binding?.mapComponent?.displayPosts(posts) { postId, ownerId ->
+            val action = AllPostsFragmentDirections.actionGlobalSinglePostFragment(postId).apply {
+                this.ownerName = usersMap[ownerId] ?: "User"
+            }
             findNavController().navigate(action)
         }
 
