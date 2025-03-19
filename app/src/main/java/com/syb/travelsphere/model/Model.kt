@@ -417,7 +417,7 @@ class Model private constructor() {
         }
     }
 
-    private fun uploadImage(image: Bitmap, callback: ImageCallback) {
+    fun uploadImage(image: Bitmap, callback: ImageCallback) {
         try {
             cloudinaryModel.uploadImage(image, callback)
         } catch (e: Exception) {
