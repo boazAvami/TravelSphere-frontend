@@ -62,7 +62,8 @@ class AddPostFragment : Fragment() {
         setupObservers()
         setupMap()
         setupImagePicker()
-        setupPhotoRecyclerView()
+        setupImageView() // New method instead of setupPhotoRecyclerView
+//        setupPhotoRecyclerView()
         setupListeners()
 
         // Get current location immediately
@@ -77,6 +78,31 @@ class AddPostFragment : Fragment() {
         GeoUtils.observeLocationChanges(requireContext()) { userLocation ->
             Log.d(TAG, "New Location: Lat=${userLocation.latitude}, Lon=${userLocation.longitude}")
             binding?.mapView?.centerMapOnLocation(userLocation.latitude, userLocation.longitude)
+        }
+    }
+
+    private fun setupImageView() {
+        // Initially hide the image view and show placeholder
+        updateImageVisibility()
+
+        // Set up remove button click listener
+        binding?.removePhotoButton?.setOnClickListener {
+            viewModel.clearImage()
+            updateImageVisibility()
+        }
+    }
+
+    // Helper method to update UI based on image state
+    private fun updateImageVisibility() {
+        if (viewModel.selectedImage != null) {
+            binding?.selectedPhotoImageView?.setImageBitmap(viewModel.selectedImage)
+            binding?.selectedPhotoImageView?.visibility = View.VISIBLE
+            binding?.noPhotoSelectedText?.visibility = View.GONE
+            binding?.removePhotoButton?.visibility = View.VISIBLE
+        } else {
+            binding?.selectedPhotoImageView?.visibility = View.GONE
+            binding?.noPhotoSelectedText?.visibility = View.VISIBLE
+            binding?.removePhotoButton?.visibility = View.GONE
         }
     }
 
@@ -97,18 +123,18 @@ class AddPostFragment : Fragment() {
         }
     }
 
-    private fun setupPhotoRecyclerView() {
-        val layoutManager = GridLayoutManager(requireContext(), 4) // 4 columns in the grid
-        binding?.photosGridRecyclerView?.layoutManager = layoutManager
-
-        // initialize adapter with the viewModel's selectedImages list
-        photosGridAdapter = PhotosGridAdapter(viewModel.selectedImages) { position ->
-            viewModel.removeImage(position)
-            photosGridAdapter.notifyDataSetChanged()
-        }
-
-        binding?.photosGridRecyclerView?.adapter = photosGridAdapter
-    }
+//    private fun setupPhotoRecyclerView() {
+//        val layoutManager = GridLayoutManager(requireContext(), 4) // 4 columns in the grid
+//        binding?.photosGridRecyclerView?.layoutManager = layoutManager
+//
+//        // initialize adapter with the viewModel's selectedImages list
+//        photosGridAdapter = PhotosGridAdapter(viewModel.selectedImages) { position ->
+//            viewModel.removeImage(position)
+//            photosGridAdapter.notifyDataSetChanged()
+//        }
+//
+//        binding?.photosGridRecyclerView?.adapter = photosGridAdapter
+//    }
 
     override fun onResume() {
         super.onResume()
@@ -154,8 +180,13 @@ class AddPostFragment : Fragment() {
     private fun setupImagePicker() {
         imagePicker = ImagePickerUtil(this) { bitmap ->
             bitmap?.let {
-                viewModel.addImage(it)
-                photosGridAdapter.notifyDataSetChanged()
+                viewModel.setImage(it)
+                // Direct UI update - no adapter needed
+                binding?.selectedPhotoImageView?.setImageBitmap(it)
+                binding?.selectedPhotoImageView?.visibility = View.VISIBLE
+                binding?.noPhotoSelectedText?.visibility = View.GONE
+                binding?.removePhotoButton?.visibility = View.VISIBLE
+//                photosGridAdapter.notifyDataSetChanged()
             }
         }
     }
@@ -163,7 +194,13 @@ class AddPostFragment : Fragment() {
     private fun setupListeners() {
         binding?.addPhotosButton?.setOnClickListener {
             // Open gallery to add photos
-            imagePicker.showImagePickerDialog()
+//            imagePicker.showImagePickerDialog()
+            if (viewModel.selectedImage == null) {
+                // Only show picker if no image is selected
+                imagePicker.showImagePickerDialog()
+            } else {
+                Toast.makeText(requireContext(), "You can only upload one photo. Remove the current one first.", Toast.LENGTH_SHORT).show()
+            }
         }
 
         binding?.sharePostButton?.setOnClickListener {
@@ -206,7 +243,7 @@ class AddPostFragment : Fragment() {
         if (!InputValidator.validateRequiredTextField(description, binding?.descriptionInputLayout)) {
             isValid = false
         }
-        if (viewModel.selectedImages.isEmpty()) {
+        if (viewModel.selectedImage == null) {
             Toast.makeText(requireContext(), "Please add at least one photo", Toast.LENGTH_SHORT).show()
             isValid = false
         }
