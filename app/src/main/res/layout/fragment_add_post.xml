@@ -125,13 +125,59 @@
                 android:text="Add Photos" />
 
             <!-- Photos Grid -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/photosGridRecyclerView"
+<!--            <androidx.recyclerview.widget.RecyclerView-->
+<!--                android:id="@+id/photosGridRecyclerView"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginTop="8dp"-->
+<!--                android:scrollbars="vertical"-->
+<!--                android:padding="4dp" />-->
+
+            <!-- Replace the Photos Grid RecyclerView section with this -->
+            <TextView
+                android:id="@+id/noPhotoSelectedText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:scrollbars="vertical"
-                android:padding="4dp" />
+                android:text="No photo selected"
+                android:textAlignment="center"
+                android:textColor="@color/gray" />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp">
+
+                <ImageView
+                    android:id="@+id/selectedPhotoImageView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="200dp"
+                    android:maxHeight="350dp"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
+                    android:visibility="gone"
+                    android:contentDescription="Selected photo" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/removePhotoButton"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_gravity="top|end"
+                    android:layout_margin="8dp"
+                    android:insetLeft="0dp"
+                    android:insetTop="0dp"
+                    android:insetRight="0dp"
+                    android:insetBottom="0dp"
+                    android:padding="8dp"
+                    android:visibility="gone"
+                    android:backgroundTint="@color/white"
+                    app:icon="@drawable/ic_delete"
+                    app:iconTint="@android:color/holo_red_dark"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp"
+                    app:shapeAppearanceOverlay="@drawable/circle_shape"/>
+            </FrameLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
