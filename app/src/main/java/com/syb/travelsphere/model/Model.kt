@@ -152,18 +152,18 @@ class Model private constructor() {
 
     fun addUser(user: User, image: Bitmap?, callback: EmptyCallback) {
         try {
-        firebaseModel.addUser(user) {
-            image?.let {
-                uploadImage(image) { uri ->
-                    if (!uri.isNullOrBlank()) {
-                        val usr = user.copy(profilePictureUrl = uri)
-                        firebaseModel.addUser(usr, callback)
-                    } else {
-                        callback()
+            firebaseModel.addUser(user) {
+                image?.let {
+                    uploadImage(image) { uri ->
+                        if (!uri.isNullOrBlank()) {
+                            val usr = user.copy(profilePictureUrl = uri)
+                            firebaseModel.addUser(usr, callback)
+                        } else {
+                            callback()
+                        }
                     }
-                }
-            } ?: callback()
-        }
+                } ?: callback()
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Error adding user: ${e.message}")
         }

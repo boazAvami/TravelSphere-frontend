@@ -48,7 +48,7 @@ class EditPostFragment : Fragment() {
                 binding?.photoViewPager?.setImageBitmap(bitmap)
 
                 // Show confirmation that image has been updated
-                Snackbar.make(binding?.root!!, "Image updated successfully", Snackbar.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Image updated successfully", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -155,7 +155,7 @@ class EditPostFragment : Fragment() {
                             Handler(Looper.getMainLooper()).post {
                                 binding?.progressBar?.visibility = View.GONE
                                 binding?.buttonsLayout?.visibility = View.VISIBLE
-                                Snackbar.make(binding?.root!!, "Failed to upload image", Snackbar.LENGTH_LONG).show()
+                                Toast.makeText(requireContext(), "Failed to upload image", Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
@@ -168,7 +168,7 @@ class EditPostFragment : Fragment() {
                 Handler(Looper.getMainLooper()).post {
                     binding?.progressBar?.visibility = View.GONE
                     binding?.buttonsLayout?.visibility = View.VISIBLE
-                    Snackbar.make(binding?.root!!, "Error updating post", Snackbar.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), "Error updating post", Toast.LENGTH_SHORT).show()
                 }
             }
         }.start()
@@ -180,8 +180,7 @@ class EditPostFragment : Fragment() {
                 viewModel.notifyPostModified()
                 binding?.progressBar?.visibility = View.GONE
                 view?.let { Navigation.findNavController(it).popBackStack() }
-                Snackbar.make(requireActivity().findViewById(android.R.id.content),
-                    "Post updated successfully", Snackbar.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Post updated successfully", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -198,8 +197,7 @@ class EditPostFragment : Fragment() {
                         viewModel.notifyPostModified()
                         binding?.progressBar?.visibility = View.GONE
                         view?.let { Navigation.findNavController(it).popBackStack() }
-                        Snackbar.make(requireActivity().findViewById(android.R.id.content),
-                            "Post deleted successfully", Snackbar.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Post deleted successfully", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
@@ -207,7 +205,7 @@ class EditPostFragment : Fragment() {
                 Handler(Looper.getMainLooper()).post {
                     binding?.progressBar?.visibility = View.GONE
                     binding?.buttonsLayout?.visibility = View.VISIBLE
-                    Snackbar.make(binding?.root!!, "Error deleting post", Snackbar.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), "Error deleting post", Toast.LENGTH_SHORT).show()
                 }
             }
         }.start()
@@ -239,57 +237,59 @@ class EditPostFragment : Fragment() {
         // Run data fetching in background thread
         Thread {
             try {
-                Model.shared.getPostById(postId!!) { post ->
-                    post?.ownerId?.let {
-                        Model.shared.getUserById(it) { user ->
-                            // Update UI with user info on main thread
-                            Handler(Looper.getMainLooper()).post {
-                                binding?.userNameText?.text = user?.userName
-                            }
+                postId?.let { postId ->
+                    Model.shared.getPostById(postId) { post ->
+                        post?.ownerId?.let { ownerId ->
+                            Model.shared.getUserById(ownerId) { user ->
+                                // Update UI with user info on main thread
+                                Handler(Looper.getMainLooper()).post {
+                                    binding?.userNameText?.text = user?.userName
+                                }
 
-                            if (!user?.profilePictureUrl.isNullOrEmpty()) {
-                                try {
-                                    val userProfilePictureUrl = user?.profilePictureUrl
-                                    if (userProfilePictureUrl != null) {
-                                        Model.shared.getImageByUrl(userProfilePictureUrl) { bitmap ->
-                                            // Update profile image on main thread
+                                if (!user?.profilePictureUrl.isNullOrEmpty()) {
+                                    try {
+                                        val userProfilePictureUrl = user?.profilePictureUrl
+                                        if (userProfilePictureUrl != null) {
+                                            Model.shared.getImageByUrl(userProfilePictureUrl) { bitmap ->
+                                                // Update profile image on main thread
+                                                Handler(Looper.getMainLooper()).post {
+                                                    binding?.userProfilePicture?.setImageBitmap(bitmap)
+                                                }
+                                            }
+                                        } else {
                                             Handler(Looper.getMainLooper()).post {
-                                                binding?.userProfilePicture?.setImageBitmap(bitmap)
+                                                binding?.userProfilePicture?.setImageResource(R.drawable.profile_icon)
                                             }
                                         }
-                                    } else {
+                                    } catch (e: Exception) {
                                         Handler(Looper.getMainLooper()).post {
                                             binding?.userProfilePicture?.setImageResource(R.drawable.profile_icon)
                                         }
                                     }
-                                } catch (e: Exception) {
-                                    Handler(Looper.getMainLooper()).post {
-                                        binding?.userProfilePicture?.setImageResource(R.drawable.profile_icon)
-                                    }
                                 }
                             }
                         }
-                    }
 
-                    // Update post data on main thread
-                    Handler(Looper.getMainLooper()).post {
-                        binding?.locationNameText?.setText(post?.locationName)
-                        binding?.descriptionText?.setText(post?.description)
-                        binding?.timestampText?.text = "Created on: ${post?.creationTime?.let { formatTimestamp(it) }}"
-                    }
+                        // Update post data on main thread
+                        Handler(Looper.getMainLooper()).post {
+                            binding?.locationNameText?.setText(post?.locationName)
+                            binding?.descriptionText?.setText(post?.description)
+                            binding?.timestampText?.text = "Created on: ${post?.creationTime?.let { formatTimestamp(it) }}"
+                        }
 
-                    post?.photos?.get(0).let { photoUrl ->
-                        if (photoUrl != null) {
-                            Model.shared.getImageByUrl(photoUrl) { image ->
-                                // Update post image and hide progress on main thread
+                        post?.photos?.get(0).let { photoUrl ->
+                            if (photoUrl != null) {
+                                Model.shared.getImageByUrl(photoUrl) { image ->
+                                    // Update post image and hide progress on main thread
+                                    Handler(Looper.getMainLooper()).post {
+                                        binding?.photoViewPager?.setImageBitmap(image)
+                                        binding?.progressBar?.visibility = View.GONE
+                                    }
+                                }
+                            } else {
                                 Handler(Looper.getMainLooper()).post {
-                                    binding?.photoViewPager?.setImageBitmap(image)
                                     binding?.progressBar?.visibility = View.GONE
                                 }
-                            }
-                        } else {
-                            Handler(Looper.getMainLooper()).post {
-                                binding?.progressBar?.visibility = View.GONE
                             }
                         }
                     }

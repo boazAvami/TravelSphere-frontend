@@ -5,6 +5,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.util.Log
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.enableEdgeToEdge
@@ -13,6 +15,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
@@ -22,6 +25,9 @@ import com.syb.travelsphere.auth.AuthActivity
 import com.syb.travelsphere.auth.AuthManager
 import com.syb.travelsphere.databinding.ActivityMainBinding
 import com.syb.travelsphere.model.Model
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
@@ -57,11 +63,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
         // Set up the Toolbar (ActionBar)
         setSupportActionBar(binding.mainToolbar)
 
@@ -186,21 +187,44 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val backgroundExecutor = Executors.newCachedThreadPool()
+    private val mainHandler = Handler(Looper.getMainLooper())
+
     private fun updateUserLocationIfShared() {
-        val authUser = authManager.getCurrentUser()
-        authUser?.let {
-            Model.shared.getUserById(authUser.uid) { user ->
-                if (user?.isLocationShared == true) { // Only update if location sharing is enabled
-                    Model.shared.editUser(
-                        user,
-                        context = this,
-                        newProfilePicture = null
-                    ) {
-                        Log.d(TAG, "User location updated in DB")
+        // Run this on a background thread to avoid blocking UI
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val authUser = authManager.getCurrentUser() ?: return@launch
+
+                // Get the user data
+                Model.shared.getUserById(authUser.uid) { user ->
+                    if (user?.isLocationShared == true) {
+                        // Update location in background
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            try {
+                                Model.shared.editUser(
+                                    user,
+                                    context = this@MainActivity,
+                                    newProfilePicture = null
+                                ) {
+                                    Log.d(TAG, "User location updated in DB")
+                                }
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error updating location: ${e.message}")
+                            }
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in updateUserLocationIfShared: ${e.message}")
             }
         }
+    }
+
+    // Also add this to onDestroy() to prevent memory leaks
+    override fun onDestroy() {
+        backgroundExecutor.shutdown()
+        super.onDestroy()
     }
 
     private fun checkLocationPermissions(): Boolean {

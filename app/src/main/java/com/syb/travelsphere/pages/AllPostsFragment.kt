@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.GeoPoint
 import com.syb.travelsphere.databinding.FragmentAllPostsBinding
 import com.syb.travelsphere.model.Model
+import com.syb.travelsphere.model.Post
 import com.syb.travelsphere.ui.PostListAdapter
 
 class AllPostsFragment : Fragment() {
@@ -27,6 +28,12 @@ class AllPostsFragment : Fragment() {
 
         setupRecyclerView()
 
+        viewModel.postOwnerUsers.observe(viewLifecycleOwner) { usersMap ->
+            viewModel.posts.value?.let { posts ->
+                updateUI(posts, usersMap)
+            }
+        }
+
         // Pass the Fragment's NavController to the MapComponent
         val navController = findNavController()
         binding?.mapComponent?.setNavController(navController)
@@ -34,20 +41,15 @@ class AllPostsFragment : Fragment() {
         viewModel.posts.observe(viewLifecycleOwner) { posts ->
             Log.d(TAG, "UI updated: Received ${posts.size} posts")
 
-            // ??Show loading state while fetching users
-            binding?.swipeToRefresh?.isRefreshing = true
-
-            viewModel.fetchPostOwnerUsers(posts) { usersMap ->
-
-                postListAdapter.update(posts, usersMap) // Update adapter with posts & usernames
-                binding?.mapComponent?.displayPosts(posts) { postId ->
-                    val action = AllPostsFragmentDirections.actionGlobalSinglePostFragment(postId)
-                    findNavController().navigate(action)
+            viewModel.fetchPostOwnerUsers(posts) {
+                viewModel.postOwnerUsers.value?.let { usersMap ->
+                    updateUI(posts, usersMap)
                 }
-
-                Log.d(TAG, "UI Updated: Showing ${posts.size} posts")
-                postListAdapter?.notifyDataSetChanged()
             }
+
+            Log.d(TAG, "UI Updated: Showing ${posts.size} posts")
+            postListAdapter?.notifyDataSetChanged()
+//            }
         }
 
         binding?.swipeToRefresh?.setOnRefreshListener {
@@ -66,17 +68,40 @@ class AllPostsFragment : Fragment() {
         viewModel.refreshPosts()
     }
 
-    private fun setupRecyclerView() {
-        binding?.postListRecyclerView?.setHasFixedSize(true)
-        binding?.postListRecyclerView?.layoutManager = LinearLayoutManager(context)
-        postListAdapter = PostListAdapter(viewModel.posts.value, viewModel.postOwnerUsers.value) { post -> centerMapOnPost(post.location) }
-        binding?.postListRecyclerView?.adapter = postListAdapter
-    }
 
     private fun centerMapOnPost(point: GeoPoint) {
         val lat = point.latitude
         val lon = point.longitude
         binding?.mapComponent?.centerMapOnLocation(lat, lon)
+    }
+
+    private fun setupRecyclerView() {
+        binding?.postListRecyclerView?.apply {
+            setHasFixedSize(true)
+            layoutManager = LinearLayoutManager(context)
+            // Initialize adapter with empty data
+            postListAdapter = PostListAdapter(emptyList(), emptyMap()) { post ->
+                centerMapOnPost(post.location)
+            }
+            adapter = postListAdapter
+        }
+    }
+
+    private fun updateUI(posts: List<Post>, usersMap: Map<String, String>) {
+        postListAdapter.update(posts, usersMap)
+        binding?.mapComponent?.displayPosts(posts) { postId ->
+            val action = AllPostsFragmentDirections.actionGlobalSinglePostFragment(postId)
+            findNavController().navigate(action)
+        }
+
+        // Center the map on the first post if available
+        if (posts.isNotEmpty()) {
+            posts[0].location?.let { location ->
+                binding?.mapComponent?.centerMapOnLocation(location.latitude, location.longitude)
+            }
+        }
+
+        Log.d(TAG, "UI Updated: Showing ${posts.size} posts")
     }
 
     override fun onDestroy() {

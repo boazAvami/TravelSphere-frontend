@@ -64,6 +64,16 @@ class ProfileFragment : Fragment() {
                             findNavController().navigate(action)
                         }
 
+                        // Center the map on the first post if available
+                        if (posts.isNotEmpty()) {
+                            posts[0].location.let { location ->
+                                binding?.mapComponent?.centerMapOnLocation(
+                                    location.latitude,
+                                    location.longitude
+                                )
+                            }
+                        }
+
                         Log.d(TAG, "UI Updated: Showing ${posts.size} posts")
                         postListAdapter?.notifyDataSetChanged()
                     }
