@@ -29,7 +29,7 @@
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/photoViewPagerMaterialCardView"
             android:layout_width="0dp"
-            android:layout_height="240dp"
+            android:layout_height="280dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="8dp"
             app:strokeWidth="1dp"
@@ -59,7 +59,6 @@
                     android:id="@+id/editImageIndicator"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="#3F51B5"
                     android:orientation="horizontal"
                     android:padding="8dp"
                     android:alpha="0.9"
@@ -137,18 +136,6 @@
                     app:layout_constraintStart_toEndOf="@id/userProfilePictureMaterialCard"
                     app:layout_constraintTop_toTopOf="@id/userProfilePictureMaterialCard"
                     android:layout_marginStart="12dp"/>
-
-                <TextView
-                    android:id="@+id/timestampText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Created at: "
-                    android:textSize="14sp"
-                    android:textColor="#666666"
-                    app:layout_constraintStart_toEndOf="@id/userProfilePictureMaterialCard"
-                    app:layout_constraintTop_toBottomOf="@id/userNameText"
-                    android:layout_marginStart="12dp"
-                    android:layout_marginTop="4dp"/>
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -177,7 +164,7 @@
                     android:text="Location"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#3F51B5"
+                    android:textColor="@color/primary"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintStart_toStartOf="parent"/>
 
@@ -211,7 +198,7 @@
                     android:text="Description"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#3F51B5"
+                    android:textColor="@color/primary"
                     app:layout_constraintTop_toBottomOf="@id/locationNameTextTextInputLayout"
                     app:layout_constraintStart_toStartOf="parent"
                     android:layout_marginTop="16dp"/>
@@ -238,6 +225,18 @@
                         android:minLines="3"
                         android:gravity="top|start"/>
                 </com.google.android.material.textfield.TextInputLayout>
+
+                <TextView
+                    android:id="@+id/timestampText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Created at: "
+                    android:textSize="14sp"
+                    android:textColor="#666666"
+                    app:layout_constraintStart_toEndOf="@id/userProfilePictureMaterialCard"
+                    app:layout_constraintTop_toBottomOf="@id/descriptionTextTextInputLayout"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="4dp"/>
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -261,9 +260,9 @@
                 android:textSize="16sp"
                 app:cornerRadius="12dp"
                 android:padding="12dp"
+                style="@style/CustomButtonStyle"
                 app:icon="@drawable/save_icon"
-                app:iconGravity="textStart"
-                android:backgroundTint="#3F51B5"/>
+                app:iconGravity="textStart"/>
 
             <!-- Delete Button -->
             <com.google.android.material.button.MaterialButton
@@ -272,8 +271,8 @@
                 android:layout_height="wrap_content"
                 android:text="Delete Post"
                 android:textSize="16sp"
-                android:textColor="#FFFFFF"
-                android:backgroundTint="#F44336"
+                android:textColor="@color/white"
+                android:backgroundTint="@android:color/holo_red_dark"
                 android:layout_marginTop="8dp"
                 app:cornerRadius="12dp"
                 android:padding="12dp"

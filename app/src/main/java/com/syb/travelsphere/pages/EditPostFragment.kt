@@ -274,7 +274,7 @@ class EditPostFragment : Fragment() {
                         Handler(Looper.getMainLooper()).post {
                             binding?.locationNameText?.setText(post?.locationName)
                             binding?.descriptionText?.setText(post?.description)
-                            binding?.timestampText?.text = "Created on: ${post?.creationTime?.let { formatTimestamp(it) }}"
+                            binding?.timestampText?.text = "Created at: ${post?.creationTime?.let { formatTimestamp(it) }}"
                         }
 
                         post?.photos?.get(0).let { photoUrl ->
