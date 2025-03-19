@@ -139,16 +139,7 @@ class EditPostFragment : Fragment() {
                     // Upload the new image using Model's uploadImage method
                     Model.shared.uploadImage(selectedImageBitmap!!) { imageUrl ->
                         if (imageUrl != null) {
-                            // Create a new photo list with the updated image url as the first element
-                            val updatedPhotos = post.photos.toMutableList()
-                            if (updatedPhotos.isNotEmpty()) {
-                                updatedPhotos[0] = imageUrl
-                            } else {
-                                updatedPhotos.add(imageUrl)
-                            }
-
-                            // Update post with new photos list
-                            val updatedPost = newPost.copy(photos = updatedPhotos)
+                            val updatedPost = newPost.copy(photo = imageUrl)
                             updatePostInDatabase(updatedPost)
                         } else {
                             // Handle image upload failure
@@ -277,17 +268,11 @@ class EditPostFragment : Fragment() {
                             binding?.timestampText?.text = "Created at: ${post?.creationTime?.let { formatTimestamp(it) }}"
                         }
 
-                        post?.photos?.get(0).let { photoUrl ->
-                            if (photoUrl != null) {
-                                Model.shared.getImageByUrl(photoUrl) { image ->
-                                    // Update post image and hide progress on main thread
-                                    Handler(Looper.getMainLooper()).post {
-                                        binding?.photoViewPager?.setImageBitmap(image)
-                                        binding?.progressBar?.visibility = View.GONE
-                                    }
-                                }
-                            } else {
+                        post?.photo?.let { photoUrl ->
+                            Model.shared.getImageByUrl(photoUrl) { image ->
+                                // Update post image and hide progress on main thread
                                 Handler(Looper.getMainLooper()).post {
+                                    binding?.photoViewPager?.setImageBitmap(image)
                                     binding?.progressBar?.visibility = View.GONE
                                 }
                             }
@@ -304,7 +289,7 @@ class EditPostFragment : Fragment() {
         }.start()
     }
 
-    fun validateInputs(): Boolean {
+    private fun validateInputs(): Boolean {
         val description = binding?.descriptionText?.text.toString().trim()
         val locationName = binding?.locationNameText?.text.toString().trim()
 

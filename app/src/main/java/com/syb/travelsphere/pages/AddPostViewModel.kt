@@ -2,7 +2,6 @@ package com.syb.travelsphere.pages
 
 import android.graphics.Bitmap
 import android.util.Log
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.GeoPoint
@@ -13,8 +12,6 @@ import com.syb.travelsphere.model.Post
 class AddPostViewModel : ViewModel() {
 
     private val authManager = AuthManager()
-
-//    val selectedImages = mutableListOf<Bitmap>()
 
     var selectedImage: Bitmap? = null
         private set
@@ -45,15 +42,16 @@ class AddPostViewModel : ViewModel() {
                 id = "",
                 locationName = locationName,
                 description = description,
-                photos = listOf(),
+                photo = "",
                 location = currentGeoPoint.value ?: GeoPoint(0.0, 0.0),
                 creationTime = timestamp,
                 ownerId = user.uid
             )
 
-            val imagesList = selectedImage?.let { listOf(it) } ?: emptyList()
+            Log.d("Addpost", "createPost: $post")
 
-            Model.shared.addPost(post, imagesList) {
+            Model.shared.addPost(post, selectedImage) {
+                Log.d("Addpost", "createPost: 55")
                 onPostCreated()
             }
         }

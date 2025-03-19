@@ -58,7 +58,7 @@ class SinglePostFragment : Fragment() {
                 binding?.locationNameText?.text = "Took place in: ${post?.locationName}"
                 binding?.descriptionText?.text = "Description: ${post?.description}"
                 binding?.timestampText?.text = "Created at: ${formatTimestamp(post!!.creationTime)}"
-                post.photos[0].let { url ->
+                post.photo.let { url ->
                     Model.shared.getImageByUrl(url) { image ->
                         run {
                             binding?.photoViewPager?.setImageBitmap(image)

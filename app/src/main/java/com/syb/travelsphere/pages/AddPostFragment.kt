@@ -1,9 +1,5 @@
 package com.syb.travelsphere.pages
 
-import android.Manifest
-import android.R
-import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -12,23 +8,17 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.GridLayoutManager
 import android.widget.ArrayAdapter
 import androidx.fragment.app.viewModels
-import com.syb.travelsphere.components.PhotosGridAdapter
 import org.osmdroid.config.Configuration
 import android.util.Log
-import androidx.core.app.ActivityCompat
 import androidx.navigation.fragment.findNavController
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.google.firebase.Timestamp
 import org.osmdroid.util.GeoPoint as OSGeoPoint
 import com.google.firebase.firestore.GeoPoint
 import com.syb.travelsphere.auth.AuthManager
 import com.syb.travelsphere.databinding.FragmentAddPostBinding
-import com.syb.travelsphere.model.Model
-import com.syb.travelsphere.model.Post
 import com.syb.travelsphere.utils.GeoUtils
 import com.syb.travelsphere.utils.ImagePickerUtil
 import com.syb.travelsphere.utils.InputValidator
@@ -43,7 +33,6 @@ class AddPostFragment : Fragment() {
 
     private lateinit var imagePicker: ImagePickerUtil
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var photosGridAdapter: PhotosGridAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -62,8 +51,7 @@ class AddPostFragment : Fragment() {
         setupObservers()
         setupMap()
         setupImagePicker()
-        setupImageView() // New method instead of setupPhotoRecyclerView
-//        setupPhotoRecyclerView()
+        setupImageView()
         setupListeners()
 
         // Get current location immediately
@@ -123,19 +111,6 @@ class AddPostFragment : Fragment() {
         }
     }
 
-//    private fun setupPhotoRecyclerView() {
-//        val layoutManager = GridLayoutManager(requireContext(), 4) // 4 columns in the grid
-//        binding?.photosGridRecyclerView?.layoutManager = layoutManager
-//
-//        // initialize adapter with the viewModel's selectedImages list
-//        photosGridAdapter = PhotosGridAdapter(viewModel.selectedImages) { position ->
-//            viewModel.removeImage(position)
-//            photosGridAdapter.notifyDataSetChanged()
-//        }
-//
-//        binding?.photosGridRecyclerView?.adapter = photosGridAdapter
-//    }
-
     override fun onResume() {
         super.onResume()
         setupMap()
@@ -181,12 +156,10 @@ class AddPostFragment : Fragment() {
         imagePicker = ImagePickerUtil(this) { bitmap ->
             bitmap?.let {
                 viewModel.setImage(it)
-                // Direct UI update - no adapter needed
                 binding?.selectedPhotoImageView?.setImageBitmap(it)
                 binding?.selectedPhotoImageView?.visibility = View.VISIBLE
                 binding?.noPhotoSelectedText?.visibility = View.GONE
                 binding?.removePhotoButton?.visibility = View.VISIBLE
-//                photosGridAdapter.notifyDataSetChanged()
             }
         }
     }
@@ -194,7 +167,6 @@ class AddPostFragment : Fragment() {
     private fun setupListeners() {
         binding?.addPhotosButton?.setOnClickListener {
             // Open gallery to add photos
-//            imagePicker.showImagePickerDialog()
             if (viewModel.selectedImage == null) {
                 // Only show picker if no image is selected
                 imagePicker.showImagePickerDialog()
@@ -208,10 +180,11 @@ class AddPostFragment : Fragment() {
             val locationName = binding?.locationNameEditText?.text.toString().trim()
 
             if (validateInputs(description, locationName)) {
+                binding?.progressBar?.visibility = View.VISIBLE
                 viewModel.createPost(description, locationName) {
-                    // This will be called when post is created successfully
-                    Toast.makeText(requireContext(), "Post shared successfully!", Toast.LENGTH_SHORT).show()
+                    binding?.progressBar?.visibility = View.GONE
                     findNavController().navigate(AddPostFragmentDirections.actionAddPostFragmentToAllPostsFragment())
+                    Toast.makeText(requireContext(), "Post shared successfully!", Toast.LENGTH_SHORT).show()
                 }
             }
         }

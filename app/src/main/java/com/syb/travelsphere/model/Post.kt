@@ -21,7 +21,7 @@ data class Post(
     val description: String,
 
     @TypeConverters(PrimitiveTypeConverter::class)
-    val photos: List<String>,
+    val photo: String,
     val locationName : String,
 
     @TypeConverters(GeoPointConverter::class)
@@ -48,7 +48,7 @@ data class Post(
             }
         const val ID_KEY = "id"
         const val DESCRIPTION_KEY = "description"
-        const val PHOTOS_KEY = "photos"
+        const val PHOTO_KEY = "photo"
         const val LOCATION_NAME_KEY = "locationName"
         const val LOCATION_KEY = "location"
         const val CREATION_TIME_KEY = "creationTime"
@@ -59,7 +59,7 @@ data class Post(
         fun fromJSON(json: Map<String, Any>): Post {
             val id = json[ID_KEY] as? String ?: "" // type casting
             val description = json[DESCRIPTION_KEY] as? String ?: ""
-            val photos = json[PHOTOS_KEY] as? List<String> ?: emptyList()
+            val photo = json[PHOTO_KEY] as? String ?: ""
             val locationName = json[LOCATION_NAME_KEY] as? String ?: ""
             val location = json[LOCATION_KEY] as? GeoPoint ?: GeoPoint(0.0, 0.0)
             val creationTime = json[CREATION_TIME_KEY] as? Timestamp ?: Timestamp(0, 0)
@@ -70,7 +70,7 @@ data class Post(
             return Post(
                 id = id,
                 description = description,
-                photos = photos,
+                photo = photo,
                 location = location,
                 creationTime = creationTime,
                 ownerId = ownerId,
@@ -85,7 +85,7 @@ data class Post(
             return hashMapOf(
                 ID_KEY to id,
                 DESCRIPTION_KEY to description,
-                PHOTOS_KEY to photos,
+                PHOTO_KEY to photo,
                 LOCATION_NAME_KEY to locationName,
                 LOCATION_KEY to location,
                 CREATION_TIME_KEY to creationTime,
