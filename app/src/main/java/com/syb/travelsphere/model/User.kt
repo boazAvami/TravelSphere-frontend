@@ -15,7 +15,7 @@ data class User(
     @PrimaryKey val id: String,
     var profilePictureUrl: String?,
     var userName: String,
-    val location: GeoPoint? = null,
+    var location: GeoPoint? = null,
     val geoHash: String = location?.let { generateGeoHash(it) } ?: "", // Generate GeoHash
     var phoneNumber: String?,
     var isLocationShared: Boolean? = false,

@@ -25,6 +25,7 @@ import com.syb.travelsphere.auth.AuthActivity
 import com.syb.travelsphere.auth.AuthManager
 import com.syb.travelsphere.databinding.ActivityMainBinding
 import com.syb.travelsphere.model.Model
+import com.syb.travelsphere.utils.GeoUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
@@ -199,18 +200,22 @@ class MainActivity : AppCompatActivity() {
                 // Get the user data
                 Model.shared.getUserById(authUser.uid) { user ->
                     if (user?.isLocationShared == true) {
-                        // Update location in background
-                        lifecycleScope.launch(Dispatchers.IO) {
-                            try {
-                                Model.shared.editUser(
-                                    user,
-                                    context = this@MainActivity,
-                                    newProfilePicture = null
-                                ) {
-                                    Log.d(TAG, "User location updated in DB")
+                        // Start observing location changes
+                        GeoUtils.observeLocationChanges(this@MainActivity) { newLocation ->
+                            // Update the user's location in the database
+                            lifecycleScope.launch(Dispatchers.IO) {
+                                try {
+                                    // Save to the database
+                                    Model.shared.editUser(
+                                        user,
+                                        context = this@MainActivity,
+                                        newProfilePicture = null
+                                    ) {
+                                        Log.d(TAG, "User location updated in DB with new coordinates: Lat=${newLocation.latitude}, Lon=${newLocation.longitude}")
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e(TAG, "Error updating location: ${e.message}")
                                 }
-                            } catch (e: Exception) {
-                                Log.e(TAG, "Error updating location: ${e.message}")
                             }
                         }
                     }
