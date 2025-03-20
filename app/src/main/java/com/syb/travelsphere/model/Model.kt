@@ -500,7 +500,7 @@ class Model private constructor() {
                         val filteredUsers = allNearbyUsers.filter { user ->
                             user.location?.let { userLoc ->
                                 GeoUtils.calculateDistance(location, userLoc) <= radius
-                            } ?: false
+                            } ?: false && user.isLocationShared == true
                         }
 
                         mainHandler.post {
