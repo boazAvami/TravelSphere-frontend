@@ -31,23 +31,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- Profile Picture -->
-<!--        <ImageView-->
-<!--            android:id="@+id/profileImage"-->
-<!--            android:layout_width="100dp"-->
-<!--            android:layout_height="100dp"-->
-<!--            android:contentDescription="Profile Picture"-->
-<!--            android:layout_gravity="center"-->
-<!--            android:layout_marginTop="24dp"-->
-<!--            android:src="@drawable/default_user"-->
-<!--            android:backgroundTint="@android:color/transparent"-->
-<!--            -->
-<!--            android:outlineProvider="background"-->
-<!--            android:clipToOutline="true"-->
-<!--            app:shapeAppearanceOverlay="@style/RoundedImageStyle"-->
-<!--            android:background="@drawable/circle_shape"-->
-<!--            android:scaleType="centerCrop"/>-->
-
         <!-- User Profile Picture -->
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/profileImage"

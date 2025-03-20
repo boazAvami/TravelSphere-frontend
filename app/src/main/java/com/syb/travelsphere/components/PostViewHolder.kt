@@ -41,8 +41,8 @@ class PostViewHolder(
             post.locationName.take(maxLocationLength) + "..." else post.locationName
 
         // Check if the base64 string is not null or empty
-        val firstImageUrl = post.photos.getOrNull(0)
-        if (!firstImageUrl.isNullOrEmpty()) {
+        val firstImageUrl = post.photo
+        if (firstImageUrl.isNotEmpty()) {
             try {
                 postPhotoImageView?.let { imageView ->
                     Model.shared.getImageByUrl(firstImageUrl) { bitmap ->

@@ -2,7 +2,6 @@ package com.syb.travelsphere.pages
 
 import android.graphics.Bitmap
 import android.util.Log
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.GeoPoint
@@ -14,23 +13,18 @@ class AddPostViewModel : ViewModel() {
 
     private val authManager = AuthManager()
 
-    val selectedImages = mutableListOf<Bitmap>()
+    var selectedImage: Bitmap? = null
+        private set
 
     val locationSuggestions = Model.shared.addressSuggestions
     val currentGeoPoint = Model.shared.geoLocation
 
-    fun addImage(bitmap: Bitmap) {
-        if (!selectedImages.contains(bitmap)) {
-            selectedImages.add(bitmap)
-            // Return true if this function needs to indicate success
-        }
+    fun setImage(bitmap: Bitmap) {
+        selectedImage = bitmap
     }
 
-    fun removeImage(position: Int) {
-        if (position >= 0 && position < selectedImages.size) {
-            selectedImages.removeAt(position)
-            // Return true if this function needs to indicate success
-        }
+    fun clearImage() {
+        selectedImage = null
     }
 
     fun fetchAddressSuggestions(query: String) {
@@ -48,20 +42,18 @@ class AddPostViewModel : ViewModel() {
                 id = "",
                 locationName = locationName,
                 description = description,
-                photos = listOf(),
+                photo = "",
                 location = currentGeoPoint.value ?: GeoPoint(0.0, 0.0),
                 creationTime = timestamp,
                 ownerId = user.uid
             )
 
-            Model.shared.addPost(post, selectedImages) {
-                Log.d(TAG, "Post created with ${selectedImages.size} photos")
+            Log.d("Addpost", "createPost: $post")
+
+            Model.shared.addPost(post, selectedImage) {
+                Log.d("Addpost", "createPost: 55")
                 onPostCreated()
             }
         }
-    }
-
-    companion object {
-        private const val TAG = "AddPostViewModel"
     }
 }

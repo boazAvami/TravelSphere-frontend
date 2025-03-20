@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.syb.travelsphere.auth.AuthActivity
 import com.syb.travelsphere.auth.AuthManager
 import com.syb.travelsphere.databinding.FragmentSettingsBinding
@@ -77,24 +78,26 @@ class SettingsFragment : Fragment() {
         // Handle Edit Button Click
         binding?.editButton?.setOnClickListener() {
             if (!validateInputs()) return@setOnClickListener  // Stop execution if validation fails
+            showConfirmationDialog("Edit Profile", "Are you sure you want to save these changes?") {
 
-            val updatedUser = currentUserObject?.copy(
-                phoneNumber = binding?.phoneText?.text.toString().trim(),
-                userName =  binding?.usernameText?.text.toString().trim(),
-                isLocationShared = binding?.locationSwitch?.isChecked ?: false
-            )
-            var profilePictureBitmap: Bitmap? = null
+                val updatedUser = currentUserObject?.copy(
+                    phoneNumber = binding?.phoneText?.text.toString().trim(),
+                    userName = binding?.usernameText?.text.toString().trim(),
+                    isLocationShared = binding?.locationSwitch?.isChecked ?: false
+                )
+                var profilePictureBitmap: Bitmap? = null
 
-            if (didSetProfilePicture) {
-                binding?.profileImage?.isDrawingCacheEnabled = true
-                binding?.profileImage?.buildDrawingCache()
+                if (didSetProfilePicture) {
+                    binding?.profileImage?.isDrawingCacheEnabled = true
+                    binding?.profileImage?.buildDrawingCache()
 
-                val drawable = binding?.profileImage?.drawable
-                profilePictureBitmap = (drawable as? BitmapDrawable)?.bitmap
-            }
+                    val drawable = binding?.profileImage?.drawable
+                    profilePictureBitmap = (drawable as? BitmapDrawable)?.bitmap
+                }
 
-            if (updatedUser != null) {
-                editUser(updatedUser, profilePictureBitmap)
+                if (updatedUser != null) {
+                    editUser(updatedUser, profilePictureBitmap)
+                }
             }
         }
 
@@ -117,6 +120,20 @@ class SettingsFragment : Fragment() {
                 navigateToUserProfile()
             }
         }
+    }
+
+    private fun showConfirmationDialog(title: String, message: String, onConfirm: () -> Unit) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(title)
+            .setMessage(message)
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setPositiveButton("Confirm") { dialog, _ ->
+                onConfirm()
+                dialog.dismiss()
+            }
+            .show()
     }
 
     private fun setupListeners() {

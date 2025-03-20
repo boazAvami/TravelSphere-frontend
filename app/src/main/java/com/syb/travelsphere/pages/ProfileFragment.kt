@@ -59,9 +59,19 @@ class ProfileFragment : Fragment() {
 
                         postListAdapter.update(posts, mapOf(currentUser.uid to user.userName))
 
-                        binding?.mapComponent?.displayPosts(posts) { postId ->
+                        binding?.mapComponent?.displayPosts(posts) { postId, _ ->
                             val action = ProfileFragmentDirections.actionGlobalEditPostFragment(postId)
                             findNavController().navigate(action)
+                        }
+
+                        // Center the map on the first post if available
+                        if (posts.isNotEmpty()) {
+                            posts[0].location.let { location ->
+                                binding?.mapComponent?.centerMapOnLocation(
+                                    location.latitude,
+                                    location.longitude
+                                )
+                            }
                         }
 
                         Log.d(TAG, "UI Updated: Showing ${posts.size} posts")

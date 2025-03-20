@@ -1,179 +1,285 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
+    android:background="@color/white"
     tools:context=".pages.EditPostFragment">
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <!-- Post Image -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/photoViewPagerMaterialCardView"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:maxHeight="180dp"
-        android:layout_marginBottom="8dp"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="4dp"
-        app:strokeWidth="1dp"
-        app:strokeColor="@color/gray"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/userProfilePictureMaterialCard">
-
-        <ImageView
-            android:id="@+id/photoViewPager"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:maxHeight="180dp"
-            android:src="@drawable/default_post"
-            android:adjustViewBounds="true"
-            android:scaleType="fitCenter"
-            android:contentDescription="Post Image"/>
-    </com.google.android.material.card.MaterialCardView>
-
-
-
-
-    <!-- Profile Section -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/userProfilePictureMaterialCard"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:cardCornerRadius="50dp"
-        app:cardElevation="4dp"
-        app:layout_constraintTop_toBottomOf="@id/photoViewPagerMaterialCardView"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="8dp">
-
-        <ImageView
-            android:id="@+id/userProfilePicture"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:padding="4dp"
-            android:src="@drawable/profile_icon"
-            android:scaleType="centerCrop"
-            android:clipToOutline="true"/>
-    </com.google.android.material.card.MaterialCardView>
-
-    <TextView
-        android:id="@+id/userNameText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Username"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@id/userProfilePictureMaterialCard"
-        app:layout_constraintStart_toEndOf="@id/userProfilePictureMaterialCard"
-        app:layout_constraintTop_toTopOf="@id/userProfilePictureMaterialCard"
-        android:layout_marginStart="8dp"/>
-
-    <!-- Location Name -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Location:"
-        android:textSize="14sp"
-        android:textColor="@color/black"
-        app:layout_constraintTop_toBottomOf="@id/userProfilePictureMaterialCard"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="12dp"/>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/locationNameTextTextInputLayout"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/userProfilePictureMaterialCard"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="30dp">
+        android:layout_height="match_parent"
+        android:padding="16dp">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/locationNameText"
+        <!-- Progress Bar -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:elevation="10dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Post Image Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/photoViewPagerMaterialCardView"
+            android:layout_width="0dp"
+            android:layout_height="280dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="8dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/gray"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:id="@+id/photoViewPager"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:contentDescription="Post Image"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"/>
+
+                <!-- Edit image indicator -->
+                <LinearLayout
+                    android:id="@+id/editImageIndicator"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="8dp"
+                    android:alpha="0.9"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:elevation="8dp"
+                    android:foreground="?attr/selectableItemBackground"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_margin="16dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/edit_icon"
+                        android:contentDescription="Edit Image"
+                        app:tint="#FFFFFF" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Change"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="4dp"/>
+                </LinearLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Profile Section -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/profileCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter location"
-            android:textSize="16sp"/>
-    </com.google.android.material.textfield.TextInputLayout>
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/photoViewPagerMaterialCardView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
-    <!-- Description -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Description:"
-        android:textSize="14sp"
-        android:textColor="@color/black"
-        app:layout_constraintTop_toBottomOf="@id/locationNameTextTextInputLayout"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="12dp"/>
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp">
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/descriptionTextTextInputLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/locationNameTextTextInputLayout"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="30dp">
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/userProfilePictureMaterialCard"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="25dp"
+                    app:cardElevation="2dp"
+                    app:strokeWidth="2dp"
+                    app:strokeColor="#3F51B5"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/descriptionText"
+                    <ImageView
+                        android:id="@+id/userProfilePicture"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/profile_icon"/>
+                </com.google.android.material.card.MaterialCardView>
+
+                <TextView
+                    android:id="@+id/userNameText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Username"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"
+                    app:layout_constraintStart_toEndOf="@id/userProfilePictureMaterialCard"
+                    app:layout_constraintTop_toTopOf="@id/userProfilePictureMaterialCard"
+                    android:layout_marginStart="12dp"/>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Post Details Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/detailsCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter description"
-            android:textSize="16sp"/>
-    </com.google.android.material.textfield.TextInputLayout>
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/profileCard"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
-    <!-- Timestamp -->
-    <TextView
-        android:id="@+id/timestampText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Created at: "
-        android:textSize="14sp"
-        android:textColor="#666666"
-        app:layout_constraintTop_toBottomOf="@id/descriptionTextTextInputLayout"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="12dp"/>
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp">
 
-    <!-- Edit Button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/editButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Edit Post"
-        app:cornerRadius="16dp"
-        style="@style/CustomButtonStyle"
-        app:iconGravity="textStart"
-        app:layout_constraintTop_toBottomOf="@id/timestampText"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="20dp"/>
+                <!-- Location Name -->
+                <TextView
+                    android:id="@+id/locationLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Location"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/primary"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"/>
 
-    <!-- Delete Button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/deleteButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Delete Post"
-        android:textColor="@android:color/holo_red_dark"
-        android:backgroundTint="@android:color/transparent"
-        app:cornerRadius="16dp"
-        app:iconGravity="textStart"
-        app:layout_constraintTop_toBottomOf="@id/editButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="12dp"/>
-</androidx.constraintlayout.widget.ConstraintLayout>
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/locationNameTextTextInputLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    app:boxStrokeColor="#3F51B5"
+                    app:hintTextColor="#3F51B5"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    app:layout_constraintTop_toBottomOf="@id/locationLabel"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/locationNameText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Enter location"
+                        android:textSize="16sp"
+                        android:inputType="text"
+                        android:maxLines="1"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Description -->
+                <TextView
+                    android:id="@+id/descriptionLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Description"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/primary"
+                    app:layout_constraintTop_toBottomOf="@id/locationNameTextTextInputLayout"
+                    app:layout_constraintStart_toStartOf="parent"
+                    android:layout_marginTop="16dp"/>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/descriptionTextTextInputLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    app:boxStrokeColor="#3F51B5"
+                    app:hintTextColor="#3F51B5"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    app:layout_constraintTop_toBottomOf="@id/descriptionLabel"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/descriptionText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Enter description"
+                        android:textSize="16sp"
+                        android:inputType="textMultiLine"
+                        android:minLines="3"
+                        android:gravity="top|start"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <TextView
+                    android:id="@+id/timestampText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Created at: "
+                    android:textSize="14sp"
+                    android:textColor="#666666"
+                    app:layout_constraintStart_toEndOf="@id/userProfilePictureMaterialCard"
+                    app:layout_constraintTop_toBottomOf="@id/descriptionTextTextInputLayout"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="4dp"/>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Action Buttons -->
+        <LinearLayout
+            android:id="@+id/buttonsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="24dp"
+            app:layout_constraintTop_toBottomOf="@id/detailsCard"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <!-- Edit Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/editButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Save Changes"
+                android:textSize="16sp"
+                app:cornerRadius="12dp"
+                android:padding="12dp"
+                style="@style/CustomButtonStyle"
+                app:icon="@drawable/save_icon"
+                app:iconGravity="textStart"/>
+
+            <!-- Delete Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/deleteButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Delete Post"
+                android:textSize="16sp"
+                android:textColor="@color/white"
+                android:backgroundTint="@android:color/holo_red_dark"
+                android:layout_marginTop="8dp"
+                app:cornerRadius="12dp"
+                android:padding="12dp"
+                app:icon="@drawable/ic_delete"
+                app:iconTint="#FFFFFF"
+                app:iconGravity="textStart"/>
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.core.widget.NestedScrollView>

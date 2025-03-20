@@ -101,35 +101,30 @@ class CloudinaryModel {
         return file
     }
 
+    // In CloudinaryModel.kt - Add image caching and resize
     fun getImageByUrl(imageUrl: String, callback: (Bitmap?) -> Unit) {
-        // String.isNullOrEmpty() won't work on a non-nullable parameter
         if (imageUrl.isEmpty()) {
             callback(null)
             return
         }
 
-        val target = object : com.squareup.picasso.Target {
-            override fun onBitmapLoaded(bitmap: Bitmap, from: Picasso.LoadedFrom) {
-                callback(bitmap) // Successfully loaded
-            }
-
-            override fun onBitmapFailed(e: Exception, errorDrawable: Drawable?) {
-                // Log the error for debugging
-                Log.e(TAG, "ImageLoading: Failed to load image: $imageUrl", e)
-                callback(null) // Failed to load
-            }
-
-            override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
-            }
-        }
-
-        // Keeps a strong reference to the target to prevent garbage collection
-        TargetManager.addTarget(target)
-
         Picasso.get()
             .load(imageUrl)
-            .config(Bitmap.Config.ARGB_8888)
-            .into(target)
+            .resize(500, 500) // Resize images to reasonable dimensions
+            .centerCrop() // Crop to maintain aspect ratio
+            .config(Bitmap.Config.RGB_565) // Use a more memory-efficient bitmap configuration
+            .into(object : com.squareup.picasso.Target {
+                override fun onBitmapLoaded(bitmap: Bitmap, from: Picasso.LoadedFrom) {
+                    callback(bitmap)
+                }
+
+                override fun onBitmapFailed(e: Exception, errorDrawable: Drawable?) {
+                    Log.e(TAG, "ImageLoading: Failed to load image: $imageUrl", e)
+                    callback(null)
+                }
+
+                override fun onPrepareLoad(placeHolderDrawable: Drawable?) {}
+            })
     }
 
     // Singleton to keep strong references to targets

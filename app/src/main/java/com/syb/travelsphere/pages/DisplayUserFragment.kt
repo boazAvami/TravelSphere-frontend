@@ -69,9 +69,20 @@ class DisplayUserFragment : Fragment() {
                             userObject = user
                             postListAdapter.update(posts, mapOf(user.id to user.userName))
 
-                            binding?.mapComponent?.displayPosts(posts) { postId ->
-                                val action = DisplayUserFragmentDirections.actionGlobalSinglePostFragment(postId)
+                            binding?.mapComponent?.displayPosts(posts) { postId, ownerId ->
+                                val action = DisplayUserFragmentDirections.actionGlobalSinglePostFragment(postId).apply {
+                                    this.ownerName = user.userName
+                                }
                                 findNavController().navigate(action)
+                            }
+
+                            if (posts.isNotEmpty()) {
+                                posts[0].location.let { location ->
+                                    binding?.mapComponent?.centerMapOnLocation(
+                                        location.latitude,
+                                        location.longitude
+                                    )
+                                }
                             }
 
                             Log.d(TAG, "UI Updated: Showing ${posts.size} posts")

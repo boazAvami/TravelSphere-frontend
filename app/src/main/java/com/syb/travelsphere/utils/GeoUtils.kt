@@ -62,24 +62,6 @@ object GeoUtils {
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
         }
 
-//        if (ActivityCompat.checkSelfPermission(
-//                context, Manifest.permission.ACCESS_FINE_LOCATION
-//            ) != PackageManager.PERMISSION_GRANTED &&
-//            ActivityCompat.checkSelfPermission(
-//                context, Manifest.permission.ACCESS_COARSE_LOCATION
-//            ) != PackageManager.PERMISSION_GRANTED
-//        ) {
-//            fragment.requestPermissions(
-//                arrayOf(
-//                    Manifest.permission.ACCESS_FINE_LOCATION,
-//                    Manifest.permission.ACCESS_COARSE_LOCATION
-//                ),
-//                LOCATION_PERMISSION_REQUEST_CODE
-//            )
-//            Log.d("GeoUtils", "Requesting location permissions...")
-//            return
-//        }
-
         // Try last known location first (fastest)
         fusedLocationClient!!.lastLocation.addOnSuccessListener { location ->
             if (location != null) {
@@ -91,7 +73,7 @@ object GeoUtils {
             }
 
 //            requestNewLocation(context, callback)
-            // Step 2: Request a real-time GPS update
+            // Request a real-time GPS update
             val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 2000)
                 .setMinUpdateIntervalMillis(500)
                 .setMaxUpdates(1)
@@ -109,7 +91,7 @@ object GeoUtils {
                 }
             }
 
-            fusedLocationClient!!.requestLocationUpdates(locationRequest, locationCallback, null)
+            fusedLocationClient?.requestLocationUpdates(locationRequest, locationCallback, null)
         }.addOnFailureListener {
             Log.e("GeoUtils", "Failed to get last known location", it)
             callback(null)
@@ -137,7 +119,7 @@ object GeoUtils {
             }
         }
 
-        fusedLocationClient!!.requestLocationUpdates(locationRequest, locationCallback, null)
+        fusedLocationClient?.requestLocationUpdates(locationRequest, locationCallback, null)
     }
 
     // Continuous location observer
@@ -149,13 +131,6 @@ object GeoUtils {
                 context, Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-//            fragment.requestPermissions(
-//                arrayOf(
-//                    Manifest.permission.ACCESS_FINE_LOCATION,
-//                    Manifest.permission.ACCESS_COARSE_LOCATION
-//                ),
-//                LOCATION_PERMISSION_REQUEST_CODE
-//            )
             Log.d("GeoUtils", "Requesting location permissions...")
             return
         }
@@ -179,7 +154,7 @@ object GeoUtils {
                         lastKnownLocation = newGeoPoint // Update last known location
                         callback(newGeoPoint) // Notify UI to update
                     } else {
-//                        Log.d("GeoUtils", "Location changed but within 500m, not updating UI.")
+                        Log.d("GeoUtils", "Location changed but within 500m, not updating UI.")
                     }
                 }
             }
@@ -187,13 +162,6 @@ object GeoUtils {
 
         fusedLocationClient?.requestLocationUpdates(locationRequest, locationCallback!!, null)
         Log.d("GeoUtils", "Started continuous location observation...")
-    }
-
-    fun stopLocationUpdates() {
-        locationCallback?.let {
-            fusedLocationClient?.removeLocationUpdates(it)
-            Log.d("GeoUtils", "Stopped location updates.")
-        }
     }
 
     // Determines if a user has moved more than a threshold (in kilometers).

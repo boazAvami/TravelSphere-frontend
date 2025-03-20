@@ -152,18 +152,18 @@ class Model private constructor() {
 
     fun addUser(user: User, image: Bitmap?, callback: EmptyCallback) {
         try {
-        firebaseModel.addUser(user) {
-            image?.let {
-                uploadImage(image) { uri ->
-                    if (!uri.isNullOrBlank()) {
-                        val usr = user.copy(profilePictureUrl = uri)
-                        firebaseModel.addUser(usr, callback)
-                    } else {
-                        callback()
+            firebaseModel.addUser(user) {
+                image?.let {
+                    uploadImage(image) { uri ->
+                        if (!uri.isNullOrBlank()) {
+                            val usr = user.copy(profilePictureUrl = uri)
+                            firebaseModel.addUser(usr, callback)
+                        } else {
+                            callback()
+                        }
                     }
-                }
-            } ?: callback()
-        }
+                } ?: callback()
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Error adding user: ${e.message}")
         }
@@ -346,28 +346,20 @@ class Model private constructor() {
         }
     }
 
-    fun addPost(post: Post, images: List<Bitmap>?, callback: EmptyCallback) {
+    fun addPost(post: Post, image: Bitmap?, callback: EmptyCallback) {
         try {
             val postRef = firebaseModel.generatePostReference() // Get Firestore-generated ID
             val postId = postRef.id // Retrieve the generated ID
 
             val newPost = post.copy(id = postId) // Assign Firestore ID to the post
 
-            if (!images.isNullOrEmpty()) {
-                val uploadedUrls = mutableListOf<String>()
-
-                images.forEach { image ->
-                    uploadImage(image) { imageUrl ->
-                        if (!imageUrl.isNullOrBlank()) {
-                            uploadedUrls.add(imageUrl)
-                        }
-
-                        if (uploadedUrls.size == images.size) {
-                            val updatedPost = post.copy(photos = uploadedUrls)
-                            firebaseModel.addPost(updatedPost, postRef, callback)
-                        }
+            if (image != null) {
+                 uploadImage(image) { imageUrl ->
+                    if (!imageUrl.isNullOrBlank()) {
+                        val updatedPost = post.copy(photo = imageUrl)
+                        firebaseModel.addPost(updatedPost, postRef, callback)
                     }
-                }
+                 }
             } else {
                 firebaseModel.addPost(newPost, postRef, callback)
             }
@@ -385,29 +377,22 @@ class Model private constructor() {
     }
 
     fun deletePost(post: Post, callback: EmptyCallback) {
-        var deletedImagesCount = 0
 
         try {
-            if (post.photos.isEmpty()) {
-                firebaseModel.deletePost(post.id, callback) // No images, delete post immediately
+            if (post.photo.isEmpty()) {
+                firebaseModel.deletePost(post.id, callback) // No image, delete post immediately
                 return
             }
 
-            post.photos.forEach { imageUrl ->
-                cloudinaryModel.deleteImage(imageUrl) { success ->
-                    if (!success) {
-                        Log.e(TAG, "Failed to delete post image: $imageUrl")
-                        callback()
-                    }
-                    deletedImagesCount++
-
-                    // Delete the post only after all images are processed
-                    if (deletedImagesCount == post.photos.size) {
-                        firebaseModel.deletePost(post.id) {
-                            executor.execute {
-                                database.postDao().deletePostById(post.id)
-                            }
-                        }
+            cloudinaryModel.deleteImage(post.photo) { success ->
+                if (!success) {
+                    Log.e(TAG, "Failed to delete post image: ${post.photo}")
+                    callback()
+                }
+                // Delete the post only after image is processed
+                firebaseModel.deletePost(post.id) {
+                    executor.execute {
+                        database.postDao().deletePostById(post.id)
                     }
                 }
             }
@@ -417,7 +402,7 @@ class Model private constructor() {
         }
     }
 
-    private fun uploadImage(image: Bitmap, callback: ImageCallback) {
+    fun uploadImage(image: Bitmap, callback: ImageCallback) {
         try {
             cloudinaryModel.uploadImage(image, callback)
         } catch (e: Exception) {

@@ -11,7 +11,7 @@ import com.syb.travelsphere.model.User
 import com.syb.travelsphere.model.converters.PrimitiveTypeConverter
 import com.syb.travelsphere.model.converters.TimestampConverter
 
-@Database(entities = [User::class, Post::class], version = 3)
+@Database(entities = [User::class, Post::class], version = 4)
 @TypeConverters(GeoPointConverter::class, TimestampConverter::class, PrimitiveTypeConverter::class) // Register the TypeConverter
 abstract class AppLocalDbRepository: RoomDatabase() {
     abstract fun userDao(): UserDao
