@@ -20,5 +20,7 @@ object Constants {
     object COLLECTIONS {
         const val USERS = "users"
         const val POSTS = "posts"
+        const val DELETED_POSTS = "deleted_posts"
+
     }
 }

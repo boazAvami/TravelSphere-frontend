@@ -46,10 +46,6 @@ class AllPostsFragment : Fragment() {
                     updateUI(posts, usersMap)
                 }
             }
-
-            Log.d(TAG, "UI Updated: Showing ${posts.size} posts")
-            postListAdapter?.notifyDataSetChanged()
-//            }
         }
 
         binding?.swipeToRefresh?.setOnRefreshListener {
@@ -106,8 +102,8 @@ class AllPostsFragment : Fragment() {
         Log.d(TAG, "UI Updated: Showing ${posts.size} posts")
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onDestroyView() {
+        super.onDestroyView()
         binding = null
     }
 

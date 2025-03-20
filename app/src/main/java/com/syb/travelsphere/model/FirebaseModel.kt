@@ -3,7 +3,9 @@ package com.syb.travelsphere.model
 import android.util.Log
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.GeoPoint
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.firestoreSettings
 import com.google.firebase.ktx.Firebase
@@ -238,6 +240,21 @@ class FirebaseModel {
             .addOnCompleteListener { task ->
                 when (task.isSuccessful) {
                     true -> {
+                        val deletedPost = hashMapOf(
+                            "postId" to postId,
+                            "deletedAt" to FieldValue.serverTimestamp()
+                        )
+
+                        database.collection(Constants.COLLECTIONS.DELETED_POSTS)
+                            .document(postId)
+                            .set(deletedPost)
+                            .addOnSuccessListener {
+                                callback()
+                            }
+                            .addOnFailureListener {
+                                Log.e(TAG, "Error recording deleted post")
+                                callback()
+                            }
                         callback() // Operation succeeded
                     }
                     false -> {
@@ -248,6 +265,47 @@ class FirebaseModel {
                 }
             }
     }
+
+    private var deletedPostsListener: ListenerRegistration? = null
+
+    // Add a listener for deleted posts
+    fun listenForDeletedPosts(lastChecked: Long, onPostDeleted: (String) -> Unit) {
+        // Remove any existing listener
+        stopListeningForDeletedPosts()
+
+        try {
+            // Convert timestamp to Firestore Timestamp
+            val timestamp = Timestamp(lastChecked / 1000, ((lastChecked % 1000) * 1000000).toInt())
+
+            // Listen for deleted posts newer than lastChecked
+            database.collection(Constants.COLLECTIONS.DELETED_POSTS)
+                .whereGreaterThan("deletedAt", timestamp)
+                .addSnapshotListener { snapshot, e ->
+                    if (e != null) {
+                        Log.e(TAG, "Listen for deleted posts failed: ${e.message}")
+                        return@addSnapshotListener
+                    }
+
+                    if (snapshot != null) {
+                        for (doc in snapshot.documents) {
+                            val postId = doc.getString("postId")
+                            if (postId != null) {
+                                onPostDeleted(postId)
+                            }
+                        }
+                    }
+                }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error setting up deleted posts listener: ${e.message}")
+        }
+    }
+
+    fun stopListeningForDeletedPosts() {
+        deletedPostsListener?.remove()
+        deletedPostsListener = null
+    }
+
+
 
     fun editPost(post: Post, callback: EmptyCallback) {
         val updatedPost = post.copy(lastUpdated = System.currentTimeMillis()) // Convert to Long
