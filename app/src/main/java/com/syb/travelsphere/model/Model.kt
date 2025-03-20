@@ -12,6 +12,7 @@ import com.google.gson.JsonArray
 import com.syb.travelsphere.base.BitmapCallback
 import com.syb.travelsphere.base.EmptyCallback
 import com.syb.travelsphere.base.ImageCallback
+import com.syb.travelsphere.base.MyApplication.Globals.context
 import com.syb.travelsphere.base.PostCallback
 import com.syb.travelsphere.base.PostsCallback
 import com.syb.travelsphere.base.UserCallback
@@ -48,9 +49,21 @@ class Model private constructor() {
     private val firebaseModel = FirebaseModel()
     private val cloudinaryModel = CloudinaryModel()
 
+    private var lastDeletedPostCheck: Long? = 0
+
     companion object {
         val shared = Model()
         private const val TAG = "Model"
+        private const val LAST_DELETED_CHECK_KEY = "last_deleted_check"
+    }
+
+    init {
+        // Get the last time we checked for deleted posts
+        val prefs = context?.getSharedPreferences("travelsphere_prefs", Context.MODE_PRIVATE)
+        lastDeletedPostCheck = prefs?.getLong(LAST_DELETED_CHECK_KEY, 0)
+
+        // Start listening for deleted posts
+        startListeningForDeletedPosts()
     }
 
     fun fetchUsersByIds(userIds: List<String>, callback: UsersCallback) {
@@ -323,6 +336,32 @@ class Model private constructor() {
         }
     }
 
+    private fun startListeningForDeletedPosts() {
+        lastDeletedPostCheck?.let {
+            firebaseModel.listenForDeletedPosts(it) { deletedPostId ->
+                executor.execute {
+                    // Delete from local database if it exists
+                    database.postDao().deletePostById(deletedPostId)
+
+                    // Update the last checked timestamp
+                    val currentTime = System.currentTimeMillis()
+                    updateLastDeletedCheck(currentTime)
+                }
+            }
+        }
+    }
+
+    private fun updateLastDeletedCheck(timestamp: Long) {
+        lastDeletedPostCheck = timestamp
+        val prefs = context?.getSharedPreferences("travelsphere_prefs", Context.MODE_PRIVATE)
+        prefs?.edit()?.putLong(LAST_DELETED_CHECK_KEY, timestamp)?.apply()
+    }
+
+    // Call this in your onDestroy or relevant lifecycle method
+    fun cleanup() {
+        firebaseModel.stopListeningForDeletedPosts()
+    }
+
     fun refreshAllPosts() {
         loadingState.postValue(LoadingState.LOADING)
         val lastUpdated: Long = Post.lastUpdated
@@ -339,6 +378,9 @@ class Model private constructor() {
                         }
                     }
                 }
+
+                // Also update the deleted posts timestamp
+                updateLastDeletedCheck(System.currentTimeMillis())
 
                 Post.lastUpdated = currentTime
                 loadingState.postValue(LoadingState.LOADED)

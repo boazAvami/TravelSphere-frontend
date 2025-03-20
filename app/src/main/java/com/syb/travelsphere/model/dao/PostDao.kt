@@ -27,4 +27,8 @@ interface PostDao {
 
     @Query("SELECT * FROM posts WHERE ownerId = :ownerId ORDER BY creationTime DESC")
     fun getPostsByUser(ownerId: String): List<Post>
+
+    @Query("SELECT COUNT(*) FROM posts WHERE id = :postId")
+    fun postExists(postId: String): Int
+
 }
