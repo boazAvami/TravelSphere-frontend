@@ -77,10 +77,8 @@ class NearbyUsersFragment : Fragment() {
             // Initialize adapter with empty data
             usersListAdapter = UserListAdapter(emptyList()) { user ->
                 user.phoneNumber?.let { showUserPhonePopup(it) }
-                user.location?.latitude?.let { lat ->
-                    user.location.longitude.let { lon ->
-                        binding?.mapComponent?.centerMapOnLocation(lat, lon)
-                    }
+                user.location?.let { location ->
+                    binding?.mapComponent?.centerMapOnLocation(location.latitude, location.longitude)
                 }
             }
 
